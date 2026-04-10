@@ -1,0 +1,96 @@
+{
+  "labels": [
+    "Name",
+    "IP No.",
+    "Age (years)",
+    "Parity",
+    "Gravida",
+    "EDD",
+    "Blood group",
+    "Rhesus",
+    "Anti D",
+    "ANC no. of visits",
+    "ANC Clinic Name:",
+    "ANC U/S",
+    "If YES, trimester",
+    "U/S findings:",
+    "VDRL",
+    "PMTCT status",
+    "Mother on ARVs",
+    "Hep B",
+    "Hep B IG given",
+    "HTN in pregnancy?",
+    "APH",
+    "Diabetes",
+    "Prolonged 2nd Stage?",
+    "Infection (UTI/Fever)",
+    "Antibiotics",
+    "Multiple Gestation",
+    "Number of babies",
+    "Current maternal drugs:",
+    "Other problems during this pregnancy:",
+    "Problems in previous pregnancies:",
+    "Relevant family/social history:"
+  ],
+
+  "baseline": {
+    "Name": "N/A",
+    "IP No.": "2330184",
+    "Age (years)": "34",
+    "Parity": "0 + 3",
+    "Gravida": "4",
+    "EDD": "13-01-2025",
+    "Blood group": "O",
+    "Rhesus": "Pos",
+    "Anti D": "N/A",
+    "ANC no. of visits": "6",
+    "ANC Clinic Name":"N/A",
+    "ANC U/S": "Y",
+    "If YES, trimester": "N/A",
+    "U/S findings": "N/A",
+    "VDRL": "Neg",
+    "PMTCT status": "Neg",
+    "Mother on ARVs": "N/A",
+    "Hep B": "Neg",
+    "Hep B IG given": "N/A",
+    "HTN in pregnancy?": "Y",
+    "APH": "N",
+    "Diabetes": "Y",
+    "Prolonged 2nd Stage?": "N/A",
+    "Infection (UTI/Fever)": "Y",
+    "Antibiotics": "N/A",
+    "Multiple Gestation": "N",
+    "Number of babies": "N/A",
+    "Current maternal drugs": "lanlus, metformin, MgSO4, nifedipine, labetalol",
+    "Other problems during this pregnancy": "methyldopa",
+    "Problems in previous pregnancies": "N/A",
+    "Relevant family/social history": "N/A"
+  },
+
+  "name": [
+      "Name",
+      "Redacted"
+    ],
+
+  "ip_no": "2330184",
+
+  "row1": {
+    "Name_label": "Name",
+    "Name_value": "N/A",
+    "IP_No_label": "IP No.",
+    "IP_No_value": "2330184"
+  },
+
+  "row2": {
+    "Age_years": "34",
+    "Parity": "0 + 3",
+    "Gravida": "4",
+    "EDD": "13/01/2025"
+  },
+
+  "row3": {
+    "Blood group": "O",
+    "Rhesus": "Pos",
+    "Anti D": "N"
+  }
+}

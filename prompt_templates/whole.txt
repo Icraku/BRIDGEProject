@@ -1,0 +1,37 @@
+You are reading the attached medical form image.
+
+Your task:
+1. Locate all the section headers.
+   - They appear inside a bold black bars.
+   - They are located above each other such that Section A (Infant Details) starts followed by Section B (B: Mother's Details) then Section C (Labour and Birth).
+
+2. Read ONLY the fields that are physically inside Section A, Section B, Section C.
+   - Ignore any repeated or faint text that appears due to OCR artifacts.
+   - If the model sees multiple faint repeated lines, keep ONLY the clearest/most visible one.
+
+3. Extract ALL visible label–value pairs in Section A, Section B, Section C.
+   - Go line by line, top to bottom.
+   - Return ONLY valid JSON.
+   - Do not include explanations.
+   - Do not use markdown.
+   - If a field is missing, use "N/A".
+
+    Expected format:
+    {
+      "Label": "Value",
+      "Label": "Value",
+    }
+
+4. STRICT OUTPUT RULE:
+   - Do NOT summarize.
+   - Do NOT interpret the fields.
+   - Do NOT reorder them.
+   - Do NOT add or remove labels.
+   - Do NOT collapse similar lines.
+   - Simply list them in the order they physically appear.
+
+5. Note that for "Parity" the values include the on before and after the "+" sign in this format: "<value> + <value>"
+
+6. For the fields with checkboxes, thoroughly go through all the values, identify then return ONLY the checkbox related to that field, that has the value or that has been ticked.
+
+7. If a value is blank, missing, unclear, or unreadable → return: N/A.

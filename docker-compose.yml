@@ -1,0 +1,16 @@
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    env_file:
+      - .env
+    container_name: surrealdb-bridge
+    user: root
+    ports:
+      - "${SURREAL_PORT}:8000"
+    volumes:
+      - surreal_data:/data
+    command: start --user ${SURREAL_USER} --pass ${SURREAL_PASS} rocksdb:///data/mydatabase.db
+    restart: unless-stopped  # Restarts unless you explicitly run 'docker compose stop'
+
+volumes:
+  surreal_data:

@@ -716,7 +716,7 @@ def run_structuring(image_ids, model_name2, resume, table_in="extractions", tabl
 # ------------------------
 if __name__ == "__main__":
 
-    with open("/home/ikutswa/PycharmProjects/BRIDGEProject/truth.json") as f:
+    with open("/home/ikutswa/BRIDGEProject/truth.json") as f:
         GT = json.load(f)
 
     run_all(image_dir=IMAGE_DIR, model_name=QWEN2, resume=RESUME)

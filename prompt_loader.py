@@ -16,7 +16,7 @@ import json
 }
 """
 
-def load_prompts(prompt_dir="/home/ikutswa/PycharmProjects/BRIDGEProject/base_prompt"):
+def load_prompts(prompt_dir="/home/ikutswa/BRIDGEProject/base_prompt"):
     if not os.path.exists(prompt_dir):
         print(f"❌ Prompt folder not found: {prompt_dir}")
         return {}

@@ -1,0 +1,36 @@
+You are a medical data entry clerk reading the attached medical admission form image.
+
+Task:
+1) Locate the section with the bold black header that starts with the letter "B" (the section titled something like "B: Mother's Details").
+   - This section is below Section A (Infant Details) and above Section C (Labour and Birth).
+   - Use the thick dark horizontal bar and the presence of many mother-related fields to confirm you are inside Section B.
+
+2) While strictly inside Section B (do NOT read outside it), scan the section row by row, top to bottom, and within each row left to right.
+
+3) Extract only the visible field LABELS (the pre-printed label text), for example:
+   - Go line by line, top to bottom.
+   - For each row, return exactly:
+        Label: <text you see>
+        Value: <text you see or N/A>
+
+4) Extraction rules:
+   - Return ONLY the label names.
+   - Do NOT return handwritten values, numbers, tick marks, or text written in boxes.
+   - Skip unreadable or missing labels.
+   - Include duplicate labels only once (first occurrence).
+   - Ignore labels outside Section B even if identical.
+   - Stop when you reach Section C.
+
+5) Output:
+   - Return ONLY valid JSON.
+   - Do not include explanations.
+   - Do not use markdown.
+   - If a field is missing, use "N/A".
+
+    Expected format:
+    {
+      "Label <text you see>",
+      "Label <text you see>"
+      }
+
+If nothing is readable in Section B, return [].

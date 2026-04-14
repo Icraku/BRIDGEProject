@@ -22,7 +22,7 @@ IP_TUTI = os.getenv("IP_TUTI")
 IP_SERVER = os.getenv("IP_SERVER")
 
 from prompt_loader import load_prompts, load_prompt_config
-from db_utils import save_record, fetch_record, fetch_records, export_each_record_md
+from db_utils import save_record, fetch_record, fetch_records #, export_each_record_md
 from md_utils import markdown_to_json
 
 # ------------------------
@@ -33,8 +33,6 @@ MEDGEMMA_T = "medgemma27-full:latest"
 MEDGEMMA = "puyangwang/medgemma-27b-it:q8"
 table_name = "extractions"
 IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
-
-#client = Client(host=IP_PAUL)
 
 RESUME=True
 # ------------------------

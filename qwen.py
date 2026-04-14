@@ -3,7 +3,6 @@ import glob
 import base64
 import os
 import re
-import ollama
 from difflib import SequenceMatcher
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -12,7 +11,6 @@ from tqdm import tqdm
 from ollama import Client
 from dotenv import load_dotenv
 
-from nar_schema import narP1_schema, schemaP1_template
 from nar_schema.narP1_schema import NARRecord
 from rerun import structure_with_retry
 
@@ -22,7 +20,7 @@ IP_TUTI = os.getenv("IP_TUTI")
 IP_SERVER = os.getenv("IP_SERVER")
 
 from prompt_loader import load_prompts, load_prompt_config
-from db_utils import save_record, fetch_record, fetch_records #, export_each_record_md
+from db.db_utils import save_record, fetch_record, fetch_records #, export_each_record_md
 from md_utils import markdown_to_json
 
 # ------------------------
@@ -38,11 +36,13 @@ RESUME=True
 # ------------------------
 # LOAD IMAGES
 
-def load_images():
-    IMAGE_EXTS = ("*.png", "*.jpg", "*.jpeg")
+def load_images(image_dir=str, extensions=("png", "jpg", "jpeg")) -> list[str]:
+    if not os.path.isdir(image_dir):
+        raise FileNotFoundError(f"Directory not found: {image_dir}")
     images = []
-    for ext in IMAGE_EXTS:
-        images.extend(glob.glob(f"{IMAGE_DIR}/{ext}"))
+    for ext in extensions:
+        pattern = os.path.join(image_dir, f"*.{ext}")
+        images.extend(glob.glob(pattern))
     return sorted(images)
 
 def image_to_base64(image_path):

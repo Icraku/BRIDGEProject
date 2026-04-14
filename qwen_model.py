@@ -3,14 +3,10 @@ import glob
 import base64
 import os
 import re
-import ollama
 from difflib import SequenceMatcher
 from tqdm import tqdm
 from ollama import Client
 from dotenv import load_dotenv
-
-from nar_schema import narP1_schema, schemaP1_template
-from nar_schema.narP1_schema import NARRecord
 
 load_dotenv()
 IP_PAUL = os.getenv("IP_PAUL")
@@ -18,7 +14,7 @@ IP_TUTI = os.getenv("IP_TUTI")
 IP_SERVER = os.getenv("IP_SERVER")
 
 from prompt_loader import load_prompts, load_prompt_config
-from db_utils import save_record, fetch_record, fetch_records, export_each_record_md
+from db.db_utils import save_record, fetch_record, fetch_records
 from md_utils import markdown_to_json
 
 # ------------------------

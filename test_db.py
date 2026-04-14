@@ -1,4 +1,4 @@
-from db_utils import save_record, fetch_record, fetch_records
+from db.db_utils import save_record, fetch_record, fetch_records
 
 table_name = "extractions"
 test_id = "test_image_001"

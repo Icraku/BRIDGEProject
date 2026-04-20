@@ -56,8 +56,6 @@ def process_image(
     Process a single image through all prompts.
     """
 
-    import os
-
     image_name = os.path.basename(image_path)
     record_id = os.path.splitext(image_name)[0]
 
@@ -100,6 +98,7 @@ def process_image(
             table_name,
             f"{record_id}_{prompt_name}"
         )
+        print(f" Saved to DB: {record_id}_{prompt_name}")
 
         # ------------------------
         # PARSE
@@ -187,14 +186,3 @@ def run_extraction_pipeline(
         f.write(results_md)
 
     return processed_ids
-
-
-"""from pipelines.extraction_pipeline import run_extraction_pipeline
-
-processed_ids = run_extraction_pipeline(
-    image_dir=IMAGE_DIR,
-    model_name=QWEN2,
-    table_name="extractions",
-    ground_truth=GT,
-    resume=True
-)"""

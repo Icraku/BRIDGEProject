@@ -1,4 +1,4 @@
-from db_utils import fetch_records
+from db.db_utils import fetch_records
 
 def get_processed_ids(table_name: str) -> list[str]:
     """

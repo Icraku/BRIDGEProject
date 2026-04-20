@@ -2,20 +2,6 @@ import os
 import glob
 import json
 
-""" from prompt_config.json
-{
-  "baseline": "baseline",
-  "trial": "baseline",
-  "whole": "baseline",
-  "A_labels": "labels",
-  "B_section_entry": "name",
-  "C_ip_no": "ip_no",
-  "D_row1": "row1",
-  "E_row2": "row2",
-  "F_row3": "row3"
-}
-"""
-
 def load_prompts(prompt_dir="/home/ikutswa/BRIDGEProject/base_prompt"):
     if not os.path.exists(prompt_dir):
         print(f"❌ Prompt folder not found: {prompt_dir}")
@@ -30,7 +16,7 @@ def load_prompts(prompt_dir="/home/ikutswa/BRIDGEProject/base_prompt"):
     if not prompts:
         print(f"❌ No .txt files found in {prompt_dir}")
     else:
-        print(f"the directory is {prompt_dir}")
+        print(f"the prompt directory is {prompt_dir}")
 
     return prompts
 

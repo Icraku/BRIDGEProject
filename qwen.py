@@ -289,6 +289,7 @@ def run_all(image_dir, model_name, resume=True):
                 "final_markdown": final_md,
                 "accuracy": overall_acc
             },
+            table="extractions2",
             record_id + "_FINAL"
         )"""
 

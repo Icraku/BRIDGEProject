@@ -1,5 +1,3 @@
-# pipelines/structuring_pipeline.py
-
 from tqdm import tqdm
 from ollama import Client
 
@@ -16,11 +14,11 @@ from nar_schema.narP1_schema import NARRecord
 
 
 # ------------------------
-# FETCH MARKDOWN FOR ONE RECORD
+# FETCH MARKDOWN
 
 def fetch_markdown_for_record(record_id: str, all_records: list) -> str | None:
     """
-    Combine markdown entries for a record (multi-page).
+    Combine markdown for a record (page 1 and page 2).
     """
 
     record_list = [
@@ -41,11 +39,11 @@ def fetch_markdown_for_record(record_id: str, all_records: list) -> str | None:
 
 
 # ------------------------
-# STRUCTURE ONE RECORD
+# STRUCTURE RECORD
 
 def structure_record(record_id: str, markdown_text: str, model_name: str, base_url: str):
     """
-    Convert markdown → structured JSON using schema.
+    Convert markdown to structured JSON using schema.
     """
 
     system_prompt = (
@@ -69,24 +67,24 @@ def structure_record(record_id: str, markdown_text: str, model_name: str, base_u
 
     result = structured_llm.invoke(prompt)
 
-    return result.model_dump()   # clean dict
+    return result.model_dump()
 
 
 # ------------------------
-# MAIN PIPELINE
+# MAIN
 
 def run_structuring_pipeline(
     model_name: str,
-    base_url: str,
+    host_url: str,
     table_in: str = "extractions",
     table_out: str = "structured",
     resume: bool = True
 ):
     """
-    Convert extracted markdown → structured JSON → mapped schema.
+    Convert extracted markdown to structured JSON while mapped to schema.
     """
 
-    client = Client(host=base_url)
+    client = Client(host=host_url)
 
     all_records = fetch_records(table_in)
 
@@ -125,7 +123,7 @@ def run_structuring_pipeline(
                 record_id,
                 markdown_text,
                 model_name,
-                base_url
+                host_url
             )
 
         except Exception as e:
@@ -133,7 +131,7 @@ def run_structuring_pipeline(
             continue
 
         # ------------------------
-        # MAP TO CLEAN SCHEMA
+        # MAP TO SCHEMA
         try:
             mapped_output = map_to_schema(structured_dict)
         except Exception as e:
@@ -143,13 +141,13 @@ def run_structuring_pipeline(
         # ------------------------
         # SAVE RESULTS
         try:
-            save_safe(
+            safe_save(
                 {"structured_text": structured_dict},
                 table_out,
                 record_id
             )
 
-            save_safe(
+            safe_save(
                 {"mapped_fields": mapped_output},
                 "mapped",
                 record_id

@@ -1,3 +1,4 @@
+import datetime
 from tqdm import tqdm
 from ollama import Client
 
@@ -12,6 +13,19 @@ from mapping.nar_mapper import map_to_schema
 from utils.text_cleaning import strip_markdown_fences
 from nar_schema.narP1_schema import NARRecord
 
+# ------------------------
+def clean_for_db(d):
+    if isinstance(d, dict):
+        return {k: clean_for_db(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [clean_for_db(v) for v in d]
+    elif isinstance(d, datetime.time):
+        return d.strftime("%H:%M")
+    elif isinstance(d, datetime.date):
+        return d.strftime("%d-%m-%Y")
+    elif isinstance(d, datetime.datetime):
+        return d.strftime("%d-%m-%Y %H:%M")
+    return d
 
 # ------------------------
 # FETCH MARKDOWN
@@ -140,15 +154,19 @@ def run_structuring_pipeline(
 
         # ------------------------
         # SAVE RESULTS
+
+        clean_structured = clean_for_db(structured_dict)
+        clean_mapped = clean_for_db(mapped_output)
+
         try:
             safe_save(
-                {"structured_text": structured_dict},
+                {"structured_text": clean_structured},
                 table_out,
                 record_id
             )
 
             safe_save(
-                {"mapped_fields": mapped_output},
+                {"mapped_fields": clean_mapped}, #***
                 "mapped",
                 record_id
             )

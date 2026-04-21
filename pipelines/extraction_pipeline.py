@@ -151,8 +151,7 @@ def run_extraction_pipeline(
     prompt_config = load_prompt_config()
 
     images = load_images(image_dir)
-    #client = Client(host=IP_TUTI)
-    client = Client()
+    client = Client(host=IP_SERVER)
 
     results_md = ""
     processed_ids = []

@@ -16,6 +16,7 @@ IP_SERVER = os.getenv("IP_SERVER")
 
 from pipelines.extraction_pipeline import run_extraction_pipeline
 from pipelines.structuring_pipeline import run_structuring_pipeline
+from evaluation.run_evaluation import run_evaluation
 
 # ------------------------
 # CONFIG
@@ -50,7 +51,7 @@ if __name__ == "__main__":
 
     processed_ids = run_extraction_pipeline(
         image_dir=IMAGE_DIR,
-        model_name=MODEL_NAME,
+        model_name="qwen3.5:35b",
         table_name=EXTRACTION_TABLE,
         ground_truth=GT,
         resume=RESUME
@@ -69,3 +70,11 @@ if __name__ == "__main__":
     )
 
     print(f"\n Structuring complete: {len(structured_ids)} records\n")
+
+    print("\n STARTING EVALUATION PIPELINE...\n")
+    run_evaluation(
+        gt_path=GT_PATH,
+        structured_table=STRUCTURED_TABLE
+    )
+
+    print("\n Evaluation complete\n")

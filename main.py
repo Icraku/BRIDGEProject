@@ -16,7 +16,8 @@ IP_SERVER = os.getenv("IP_SERVER")
 
 from pipelines.extraction_pipeline import run_extraction_pipeline
 from pipelines.structuring_pipeline import run_structuring_pipeline
-from evaluation.run_evaluation import run_evaluation
+from evaluation.run_evaluation import run_evaluation, load_structured_outputs
+from evaluation.gt_processing import load_and_process_meta
 
 # ------------------------
 # CONFIG

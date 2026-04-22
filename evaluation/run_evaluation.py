@@ -12,13 +12,35 @@ gt_path="/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/me
 # ------------------------
 # LOAD STRUCTURED DATA FROM DB
 
-def load_structured_outputs(table_name="structured_T3"):
+"""def load_structured_outputs(table_name="structured"):
     records = fetch_records(table_name)
 
     predictions = {}
 
     for r in records:
         record_id = str(r.get("id")).split(":")[1]
+
+        structured = r.get("structured_text")
+
+        if structured:
+            predictions[record_id] = structured
+
+    return predictions"""
+
+
+def load_structured_outputs(table_name="structured"):
+    records = fetch_records(table_name)
+
+    predictions = {}
+
+    for r in records:
+        raw_id = r.get("id")
+
+        if not raw_id:
+            continue
+
+        # SurrealDB format: "structured:NAR_630001"
+        record_id = str(raw_id).split(":")[-1]
 
         structured = r.get("structured_text")
 
@@ -42,11 +64,11 @@ def run_evaluation(gt_path, structured_table="structured"):
 
     print("\n📊 Running evaluation...\n")
 
-    # Load GT
-    ground_truth = load_and_process_meta(gt_path)
-
     # Load predictions
     predictions = load_structured_outputs(structured_table)
+
+    # Load GT
+    ground_truth = load_and_process_meta(gt_path)
 
     # Compute table
     df = build_accuracy_table(predictions, ground_truth)

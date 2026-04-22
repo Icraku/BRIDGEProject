@@ -9,7 +9,7 @@ services:
       - "${SURREAL_PORT}:8000"
     volumes:
       - surreal_data:/data
-    command: start --user ${SURREAL_USER} --pass ${SURREAL_PASS} rocksdb:///data/mydatabase.db
+    command: start --user ${SURREAL_USER} --pass ${SURREAL_PASS} rocksdb:///data/mydatabase.database_utils
     restart: unless-stopped  # Restarts unless you explicitly run 'docker compose stop'
 
 volumes:

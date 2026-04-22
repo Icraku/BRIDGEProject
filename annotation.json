@@ -1,0 +1,205 @@
+{
+    "boxes": [
+        {
+            "id": "2",
+            "label": "Name",
+            "x": "780.00",
+            "y": "1224.00",
+            "width": "1232.00",
+            "height": "104.00",
+            "confidence": null
+        },
+        {
+            "id": "5",
+            "label": "Age",
+            "x": "325.50",
+            "y": "1327.25",
+            "width": "315.00",
+            "height": "97.50",
+            "confidence": null
+        },
+        {
+            "id": "7",
+            "label": "IP",
+            "x": "1873.00",
+            "y": "1227.00",
+            "width": "938.00",
+            "height": "106.00",
+            "confidence": null
+        },
+        {
+            "id": "8",
+            "label": "Parity",
+            "x": "653.00",
+            "y": "1328.00",
+            "width": "318.00",
+            "height": "96.00",
+            "confidence": null
+        },
+        {
+            "id": "9",
+            "label": "EDD",
+            "x": "1234.00",
+            "y": "1330.00",
+            "width": "836.00",
+            "height": "100.00",
+            "confidence": null
+        },
+        {
+            "id": "A",
+            "label": "ANC Clinic",
+            "x": "1997.00",
+            "y": "1333.00",
+            "width": "682.00",
+            "height": "102.00",
+            "confidence": null
+        },
+        {
+            "id": "B",
+            "label": "ANC Visits",
+            "x": "326.00",
+            "y": "1424.00",
+            "width": "320.00",
+            "height": "88.00",
+            "confidence": null
+        },
+        {
+            "id": "C",
+            "label": "ANC US",
+            "x": "671.00",
+            "y": "1426.00",
+            "width": "362.00",
+            "height": "88.00",
+            "confidence": null
+        },
+        {
+            "id": "E",
+            "label": "If Yes",
+            "x": "996.00",
+            "y": "1427.00",
+            "width": "280.00",
+            "height": "86.00",
+            "confidence": null
+        },
+        {
+            "id": "G",
+            "label": "US Findings",
+            "x": "1740.00",
+            "y": "1433.00",
+            "width": "1200.00",
+            "height": "86.00",
+            "confidence": null
+        },
+        {
+            "id": "H",
+            "label": "Blood Grp",
+            "x": "651.75",
+            "y": "1517.75",
+            "width": "964.50",
+            "height": "75.50",
+            "confidence": null
+        },
+        {
+            "id": "I",
+            "label": "Rhesus",
+            "x": "1533.00",
+            "y": "1519.00",
+            "width": "782.00",
+            "height": "70.00",
+            "confidence": null
+        },
+        {
+            "id": "J",
+            "label": "Anti D",
+            "x": "2136.00",
+            "y": "1522.00",
+            "width": "408.00",
+            "height": "72.00",
+            "confidence": null
+        },
+        {
+            "id": "L",
+            "label": "VDRL",
+            "x": "489.00",
+            "y": "1591.00",
+            "width": "642.00",
+            "height": "74.00",
+            "confidence": null
+        },
+        {
+            "id": "M",
+            "label": "PMTCT",
+            "x": "1195.00",
+            "y": "1593.00",
+            "width": "754.00",
+            "height": "74.00",
+            "confidence": null
+        },
+        {
+            "id": "N",
+            "label": "Mother-on-ARVs",
+            "x": "1958.00",
+            "y": "1598.00",
+            "width": "756.00",
+            "height": "72.00",
+            "confidence": null
+        },
+        {
+            "id": "O",
+            "label": "HepB",
+            "x": "488.50",
+            "y": "1666.75",
+            "width": "639.00",
+            "height": "69.50",
+            "confidence": null
+        },
+        {
+            "id": "P",
+            "label": "HepB-IG given",
+            "x": "1194.00",
+            "y": "1674.00",
+            "width": "764.00",
+            "height": "80.00",
+            "confidence": null
+        },
+        {
+            "id": "Q",
+            "label": "HTN-in-pregnancy",
+            "x": "1958.00",
+            "y": "1676.00",
+            "width": "756.00",
+            "height": "76.00",
+            "confidence": null
+        },
+        {
+            "id": "R",
+            "label": "APH",
+            "x": "491.00",
+            "y": "1750.00",
+            "width": "646.00",
+            "height": "76.00",
+            "confidence": null
+        },
+        {
+            "id": "S",
+            "label": "Diabetes",
+            "x": "1195.00",
+            "y": "1753.75",
+            "width": "755.00",
+            "height": "72.50",
+            "confidence": null
+        },
+        {
+            "id": "T",
+            "label": "Prolonged-2nd Stage",
+            "x": "1955.00",
+            "y": "1757.50",
+            "width": "760.00",
+            "height": "70.00",
+            "confidence": null
+        }
+    ],
+    "height": 3484,
+    "key": "40000176_NAR_2919_page_1.png",
+    "width": 2400
+}

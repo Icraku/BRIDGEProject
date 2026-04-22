@@ -1,0 +1,14 @@
+[
+  {
+    "image": "Screenshot from 2026-01-13 10-42-35.png",
+    "raw_output": ""
+  },
+  {
+    "image": "Screenshot from 2026-01-13 10-43-07.png",
+    "raw_output": "{\n  \"label\": \"Name\",\n  \"handwritten_text\": \"Eshy muthori!\"\n}"
+  },
+  {
+    "image": "Screenshot from 2026-01-13 10-43-27.png",
+    "raw_output": "{\n  \"labels\": [\"VDRL\", \"Pos\", \"Neg\", \"Unkn\"],\n  \"checked\": \"Neg\"\n}"
+  }
+]

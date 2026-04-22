@@ -17,4 +17,8 @@
 !/truth.json
 !/util.py
 !/markdown_exports/
-.env
+.env!/qwen.py
+!/qwen_model.py
+!/pdftoImage/
+!/models/
+!/prompt_templates/

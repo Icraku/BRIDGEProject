@@ -1,5 +1,6 @@
 import os
-from parsing.markdown_parser import markdown_to_dict
+
+from c_structuring.markdown_parser import markdown_to_dict
 
 def process_markdown_folder(folder: str = "markdown_exports") -> list:
     """

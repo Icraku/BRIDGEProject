@@ -26,7 +26,7 @@ def test_empty_normalization(input_val):
         assert getattr(obj, field) == YesNoEnum.EMPTY
 
 # ------------------------
-# Valid input tests
+# Valid 1_input tests
 
 
 def test_valid_yes_no():

@@ -11,7 +11,8 @@ from database_utils.queries import get_processed_ids
 
 from c_structuring.nar_schema_mapper import map_to_schema
 from utils.text_cleaning import strip_markdown_fences
-from schemas.nar_schema import NARRecord
+from schemas.neonatal_admission_form.nar_schema import NARRecord
+from schemas.internal_transfer_form.itf_schema import ITFRecord
 
 # ------------------------
 def clean_for_db(d):

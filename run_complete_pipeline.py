@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
-# Your schema
-from schemas.nar_schema import NARRecord
+from schemas.neonatal_admission_form.nar_schema import NARRecord
+from schemas.internal_transfer_form.itf_schema import ITFRecord
 
 
 # ============================================================
@@ -65,15 +65,21 @@ def markdown_to_structured_json(md_path: Path) -> dict:
     # ------------------------
     # STEP 3: BUILD PROMPT
 
-    system_prompt = (
+    NAR_system_prompt = (
         "Extract ALL information from the provided Markdown.\n"
         "Return ONLY valid JSON.\n"
         f"The format MUST match this schema: {NARRecord.model_fields}"
     ).replace("{", "{{").replace("}", "}}")
 
+    ITF_system_prompt = (
+        "Extract ALL information from the provided Markdown.\n"
+        "Return ONLY valid JSON.\n"
+        f"The format MUST match this schema: {ITFRecord.model_fields}"
+    ).replace("{", "{{").replace("}", "}}")
+
     prompt_template = ChatPromptTemplate.from_messages(
         [
-            ("system", system_prompt),
+            ("system", ITF_system_prompt),
             ("user", "{text}")
         ]
     )
@@ -88,15 +94,17 @@ def markdown_to_structured_json(md_path: Path) -> dict:
         base_url=IP_SERVER
     )
 
-    structured_llm = llm.with_structured_output(NARRecord)
+    NAR_structured_llm = llm.with_structured_output(NARRecord)
+    ITF_structured_llm = llm.with_structured_output(ITFRecord)
 
     # ------------------------
     # STEP 5: RUN STRUCTURING
 
-    response = structured_llm.invoke(prompt)
+    NAR_response = NAR_structured_llm.invoke(prompt)
+    ITF_response = ITF_structured_llm.invoke(prompt)
 
     # Convert to JSON
-    result_json = json.loads(response.model_dump_json())
+    result_json = json.loads(ITF_response.model_dump_json())
 
     return result_json
 

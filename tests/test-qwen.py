@@ -24,7 +24,8 @@ from utils.text_cleaning import strip_markdown_fences
 from pipelines.extraction_pipeline import run_extraction_pipeline
 from pipelines.structuring_pipeline import run_structuring_pipeline
 
-from schemas.nar_schema import NARRecord
+from schemas.neonatal_admission_form.nar_schema import NARRecord
+from schemas.internal_transfer_form.itf_schema import ITFRecord
 from rerun import structure_with_retry
 
 from database_utils.db_utils import fetch_records, fetch_record, save_record

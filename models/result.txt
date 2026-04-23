@@ -1,0 +1,754 @@
+/home/ikutswa/miniconda3/envs/ocr/bin/python /home/ikutswa/PycharmProjects/BRIDGEProject/models/practice2.py
+Loading annotation JSON: /home/ikutswa/PycharmProjects/BRIDGEProject/annotation.json
+
+=== Processing image: /home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images/5300014_NAR_428_page_1.png ===
+Processing 22 boxes...
+
+[1/22] Processing field: 'Name'
+  Cropped 'Name' at (780.0,1224.0,1232.0,104.0)
+    Sending 'Name' to Qwen for extraction...
+    Extracted value for 'Name': '{
+  "ANC no. of visits": "O",
+  "ANC U/S": "N",
+  "If YES, trimester": "N/A",
+  "U/S": "N/A"
+}'
+
+[2/22] Processing field: 'Age'
+  Cropped 'Age' at (325.5,1327.25,315.0,97.5)
+    Sending 'Age' to Qwen for extraction...
+    Extracted value for 'Age': '{
+  "Age": "N/A",
+  "Handwritten text": "N/A",
+  "Checkbox value": "N/A"
+}'
+
+[3/22] Processing field: 'IP'
+  Cropped 'IP' at (1873.0,1227.0,938.0,106.0)
+    Sending 'IP' to Qwen for extraction...
+    Extracted value for 'IP': '{
+  "IP": "N/A",
+  "handwritten_text": "Rajeev Chau"
+}'
+
+[4/22] Processing field: 'Parity'
+  Cropped 'Parity' at (653.0,1328.0,318.0,96.0)
+    Sending 'Parity' to Qwen for extraction...
+    Extracted value for 'Parity': '{
+  "Parity": "N/A",
+  "Handwritten text": "A, B, AB",
+  "Checked boxes": "N/A"
+}'
+
+[5/22] Processing field: 'EDD'
+  Cropped 'EDD' at (1234.0,1330.0,836.0,100.0)
+    Sending 'EDD' to Qwen for extraction...
+    Extracted value for 'EDD': ''
+
+[6/22] Processing field: 'ANC Clinic'
+  Cropped 'ANC Clinic' at (1997.0,1333.0,682.0,102.0)
+    Sending 'ANC Clinic' to Qwen for extraction...
+    Extracted value for 'ANC Clinic': '{
+  "Unkn": "Unkn",
+  "Anti D": "Anti D",
+  "Y": "N/A",
+  "N": "N/A"
+}'
+
+[7/22] Processing field: 'ANC Visits'
+  Cropped 'ANC Visits' at (326.0,1424.0,320.0,88.0)
+    Sending 'ANC Visits' to Qwen for extraction...
+    Extracted value for 'ANC Visits': ''
+
+[8/22] Processing field: 'ANC US'
+  Cropped 'ANC US' at (671.0,1426.0,362.0,88.0)
+    Sending 'ANC US' to Qwen for extraction...
+    Extracted value for 'ANC US': ''
+
+[9/22] Processing field: 'If Yes'
+  Cropped 'If Yes' at (996.0,1427.0,280.0,86.0)
+    Sending 'If Yes' to Qwen for extraction...
+    Extracted value for 'If Yes': ''
+
+[10/22] Processing field: 'US Findings'
+  Cropped 'US Findings' at (1740.0,1433.0,1200.0,86.0)
+    Sending 'US Findings' to Qwen for extraction...
+    Extracted value for 'US Findings': ''
+
+[11/22] Processing field: 'Blood Grp'
+  Cropped 'Blood Grp' at (651.75,1517.75,964.5,75.5)
+    Sending 'Blood Grp' to Qwen for extraction...
+    Extracted value for 'Blood Grp': ''
+
+[12/22] Processing field: 'Rhesus'
+  Cropped 'Rhesus' at (1533.0,1519.0,782.0,70.0)
+    Sending 'Rhesus' to Qwen for extraction...
+    Extracted value for 'Rhesus': '{
+  "checkbox_value": "N, Unkn",
+  "prolonged_stage": "Y"
+}'
+
+[13/22] Processing field: 'Anti D'
+  Cropped 'Anti D' at (2136.0,1522.0,408.0,72.0)
+    Sending 'Anti D' to Qwen for extraction...
+    Extracted value for 'Anti D': '{
+  "Anti D": "N/A",
+  "handwritten text": "N/A",
+  "ticked values": ["N", "Unkn"]
+}'
+
+[14/22] Processing field: 'VDRL'
+  Cropped 'VDRL' at (489.0,1591.0,642.0,74.0)
+    Sending 'VDRL' to Qwen for extraction...
+    Extracted value for 'VDRL': '{
+  "VDRL": "N/A",
+  "handwritten_text": "C: Mother's problems during p..."
+}'
+
+[15/22] Processing field: 'PMTCT'
+  Cropped 'PMTCT' at (1195.0,1593.0,754.0,74.0)
+    Sending 'PMTCT' to Qwen for extraction...
+    Extracted value for 'PMTCT': '{
+  "text": "pregnancy/labour & relevant maternal treat",
+  "checkbox": "N/A"
+}'
+
+[16/22] Processing field: 'Mother-on-ARVs'
+  Cropped 'Mother-on-ARVs' at (1958.0,1598.0,756.0,72.0)
+    Sending 'Mother-on-ARVs' to Qwen for extraction...
+    Extracted value for 'Mother-on-ARVs': '{
+  "Mother-on-ARVs": "N/A",
+  "handwritten_text": "ment",
+  "checkbox_value": "N/A"
+}'
+
+[17/22] Processing field: 'HepB'
+  Cropped 'HepB' at (488.5,1666.75,639.0,69.5)
+    Sending 'HepB' to Qwen for extraction...
+    Extracted value for 'HepB': '{
+  "HepB": "N/A",
+  "handwritten_text": "Yes"
+}'
+
+[18/22] Processing field: 'HepB-IG given'
+  Cropped 'HepB-IG given' at (1194.0,1674.0,764.0,80.0)
+    Sending 'HepB-IG given' to Qwen for extraction...
+    Extracted value for 'HepB-IG given': '{
+  "HepB-IG": "N/A",
+  "handwritten_text": "ernal for TB or antibiotics during labour? (Describe)"
+}'
+
+[19/22] Processing field: 'HTN-in-pregnancy'
+  Cropped 'HTN-in-pregnancy' at (1958.0,1676.0,756.0,76.0)
+    Sending 'HTN-in-pregnancy' to Qwen for extraction...
+    Extracted value for 'HTN-in-pregnancy': '{
+  "HTN-in-pregnancy": "N/A",
+  "handwritten_text": "N/A"
+}'
+
+[20/22] Processing field: 'APH'
+  Cropped 'APH' at (491.0,1750.0,646.0,76.0)
+    Sending 'APH' to Qwen for extraction...
+    Extracted value for 'APH': '{
+  "APH": "N/A",
+  "handwritten_text": "Aove. (he did not e"
+}'
+
+[21/22] Processing field: 'Diabetes'
+  Cropped 'Diabetes' at (1195.0,1753.75,755.0,72.5)
+    Sending 'Diabetes' to Qwen for extraction...
+    Extracted value for 'Diabetes': '{
+  "Diabetes": "N/A",
+  "HandwrittenText": "ehtal clinic"
+}'
+
+[22/22] Processing field: 'Prolonged-2nd Stage'
+  Cropped 'Prolonged-2nd Stage' at (1955.0,1757.5,760.0,70.0)
+    Sending 'Prolonged-2nd Stage' to Qwen for extraction...
+    Extracted value for 'Prolonged-2nd Stage': '{
+  "Prolonged-2nd Stage": "N/A",
+  "handwritten text": "N/A"
+}'
+
+=== Processing image: /home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images/40000174_NAR_2901_page_1.png ===
+Processing 22 boxes...
+
+[1/22] Processing field: 'Name'
+  Cropped 'Name' at (780.0,1224.0,1232.0,104.0)
+    Sending 'Name' to Qwen for extraction...
+    Extracted value for 'Name': '{"Name": "Daisy chopkeb'el,"}'
+
+[2/22] Processing field: 'Age'
+  Cropped 'Age' at (325.5,1327.25,315.0,97.5)
+    Sending 'Age' to Qwen for extraction...
+    Extracted value for 'Age': '{
+  "Age (years)": "26"
+}'
+
+[3/22] Processing field: 'IP'
+  Cropped 'IP' at (1873.0,1227.0,938.0,106.0)
+    Sending 'IP' to Qwen for extraction...
+    Extracted value for 'IP': ''
+
+[4/22] Processing field: 'Parity'
+  Cropped 'Parity' at (653.0,1328.0,318.0,96.0)
+    Sending 'Parity' to Qwen for extraction...
+    Extracted value for 'Parity': ''
+
+[5/22] Processing field: 'EDD'
+  Cropped 'EDD' at (1234.0,1330.0,836.0,100.0)
+    Sending 'EDD' to Qwen for extraction...
+    Extracted value for 'EDD': ''
+
+[6/22] Processing field: 'ANC Clinic'
+  Cropped 'ANC Clinic' at (1997.0,1333.0,682.0,102.0)
+    Sending 'ANC Clinic' to Qwen for extraction...
+    Extracted value for 'ANC Clinic': '{
+  "ANC Clinic Name": "N/A"
+}'
+
+[7/22] Processing field: 'ANC Visits'
+  Cropped 'ANC Visits' at (326.0,1424.0,320.0,88.0)
+    Sending 'ANC Visits' to Qwen for extraction...
+    Extracted value for 'ANC Visits': '{
+  "ANC Visits": "X6"
+}'
+
+[8/22] Processing field: 'ANC US'
+  Cropped 'ANC US' at (671.0,1426.0,362.0,88.0)
+    Sending 'ANC US' to Qwen for extraction...
+    Extracted value for 'ANC US': '{
+  "ANC U/S": "N/A"
+}'
+
+[9/22] Processing field: 'If Yes'
+  Cropped 'If Yes' at (996.0,1427.0,280.0,86.0)
+    Sending 'If Yes' to Qwen for extraction...
+    Extracted value for 'If Yes': '{
+  "If yes, trimester": "N/A"
+}'
+
+[10/22] Processing field: 'US Findings'
+  Cropped 'US Findings' at (1740.0,1433.0,1200.0,86.0)
+    Sending 'US Findings' to Qwen for extraction...
+    Extracted value for 'US Findings': '{
+  "US Findings": "N/A",
+  "Handwritten Text": "N/A"
+}'
+
+[11/22] Processing field: 'Blood Grp'
+  Cropped 'Blood Grp' at (651.75,1517.75,964.5,75.5)
+    Sending 'Blood Grp' to Qwen for extraction...
+    Extracted value for 'Blood Grp': '{
+  "Blood Grp": "O",
+  "handwritten text": "N/A"
+}'
+
+[12/22] Processing field: 'Rhesus'
+  Cropped 'Rhesus' at (1533.0,1519.0,782.0,70.0)
+    Sending 'Rhesus' to Qwen for extraction...
+    Extracted value for 'Rhesus': '{"Rhesus": "Pos"}'
+
+[13/22] Processing field: 'Anti D'
+  Cropped 'Anti D' at (2136.0,1522.0,408.0,72.0)
+    Sending 'Anti D' to Qwen for extraction...
+    Extracted value for 'Anti D': ''
+
+[14/22] Processing field: 'VDRL'
+  Cropped 'VDRL' at (489.0,1591.0,642.0,74.0)
+    Sending 'VDRL' to Qwen for extraction...
+    Extracted value for 'VDRL': '{
+  "VDRL": "Neg"
+}'
+
+[15/22] Processing field: 'PMTCT'
+  Cropped 'PMTCT' at (1195.0,1593.0,754.0,74.0)
+    Sending 'PMTCT' to Qwen for extraction...
+    Extracted value for 'PMTCT': '{
+  "PMTCT status": "N/A"
+}'
+
+[16/22] Processing field: 'Mother-on-ARVs'
+  Cropped 'Mother-on-ARVs' at (1958.0,1598.0,756.0,72.0)
+    Sending 'Mother-on-ARVs' to Qwen for extraction...
+    Extracted value for 'Mother-on-ARVs': '{
+  "Mother on ARVs": "N"
+}'
+
+[17/22] Processing field: 'HepB'
+  Cropped 'HepB' at (488.5,1666.75,639.0,69.5)
+    Sending 'HepB' to Qwen for extraction...
+    Extracted value for 'HepB': '{
+  "HepB": "Unkn"
+}'
+
+[18/22] Processing field: 'HepB-IG given'
+  Cropped 'HepB-IG given' at (1194.0,1674.0,764.0,80.0)
+    Sending 'HepB-IG given' to Qwen for extraction...
+    Extracted value for 'HepB-IG given': '{
+  "Hep B IG given": "N"
+}'
+
+[19/22] Processing field: 'HTN-in-pregnancy'
+  Cropped 'HTN-in-pregnancy' at (1958.0,1676.0,756.0,76.0)
+    Sending 'HTN-in-pregnancy' to Qwen for extraction...
+    Extracted value for 'HTN-in-pregnancy': '{
+  "HTN in pregnancy?": "N"
+}'
+
+[20/22] Processing field: 'APH'
+  Cropped 'APH' at (491.0,1750.0,646.0,76.0)
+    Sending 'APH' to Qwen for extraction...
+    Extracted value for 'APH': '{
+  "APH": "N"
+}'
+
+[21/22] Processing field: 'Diabetes'
+  Cropped 'Diabetes' at (1195.0,1753.75,755.0,72.5)
+    Sending 'Diabetes' to Qwen for extraction...
+    Extracted value for 'Diabetes': '{
+  "Diabetes": "N"
+}'
+
+[22/22] Processing field: 'Prolonged-2nd Stage'
+  Cropped 'Prolonged-2nd Stage' at (1955.0,1757.5,760.0,70.0)
+    Sending 'Prolonged-2nd Stage' to Qwen for extraction...
+    Extracted value for 'Prolonged-2nd Stage': '{"Prolonged 2nd Stage?": "N"}'
+
+=== Processing image: /home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images/40000176_NAR_2919_page_1.png ===
+Processing 22 boxes...
+
+[1/22] Processing field: 'Name'
+  Cropped 'Name' at (780.0,1224.0,1232.0,104.0)
+    Sending 'Name' to Qwen for extraction...
+    Extracted value for 'Name': '{
+  "Name": "Esthp muthrom!"
+}'
+
+[2/22] Processing field: 'Age'
+  Cropped 'Age' at (325.5,1327.25,315.0,97.5)
+    Sending 'Age' to Qwen for extraction...
+    Extracted value for 'Age': '{
+  "Age": "30"
+}'
+
+[3/22] Processing field: 'IP'
+  Cropped 'IP' at (1873.0,1227.0,938.0,106.0)
+    Sending 'IP' to Qwen for extraction...
+    Extracted value for 'IP': ''
+
+[4/22] Processing field: 'Parity'
+  Cropped 'Parity' at (653.0,1328.0,318.0,96.0)
+    Sending 'Parity' to Qwen for extraction...
+    Extracted value for 'Parity': '{"Parity": "2 + heart"}'
+
+[5/22] Processing field: 'EDD'
+  Cropped 'EDD' at (1234.0,1330.0,836.0,100.0)
+    Sending 'EDD' to Qwen for extraction...
+    Extracted value for 'EDD': ''
+
+[6/22] Processing field: 'ANC Clinic'
+  Cropped 'ANC Clinic' at (1997.0,1333.0,682.0,102.0)
+    Sending 'ANC Clinic' to Qwen for extraction...
+    Extracted value for 'ANC Clinic': '{
+  "ANC Clinic": "ANC Clinic",
+  "handwritten text": "N/A"
+}'
+
+[7/22] Processing field: 'ANC Visits'
+  Cropped 'ANC Visits' at (326.0,1424.0,320.0,88.0)
+    Sending 'ANC Visits' to Qwen for extraction...
+    Extracted value for 'ANC Visits': '{"ANC Visits": "3"}'
+
+[8/22] Processing field: 'ANC US'
+  Cropped 'ANC US' at (671.0,1426.0,362.0,88.0)
+    Sending 'ANC US' to Qwen for extraction...
+    Extracted value for 'ANC US': '{
+  "ANC US": "ANC U/S",
+  "value": "N/A"
+}'
+
+[9/22] Processing field: 'If Yes'
+  Cropped 'If Yes' at (996.0,1427.0,280.0,86.0)
+    Sending 'If Yes' to Qwen for extraction...
+    Extracted value for 'If Yes': '{
+  "text": "If yes, trimester",
+  "checkbox_value": "N/A"
+}'
+
+[10/22] Processing field: 'US Findings'
+  Cropped 'US Findings' at (1740.0,1433.0,1200.0,86.0)
+    Sending 'US Findings' to Qwen for extraction...
+    Extracted value for 'US Findings': '{"US Findings": "N/A"}'
+
+[11/22] Processing field: 'Blood Grp'
+  Cropped 'Blood Grp' at (651.75,1517.75,964.5,75.5)
+    Sending 'Blood Grp' to Qwen for extraction...
+    Extracted value for 'Blood Grp': '{
+  "Blood Grp": "O",
+  "Handwritten text": "O"
+}'
+
+[12/22] Processing field: 'Rhesus'
+  Cropped 'Rhesus' at (1533.0,1519.0,782.0,70.0)
+    Sending 'Rhesus' to Qwen for extraction...
+    Extracted value for 'Rhesus': '{
+  "Rhesus": "Pos"
+}'
+
+[13/22] Processing field: 'Anti D'
+  Cropped 'Anti D' at (2136.0,1522.0,408.0,72.0)
+    Sending 'Anti D' to Qwen for extraction...
+    Extracted value for 'Anti D': '{
+  "Anti D": "Anti D",
+  "handwritten text": "N/A"
+}'
+
+[14/22] Processing field: 'VDRL'
+  Cropped 'VDRL' at (489.0,1591.0,642.0,74.0)
+    Sending 'VDRL' to Qwen for extraction...
+    Extracted value for 'VDRL': '{
+  "VDRL": "Neg"
+}'
+
+[15/22] Processing field: 'PMTCT'
+  Cropped 'PMTCT' at (1195.0,1593.0,754.0,74.0)
+    Sending 'PMTCT' to Qwen for extraction...
+    Extracted value for 'PMTCT': '{
+  "PMTCT status": "N/A"
+}'
+
+[16/22] Processing field: 'Mother-on-ARVs'
+  Cropped 'Mother-on-ARVs' at (1958.0,1598.0,756.0,72.0)
+    Sending 'Mother-on-ARVs' to Qwen for extraction...
+    Extracted value for 'Mother-on-ARVs': '{
+  "Mother on ARVs": "N/A"
+}'
+
+[17/22] Processing field: 'HepB'
+  Cropped 'HepB' at (488.5,1666.75,639.0,69.5)
+    Sending 'HepB' to Qwen for extraction...
+    Extracted value for 'HepB': '{
+  "Hep B": "Neg"
+}'
+
+[18/22] Processing field: 'HepB-IG given'
+  Cropped 'HepB-IG given' at (1194.0,1674.0,764.0,80.0)
+    Sending 'HepB-IG given' to Qwen for extraction...
+    Extracted value for 'HepB-IG given': '{
+  "Hep B IG given": "N/A"
+}'
+
+[19/22] Processing field: 'HTN-in-pregnancy'
+  Cropped 'HTN-in-pregnancy' at (1958.0,1676.0,756.0,76.0)
+    Sending 'HTN-in-pregnancy' to Qwen for extraction...
+    Extracted value for 'HTN-in-pregnancy': '{
+  "HTN in pregnancy?": "Y"
+}'
+
+[20/22] Processing field: 'APH'
+  Cropped 'APH' at (491.0,1750.0,646.0,76.0)
+    Sending 'APH' to Qwen for extraction...
+    Extracted value for 'APH': '{
+  "APH": "N"
+}'
+
+[21/22] Processing field: 'Diabetes'
+  Cropped 'Diabetes' at (1195.0,1753.75,755.0,72.5)
+    Sending 'Diabetes' to Qwen for extraction...
+    Extracted value for 'Diabetes': '{
+  "Diabetes": "N"
+}'
+
+[22/22] Processing field: 'Prolonged-2nd Stage'
+  Cropped 'Prolonged-2nd Stage' at (1955.0,1757.5,760.0,70.0)
+    Sending 'Prolonged-2nd Stage' to Qwen for extraction...
+    Extracted value for 'Prolonged-2nd Stage': '{"Prolonged-2nd Stage": "N"}'
+
+=== Final Extracted JSON ===
+[
+  {
+    "image": "5300014_NAR_428_page_1.png",
+    "fields": {
+      "Name": {
+        "value": "O",
+        "confidence": 0.9
+      },
+      "Age": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "IP": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Parity": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "EDD": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "ANC Clinic": {
+        "value": "Unkn",
+        "confidence": 1.0
+      },
+      "ANC Visits": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "ANC US": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "If Yes": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "US Findings": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "Blood Grp": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "Rhesus": {
+        "value": "N, Unkn",
+        "confidence": 0.96
+      },
+      "Anti D": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "VDRL": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "PMTCT": {
+        "value": "pregnancy/labour & relevant maternal treat",
+        "confidence": 0.99
+      },
+      "Mother-on-ARVs": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "HepB": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "HepB-IG given": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "HTN-in-pregnancy": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "APH": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Diabetes": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Prolonged-2nd Stage": {
+        "value": "N/A",
+        "confidence": 0.0
+      }
+    },
+    "image_confidence": 0.18
+  },
+  {
+    "image": "40000174_NAR_2901_page_1.png",
+    "fields": {
+      "Name": {
+        "value": "Daisy chopkeb'el,",
+        "confidence": 0.96
+      },
+      "Age": {
+        "value": "26",
+        "confidence": 1.0
+      },
+      "IP": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "Parity": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "EDD": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "ANC Clinic": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "ANC Visits": {
+        "value": "X6",
+        "confidence": 1.0
+      },
+      "ANC US": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "If Yes": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "US Findings": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Blood Grp": {
+        "value": "O",
+        "confidence": 0.9
+      },
+      "Rhesus": {
+        "value": "Pos",
+        "confidence": 1.0
+      },
+      "Anti D": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "VDRL": {
+        "value": "Neg",
+        "confidence": 1.0
+      },
+      "PMTCT": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Mother-on-ARVs": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "HepB": {
+        "value": "Unkn",
+        "confidence": 1.0
+      },
+      "HepB-IG given": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "HTN-in-pregnancy": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "APH": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "Diabetes": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "Prolonged-2nd Stage": {
+        "value": "N",
+        "confidence": 0.9
+      }
+    },
+    "image_confidence": 0.56
+  },
+  {
+    "image": "40000176_NAR_2919_page_1.png",
+    "fields": {
+      "Name": {
+        "value": "Esthp muthrom!",
+        "confidence": 0.98
+      },
+      "Age": {
+        "value": "30",
+        "confidence": 1.0
+      },
+      "IP": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "Parity": {
+        "value": "2 + heart",
+        "confidence": 1.0
+      },
+      "EDD": {
+        "value": "",
+        "confidence": 0.0
+      },
+      "ANC Clinic": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "ANC Visits": {
+        "value": "3",
+        "confidence": 0.9
+      },
+      "ANC US": {
+        "value": "ANC U/S",
+        "confidence": 1.0
+      },
+      "If Yes": {
+        "value": "If yes, trimester",
+        "confidence": 0.98
+      },
+      "US Findings": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Blood Grp": {
+        "value": "O",
+        "confidence": 0.9
+      },
+      "Rhesus": {
+        "value": "Pos",
+        "confidence": 1.0
+      },
+      "Anti D": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "VDRL": {
+        "value": "Neg",
+        "confidence": 1.0
+      },
+      "PMTCT": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "Mother-on-ARVs": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "HepB": {
+        "value": "Neg",
+        "confidence": 1.0
+      },
+      "HepB-IG given": {
+        "value": "N/A",
+        "confidence": 0.0
+      },
+      "HTN-in-pregnancy": {
+        "value": "Y",
+        "confidence": 0.9
+      },
+      "APH": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "Diabetes": {
+        "value": "N",
+        "confidence": 0.9
+      },
+      "Prolonged-2nd Stage": {
+        "value": "N",
+        "confidence": 0.9
+      }
+    },
+    "image_confidence": 0.61
+  }
+]
+
+Process finished with exit code 0

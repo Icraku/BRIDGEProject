@@ -22,3 +22,4 @@
 !/pdftoImage/
 !/models/
 !/prompt_templates/
+.env

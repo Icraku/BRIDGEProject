@@ -5,7 +5,7 @@ from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
 
-gt_path="/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/metadata.json"
+gt_path="/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/NAR_metadata.json"
 
 # ------------------------
 # LOAD STRUCTURED DATA FROM DB
@@ -92,7 +92,7 @@ def run_evaluation(gt_path, structured_table="structured"):
         print("Ground truth file not found, skipping d_evaluation.")
         return None
 
-    print("\n📊 Running d_evaluation...\n")
+    print("\n Running evaluation...\n")
 
     # Load predictions
     predictions = load_structured_outputs(structured_table)
@@ -102,24 +102,45 @@ def run_evaluation(gt_path, structured_table="structured"):
 
     # Compute table
     df = build_accuracy_table(predictions, ground_truth)
+    print(df.head())
 
-    # Save CSV
+    # Save raw table
     df.to_csv("field_accuracy.csv", index=False)
 
-    print(" Saved field_accuracy.csv")
+    # -------- summaries --------
+    field_summary = (
+        df.groupby("field")["correct?"]
+        .mean()
+        .reset_index()
+        .sort_values(by="correct?", ascending=False)
+    )
 
-    # Summary
-    summary = df.mean(numeric_only=True)
+    print("\n FIELD ACCURACY:\n")
+    print(field_summary)
 
-    print("\n FIELD AVERAGES:\n")
-    print(summary)
+    record_summary = (
+        df.groupby("record_id")["correct?"]
+        .mean()
+        .reset_index()
+    )
+ #########################################################################################################
+    print("\n RECORD ACCURACY:\n")
+    print(record_summary.head())
 
-    for _, row in df.iterrows():
-        record_id = row["record_id"]
+    # -------- save per record --------
+    print(f"Total rows in df: {len(df)}")
 
+    for record_id, group in df.groupby("record_id"):
+        print(f"Saving record: {record_id}, fields: {len(group)}")
+
+    for record_id, group in df.groupby("record_id"):
         safe_save(
-            row.to_dict(),
-            "d_evaluation",
+            {
+                "record_id": record_id,
+                "average_accuracy": group["correct?"].mean(),
+                "fields": group[["field", "correct?"]].to_dict(orient="records")
+            },
+            "evaluation",
             record_id
         )
 

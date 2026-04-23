@@ -25,7 +25,7 @@ def normalize(value):
 
 
 # ------------------------
-# FLATTEN JSON (IMPORTANT)
+# FLATTEN JSON
 
 def flatten_dict(d, parent_key="", sep="."):
     """
@@ -49,7 +49,7 @@ def flatten_dict(d, parent_key="", sep="."):
 
 def compute_field_accuracy(pred: dict, truth: dict):
     """
-    Returns dict: field -> accuracy (0 or 1)
+    Returns dict: field -> accuracy (not accurate-0 or accurate-1)
     """
 
     pred_flat = flatten_dict(pred)
@@ -87,9 +87,12 @@ def build_accuracy_table(predictions: dict, ground_truth: dict):
 
         field_acc = compute_field_accuracy(pred, truth)
 
-        field_acc["record_id"] = record_id
-
-        rows.append(field_acc)
+        for field, acc in field_acc.items():
+            rows.append({
+                "record_id": record_id,
+                "field": field,
+                "correct?": acc
+            })
 
     df = pd.DataFrame(rows)
 

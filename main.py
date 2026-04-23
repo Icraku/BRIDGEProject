@@ -34,7 +34,7 @@ RESUME = True
 # ------------------------
 # LOAD GROUND TRUTH*** (TBD)
 
-GT_PATH = "/home/ikutswa/BRIDGEProject/truth.json"
+GT_PATH = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/NAR_metadata.json"
 
 if os.path.exists(GT_PATH):
     with open(GT_PATH) as f:

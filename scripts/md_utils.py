@@ -1,6 +1,6 @@
 import re
 
-with open("markdown_exports/extractions_NAR_63000001_page_1_base.md", "r", encoding="utf-8") as f:
+with open("../markdown_exports/extractions_NAR_63000001_page_1_base.md", "r", encoding="utf-8") as f:
     md = f.read()
 
 def clean_markdown(md):

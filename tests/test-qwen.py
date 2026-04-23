@@ -183,7 +183,7 @@ def run_all(image_dir, model_name, resume=True):
 
     # ------------------------
     # WRITE FILE (optional, keep it)
-    with open("results.md", "w") as f:
+    with open("../results.md", "w") as f:
         f.write(results_md)
 
     return processed_ids

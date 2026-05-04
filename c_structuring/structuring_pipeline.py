@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, date, time
 from tqdm import tqdm
 from ollama import Client
 
@@ -20,11 +20,11 @@ def clean_for_db(d):
         return {k: clean_for_db(v) for k, v in d.items()}
     elif isinstance(d, list):
         return [clean_for_db(v) for v in d]
-    elif isinstance(d, datetime.time):
+    elif isinstance(d, time):
         return d.strftime("%H:%M")
-    elif isinstance(d, datetime.date):
+    elif isinstance(d, date):
         return d.strftime("%d-%m-%Y")
-    elif isinstance(d, datetime.datetime):
+    elif isinstance(d, datetime):
         return d.strftime("%d-%m-%Y %H:%M")
     return d
 
@@ -67,6 +67,14 @@ def structure_record(record_id: str, markdown_text: str, model_name: str, base_u
         f"The format should be {NARRecord.model_fields}"
     ).replace("{", "{{").replace("}", "}}")
 
+    """system_prompt = (
+        f"Extract information from the provided Markdown. "
+        f"If the field has not been filled, return N/A, Example born_where: N/A "
+        f"If you cannot read a field correctly, return the question mark symbol in its place, Example: Date of Admission: 12/??/2024 "
+        f"The response MUST be a json. "
+        f"The format should be {NARRecord.model_fields}"
+    ).replace("{", "{{").replace("}", "}}")"""
+
     prompt_template = ChatPromptTemplate.from_messages(
         [("system", system_prompt), ("user", "{__text__}")]
     )
@@ -92,8 +100,10 @@ def run_structuring_pipeline(
     model_name: str,
     host_url: str,
     table_in: str = "extractions",
-    table_out: str = "structured",
-    resume: bool = True
+    table_out: str = "structured_Q", #structured_Q
+    resume: bool = True,
+    run_id = None,
+    **kwargs,
 ):
     """
     Convert extracted markdown to structured JSON while mapped to schema.
@@ -107,9 +117,13 @@ def run_structuring_pipeline(
     image_ids = list(set([i.split("_page")[0] for i in image_ids]))
 
     structured_ids = []
+    #run_id = kwargs.get("run_id")
 
     for record_id in tqdm(image_ids):
         print(f"\n=== Structuring {record_id} ===")
+
+        run_id = datetime.now().isoformat()
+        print(f"{record_id} → {run_id}")
 
         # ------------------------
         # RESUME
@@ -161,13 +175,22 @@ def run_structuring_pipeline(
 
         try:
             safe_save(
-                {"structured_text": clean_structured},
+                {
+                "structured_text": clean_structured,
+                "run_id": run_id,
+                #"timestamp": run_id
+                 },
+
                 table_out,
+                f"{record_id}_{run_id}",
                 record_id
             )
 
             safe_save(
-                {"mapped_fields": clean_mapped}, #***
+                {"mapped_fields": clean_mapped,
+                 "run_id": run_id,
+                 #"timestamp": run_id
+                 }, #***
                 "mapped",
                 record_id
             )

@@ -61,7 +61,11 @@ def compute_field_accuracy(pred: dict, truth: dict):
         pred_val = normalize(pred_flat.get(key))
         truth_val = normalize(truth_flat.get(key))
 
-        results[key] = fuzzy_match(pred_val, truth_val)
+        results[key] = {
+            "accuracy": fuzzy_match(pred_val, truth_val),
+            "ground_truth_val": truth_val,
+            "predicted_val": pred_val
+        }
 
     return results
 
@@ -87,13 +91,19 @@ def build_accuracy_table(predictions: dict, ground_truth: dict):
 
         field_acc = compute_field_accuracy(pred, truth)
 
-        for field, acc in field_acc.items():
+        for field, info in field_acc.items():
             rows.append({
                 "record_id": record_id,
                 "field": field,
-                "correct?": acc
+                "correct?": info["accuracy"],
+                "ground_truth_val": info["ground_truth_val"],
+                "predicted_val": info["predicted_val"],
+                "field_type": type(info).__name__
             })
 
     df = pd.DataFrame(rows)
+    print(df.columns)
+    print("COLUMNS:", df.columns.tolist())
+    print(df.head())
 
     return df

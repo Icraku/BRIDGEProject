@@ -14,7 +14,7 @@
 !/results.md
 !/SCHEMA.md
 !/tests/test_db.py
-!/truth.json
+!/NAR_metadata.json
 !/util.py
 !/markdown_exports/
 .env!/qwen.py

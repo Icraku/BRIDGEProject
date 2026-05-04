@@ -1,6 +1,7 @@
 import os
 from tqdm import tqdm
 from ollama import Client
+from datetime import datetime
 
 IP_PAUL = os.getenv("IP_PAUL")
 IP_TUTI = os.getenv("IP_TUTI")
@@ -88,6 +89,10 @@ def process_image(
         md_output = run_prompt(client, model_name, prompt_text, image_base64)
         markdown_outputs.append(md_output)
 
+        run_id = datetime.now().isoformat()
+        unique_id = f"{record_id}_{run_id}"
+        print(f"{record_id} → {run_id}")
+
         print(md_output)
 
         # ------------------------
@@ -95,7 +100,9 @@ def process_image(
         safe_save(
             {
                 "extracted_text": md_output,
-                "prompt": prompt_name
+                "prompt": prompt_name,
+                "run_id": run_id,
+                #"timestamp": run_id
             },
             table_name,
             f"{record_id}_{prompt_name}"
@@ -143,7 +150,9 @@ def run_extraction_pipeline(
     model_name: str,
     table_name: str,
     ground_truth: dict | None = None,
-    resume: bool = True
+    resume: bool = True,
+    run_id = None,
+    **kwargs
 ):
     """
     Main extraction pipeline.
@@ -157,6 +166,8 @@ def run_extraction_pipeline(
 
     results_md = ""
     processed_ids = []
+
+    #run_id = kwargs.get("run_id")
 
     for image_path in tqdm(images):
         result = process_image(

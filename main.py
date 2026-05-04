@@ -1,6 +1,7 @@
 import json
 import os
 from dotenv import load_dotenv
+from datetime import datetime, date, time
 
 # ------------------------
 # LOAD ENV VARIABLES
@@ -16,7 +17,7 @@ IP_SERVER = os.getenv("IP_SERVER")
 
 from b_extraction.extraction_pipeline import run_extraction_pipeline
 from c_structuring.structuring_pipeline import run_structuring_pipeline
-from d_evaluation.run_evaluation import run_evaluation
+from d_evaluation.run_evaluation import run_evaluation, load_and_process_meta
 
 # ------------------------
 # CONFIG
@@ -26,7 +27,7 @@ IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/convert
 MODEL_NAME = "qwen3.5:35b"
 
 EXTRACTION_TABLE = "extractions"
-STRUCTURED_TABLE = "structured"
+STRUCTURED_TABLE = "structured_Q"
 MAPPED_TABLE = "mapped"
 
 RESUME = True
@@ -34,13 +35,23 @@ RESUME = True
 # ------------------------
 # LOAD GROUND TRUTH*** (TBD)
 
-GT_PATH = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/NAR_metadata.json"
+GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 
 if os.path.exists(GT_PATH):
     with open(GT_PATH) as f:
         GT = json.load(f)
 else:
     GT = None
+
+if isinstance(GT, list):
+    print("GT is still a list — converting...")
+
+    temp = {}
+    for item in GT:
+        record_id = item["_id"].split("_page")[0]
+        temp[record_id] = item
+
+    GT = temp
 
 # ------------------------
 # MAIN EXECUTION
@@ -54,7 +65,8 @@ if __name__ == "__main__":
         model_name="qwen3.5:35b",
         table_name=EXTRACTION_TABLE,
         ground_truth=GT,
-        resume=RESUME
+        resume=RESUME,
+        run_id=datetime.now().isoformat()
     )
 
     print(f"\n Extraction complete: {len(processed_ids)} records\n")
@@ -66,7 +78,8 @@ if __name__ == "__main__":
         host_url=IP_SERVER,
         table_in=EXTRACTION_TABLE,
         table_out=STRUCTURED_TABLE,
-        resume=RESUME
+        resume=RESUME,
+        run_id=datetime.now().isoformat()
     )
 
     print(f"\n Structuring complete: {len(structured_ids)} records\n")

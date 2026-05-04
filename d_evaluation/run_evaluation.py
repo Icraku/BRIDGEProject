@@ -61,9 +61,9 @@ def load_and_process_meta(gt_path: str):
         if not file_id.startswith("NAR_"):
             continue
 
-        base_id = file_id.split("_page_")[0]
+        base_id = file_id.split("_page")[0]
 
-        # only keep if we actually predicted it
+        # only keep if it is actually predicted
         if base_id not in predictions:
             continue
 
@@ -81,7 +81,7 @@ def load_and_process_meta(gt_path: str):
 
 
 # ------------------------
-# MAIN EVALUATION RUNNER
+# MAIN EVALUATION
 
 def run_evaluation(gt_path, structured_table="structured"):
     """
@@ -134,11 +134,13 @@ def run_evaluation(gt_path, structured_table="structured"):
         print(f"Saving record: {record_id}, fields: {len(group)}")
 
     for record_id, group in df.groupby("record_id"):
+        print("GT KEYS:", list(ground_truth.keys())[:5])
+        print("PRED KEYS:", list(predictions.keys())[:5])
         safe_save(
             {
                 "record_id": record_id,
                 "average_accuracy": group["correct?"].mean(),
-                "fields": group[["field", "correct?"]].to_dict(orient="records")
+                "fields": group[["field", "correct?", "ground_truth_val", "predicted_val", "field_type"]].to_dict(orient="records")
             },
             "evaluation",
             record_id

@@ -1,4 +1,5 @@
 import os
+import time
 from tqdm import tqdm
 from ollama import Client
 from datetime import datetime
@@ -23,10 +24,13 @@ from b_extraction.prompts.prompt_loader import load_prompts, load_prompt_config
 # ------------------------
 # CORE: LLM CALL
 
-def run_prompt(client: Client, model_name: str, prompt_text: str, image_base64: str) -> str:
+def run_prompt(client: Client, model_name: str, prompt_text: str, image_base64: str):
     """
     Run a single prompt against the model.
     """
+
+    start_time = time.perf_counter()
+
     response = client.chat(
         model=model_name,
         messages=[
@@ -39,7 +43,14 @@ def run_prompt(client: Client, model_name: str, prompt_text: str, image_base64: 
         options={"seed": 42}
     )
 
-    return response["message"]["content"]
+    end_time = time.perf_counter()
+
+    runtime_seconds = end_time - start_time
+
+    return {
+        "content": response["message"]["content"],
+        "runtime_seconds": runtime_seconds
+    }
 
 
 # ------------------------
@@ -58,6 +69,8 @@ def process_image(
     """
     Process a single image through all prompts.
     """
+    # RECORD-LEVEL TIMER
+    record_start_time = time.perf_counter()
 
     image_name = os.path.basename(image_path)
     record_id = os.path.splitext(image_name)[0]
@@ -86,7 +99,16 @@ def process_image(
     for prompt_name, prompt_text in prompts.items():
         print(f"\n--- {prompt_name} ---")
 
-        md_output = run_prompt(client, model_name, prompt_text, image_base64)
+        prompt_result = run_prompt(
+            client,
+            model_name,
+            prompt_text,
+            image_base64
+        )
+
+        md_output = prompt_result["content"]
+        runtime_seconds = prompt_result["runtime_seconds"]
+
         markdown_outputs.append(md_output)
 
         run_id = datetime.now().isoformat()
@@ -99,10 +121,12 @@ def process_image(
         # SAVE RAW OUTPUT
         safe_save(
             {
+                "model": model_name,
+                "record_id": record_id,
                 "extracted_text": md_output,
                 "prompt": prompt_name,
                 "run_id": run_id,
-                #"timestamp": run_id
+                "runtime_seconds": runtime_seconds
             },
             table_name,
             f"{record_id}_{prompt_name}"
@@ -135,10 +159,18 @@ def process_image(
 
     overall_acc = round(sum(accuracies) / len(accuracies), 3) if accuracies else 0
 
+    record_end_time = time.perf_counter()
+
+    total_record_runtime = (
+            record_end_time - record_start_time
+    )
+
     return {
         "record_id": record_id,
         "final_markdown": final_md,
-        "accuracy": overall_acc
+        "accuracy": overall_acc,
+        "model": model_name,
+        "runtime_seconds": total_record_runtime
     }
 
 
@@ -167,7 +199,6 @@ def run_extraction_pipeline(
     results_md = ""
     processed_ids = []
 
-    #run_id = kwargs.get("run_id")
 
     for image_path in tqdm(images):
         result = process_image(

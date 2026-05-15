@@ -25,8 +25,10 @@ from d_evaluation.run_evaluation import run_evaluation, load_and_process_meta
 IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
 
 MODEL_NAME = "qwen3.5:35b"
+MODEL_NAME2 = "gemma4:31b"
 
 EXTRACTION_TABLE = "extractions"
+EXTRACTION_TABLE2 = "extractions_gemma"
 STRUCTURED_TABLE = "structured_Q"
 MAPPED_TABLE = "mapped"
 
@@ -62,8 +64,8 @@ if __name__ == "__main__":
 
     processed_ids = run_extraction_pipeline(
         image_dir=IMAGE_DIR,
-        model_name="qwen3.5:35b",
-        table_name=EXTRACTION_TABLE,
+        model_name=MODEL_NAME2,
+        table_name=EXTRACTION_TABLE2,
         ground_truth=GT,
         resume=RESUME,
         run_id=datetime.now().isoformat()

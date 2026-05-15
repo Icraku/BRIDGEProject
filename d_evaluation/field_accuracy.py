@@ -1,5 +1,6 @@
 import pandas as pd
 from difflib import SequenceMatcher
+from schemas.neonatal_admission_form.field_types import FIELD_TYPES
 
 # ------------------------
 # FUZZY MATCH
@@ -98,7 +99,7 @@ def build_accuracy_table(predictions: dict, ground_truth: dict):
                 "correct?": info["accuracy"],
                 "ground_truth_val": info["ground_truth_val"],
                 "predicted_val": info["predicted_val"],
-                "field_type": type(info).__name__
+                "field_type": FIELD_TYPES.get(field, "text")
             })
 
     df = pd.DataFrame(rows)

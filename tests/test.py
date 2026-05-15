@@ -1,169 +1,108 @@
-from a_input.load_images import load_images
-
-IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
-
-images = load_images(IMAGE_DIR)
-print(len(images))
-print(images[:2])
-
-image_path = images[0] #pick 1 img
-print(image_path)
-
-from utils.image_encoding import image_to_base64 # convert to base64
-
-image_base64 = image_to_base64(image_path)
-print(len(image_base64))
-
-from b_extraction.prompts.prompt_loader import load_prompts, load_prompt_config # loading the prompts
-
-prompts = load_prompts()
-prompt_config = load_prompt_config()
-
-print(prompts.keys())
-
-from ollama import Client
+import json
 import os
-QWEN2 = "qwen3.5:35b"
-IP_PAUL = os.getenv("IP_PAUL")
-IP_TUTI = os.getenv("IP_TUTI")
+from ollama import Client
+from dotenv import load_dotenv
+from datetime import datetime
+from a_input.load_images import load_images
+from b_extraction.extraction_pipeline import process_image, run_extraction_pipeline
+from b_extraction.prompts.prompt_loader import load_prompts, load_prompt_config
+from c_structuring.structuring_pipeline import run_structuring_pipeline
+
+# ------------------------
+# LOAD ENV VARIABLES
+
+load_dotenv()
 IP_SERVER = os.getenv("IP_SERVER")
 
-client = Client(host=IP_SERVER)
-# response=client.list() ---- models available in the client
-model_name = QWEN2
-model_name = 'qwen3.5:35b'
-QWEN = "qwen3.5:27b"
+# ------------------------
+# CONFIG
 
-prompt_name, prompt_text = list(prompts.items())[0]
+IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
+GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
+RESUME = True
 
-from b_extraction.extraction_pipeline import run_prompt
+MODELS = {
+    "qwen": "qwen3.5:35b",
+    "gemma": "gemma4:31b",
+    #"medgemma": "medgemma",
+    #"llava_med": "llava-med",
+    #"donut": "donut"
+}
 
-md_output = run_prompt(client, model_name, prompt_text, image_base64)
+# ------------------------
+# LOAD GT
 
-print(md_output)
+if os.path.exists(GT_PATH):
 
-from c_structuring.markdown_parser import markdown_to_dict # parsing
+    with open(GT_PATH) as f:
+        GT = json.load(f)
 
-parsed = markdown_to_dict(md_output)
+else:
+    GT = None
 
-print(parsed)
 
-import json # accuracy test
+# ------------------------
+# FIX GT FORMAT
 
-with open("/home/ikutswa/BRIDGEProject/truth.json") as f:
-    GT = json.load(f)
+if isinstance(GT, list):
 
-gt_key = prompt_config.get(prompt_name)
-truth = GT.get(gt_key)
+    print("GT is still a list — converting...")
 
-from d_evaluation.accuracy import compute_accuracy
+    temp = {}
 
-acc = compute_accuracy(parsed, truth)
-print(acc)
+    for item in GT:
 
-parsed_predictions = [] # multi-prompts
+        record_id = item["_id"].split("_page")[0]
 
-for name, text in prompts.items():
-    print("Running:", name)
+        temp[record_id] = item
 
-    md = run_prompt(client, model_name, text, image_base64)
-    parsed = markdown_to_dict(md)
+    GT = temp
 
-    parsed_predictions.append(parsed)
 
-from b_extraction.merge_extraction import merge_predictions
+# ------------------------
+# MAIN
 
-merged = merge_predictions(parsed_predictions)
+if __name__ == "__main__":
 
-print(merged)
+    prompts = load_prompts()
+    prompt_config = load_prompt_config()
+    images = load_images(IMAGE_DIR)
+    clients = {label: Client(host=IP_SERVER) for label in MODELS}
 
-from c_structuring.markdown_formatter import dict_to_markdown # output formatter
+    # Extraction
+    for image_path in images:
+        for model_label, model_name in MODELS.items():
+            print(f"\n{'='*60}")
+            print(f"IMAGE: {os.path.basename(image_path)} | MODEL: {model_label}")
+            print(f"{'='*60}")
 
-final_md = dict_to_markdown(merged)
-print(final_md)
+            result = process_image(
+                image_path=image_path,
+                client=clients[model_label],
+                model_name=model_name,
+                prompts=prompts,
+                prompt_config=prompt_config,
+                table_name=f"extractions_{model_label}",
+                ground_truth=GT,
+                resume=RESUME
+            )
 
-from b_extraction.extraction_pipeline import process_image # full extraction test
+            if result:
+                print(f"Saved {result['record_id']} to extractions_{model_label}")
 
-result = process_image(
-    image_path=image_path,
-    client=client,
-    model_name=model_name,
-    prompts=prompts,
-    prompt_config=prompt_config,
-    table_name="extractions",
-    ground_truth=GT,
-    resume=False
-)
+    # Structuring
+    for model_label, model_name in MODELS.items():
+        print(f"\n{'=' * 60}")
+        print(f"STRUCTURING: {model_label}")
+        print(f"{'=' * 60}")
 
-print(result)
+        structured_ids = run_structuring_pipeline(
+            model_name=model_name,
+            host_url=IP_SERVER,
+            table_in=f"extractions_{model_label}",
+            table_out=f"structured_{model_label}",
+            resume=RESUME,
+            run_id=datetime.now().isoformat()
+        )
 
-from database_utils.db_utils import fetch_records # fetch md records
-
-records = fetch_records("extractions")
-print(len(records))
-
-record_id = "---" #pick 1 record
-
-from c_structuring.structuring_pipeline import fetch_markdown_for_record #get md
-
-md = fetch_markdown_for_record(record_id, records)
-print(md[:500])
-
-from c_structuring.structuring_pipeline import structure_record # structure the md
-
-structured = structure_record(
-    record_id,
-    md,
-    model_name="qwen3.5:35b",
-    base_url=IP_SERVER
-)
-
-print(structured)
-
-from c_structuring.nar_schema_mapper import map_to_schema # MAP TO SCHEMA... SHOULD WORK ON THIS ESP sex, delivery... or might remove completely
-
-mapped = map_to_schema(structured)
-print(mapped)
-
-from d_evaluation.run_evaluation import run_evaluation
-GT_PATH = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/metadata.json"
-df = run_evaluation(
-    gt_path=GT_PATH,
-    structured_table="structured"
-)
-print(df.head())
-print(df.mean(numeric_only=True)) # get field averages
-
-#OR
-from d_evaluation.run_evaluation import load_structured_outputs
-
-predictions = load_structured_outputs("structured")
-
-print(len(predictions))
-
-import json # load ground truth
-
-with open("/home/ikutswa/BRIDGEProject/truth.json") as f:
-    ground_truth = json.load(f)
-
-print(len(ground_truth))
-
-from d_evaluation.field_accuracy import build_accuracy_table # EVALUATION core
-
-df = build_accuracy_table(predictions, ground_truth)
-
-print(df.columns) # inspect table
-print(df.head())
-
-df.to_csv("field_accuracy.csv", index=False) # manual save
-
-record_id = list(predictions.keys())[0] # Test 1 record
-
-pred = predictions[record_id]
-truth = ground_truth[record_id]
-
-from d_evaluation.field_accuracy import compute_field_accuracy
-
-result = compute_field_accuracy(pred, truth)
-
-print(result)
+        print(f"\nStructuring complete for {model_label}: {len(structured_ids)} records\n")

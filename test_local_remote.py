@@ -13,7 +13,7 @@ from c_structuring.structuring_pipeline import run_structuring_pipeline
 
 load_dotenv()
 IP_SERVER = os.getenv("IP_SERVER")
-#IP_LOCAL = os.getenv("IP_LOCAL")
+IP_LOCAL = os.getenv("IP_LOCAL")
 
 # ------------------------
 # CONFIG
@@ -25,9 +25,22 @@ RESUME = True
 MODELS = {
     #"qwen": "qwen3.5:35b",
     #"gemma": "gemma4:31b", # Not fast/not working
-    "medgemma": "medgemma27-full:latest",
+    #"medgemma": "medgemma27-full:latest",
     "llama": "llama3:latest",
-    #"donut": "donut"
+    #"llama_local": "llama3.2-vision:11b",
+    #"moondream": "moondream:latest",
+    #"falcon": "falcon2:11b",
+    "minicpm": "minicpm-v:8b"
+
+}
+
+MODEL_HOSTS = {
+    "medgemma": IP_SERVER,
+    "llama": IP_SERVER,
+    #"llama_local": IP_LOCAL,
+    #"moondream": IP_LOCAL,
+    #"falcon": IP_LOCAL,
+    "minicpm": IP_LOCAL
 }
 
 # ------------------------
@@ -68,7 +81,11 @@ if __name__ == "__main__":
     prompts = load_prompts()
     prompt_config = load_prompt_config()
     images = load_images(IMAGE_DIR)
-    clients = {label: Client(host=IP_SERVER) for label in MODELS}
+    #clients = {label: Client(host=IP_SERVER) for label in MODELS}
+    clients = {
+        label: Client(host=MODEL_HOSTS[label])
+        for label in MODELS
+    }
 
     # Extraction
     for image_path in images:

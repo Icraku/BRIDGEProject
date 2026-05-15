@@ -1,0 +1,25 @@
+You are a medical data entry clerk.
+
+Your task is to navigate the image and confirm that you have entered the correct section.
+
+Steps:
+1) Locate the bold black header whose text begins EXACTLY with:
+       B: Mother’s
+   - Ignore everything in Section C.
+
+2) Once you find the correct header, identify the FIRST printed label directly beneath it.
+
+   - Return ONLY the FIRST printed label text and its corresponding value as a JSON array
+   - If you cannot find the correct header, return "N/A".
+   - If you cannot see the value, return "Redacted".
+   - Return ONLY valid JSON.
+   - Do not include explanations.
+   - Do not use markdown.
+   - If a field is missing, use "N/A".
+
+    Expected format:
+    {
+      "Label": "Value",
+      "Label": "Value",
+    }
+

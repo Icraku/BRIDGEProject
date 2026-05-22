@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from ollama import Client
 from dotenv import load_dotenv
 from datetime import datetime
@@ -23,10 +24,10 @@ GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 RESUME = True
 
 MODELS = {
-    #"qwen": "qwen3.5:35b",
+    "qwen": "qwen3.5:35b",
     #"gemma": "gemma4:31b", # Not fast/not working
-    "medgemma": "medgemma27-full:latest",
-    "llama": "llama3:latest",
+    #"medgemma": "medgemma27-full:latest",
+    #"llama": "llama3:latest",
     #"donut": "donut"
 }
 

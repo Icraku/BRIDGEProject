@@ -1,4 +1,5 @@
-from datetime import datetime, date, time
+import time
+from datetime import datetime, date, time as dt_time
 from tqdm import tqdm
 from ollama import Client
 
@@ -10,17 +11,29 @@ from database_utils.db_save import safe_save
 from database_utils.queries import get_processed_ids
 
 from c_structuring.nar_schema_mapper import map_to_schema
+from c_structuring.bool_nullifier import nullify_unticked_bools, BOOL_FIELD_LABELS
 from utils.text_cleaning import strip_markdown_fences
 from schemas.neonatal_admission_form.nar_schema import NARRecord
 from schemas.internal_transfer_form.itf_schema import ITFRecord
 
 # ------------------------
-def clean_for_db(d):
+def clean_for_db(d, _bool_fields=set(BOOL_FIELD_LABELS.keys())):
+    if d is None:
+        return None
     if isinstance(d, dict):
-        return {k: clean_for_db(v) for k, v in d.items()}
+        result = {}
+        for k, v in d.items():
+            cleaned = clean_for_db(v)
+            # If a bool field came back None, store as "null" string
+            # so SurrealDB doesn't coerce it to false
+            if cleaned is None and k in _bool_fields:
+                result[k] = "null"
+            else:
+                result[k] = cleaned
+        return result
     elif isinstance(d, list):
         return [clean_for_db(v) for v in d]
-    elif isinstance(d, time):
+    elif isinstance(d, dt_time):
         return d.strftime("%H:%M")
     elif isinstance(d, date):
         return d.strftime("%d-%m-%Y")
@@ -75,6 +88,8 @@ def structure_record(record_id: str, markdown_text: str, model_name: str, base_u
         f"The format should be {NARRecord.model_fields}"
     ).replace("{", "{{").replace("}", "}}")"""
 
+    start_time = time.perf_counter()
+
     prompt_template = ChatPromptTemplate.from_messages(
         [("system", system_prompt), ("user", "{__text__}")]
     )
@@ -90,7 +105,14 @@ def structure_record(record_id: str, markdown_text: str, model_name: str, base_u
 
     result = structured_llm.invoke(prompt)
 
-    return result.model_dump()
+    end_time = time.perf_counter()
+
+    runtime_seconds = end_time - start_time
+
+    return {
+        "content": result.model_dump(),
+        "runtime_seconds": runtime_seconds
+    }
 
 
 # ------------------------
@@ -117,9 +139,11 @@ def run_structuring_pipeline(
     image_ids = list(set([i.split("_page")[0] for i in image_ids]))
 
     structured_ids = []
-    #run_id = kwargs.get("run_id")
 
     for record_id in tqdm(image_ids):
+
+        record_start_time = time.perf_counter()
+
         print(f"\n=== Structuring {record_id} ===")
 
         run_id = datetime.now().isoformat()
@@ -148,12 +172,19 @@ def run_structuring_pipeline(
         # ------------------------
         # STRUCTURE
         try:
-            structured_dict = structure_record(
+            structure_result = structure_record(
                 record_id,
                 markdown_text,
                 model_name,
                 host_url
             )
+
+            structured_dict = structure_result["content"]
+
+            # Post-process: blank bool fields changed to None instead of false
+            structured_dict = nullify_unticked_bools(structured_dict, markdown_text)
+
+            llm_runtime_seconds = structure_result["runtime_seconds"]
 
         except Exception as e:
             print(f"Structuring failed: {e}")
@@ -168,29 +199,41 @@ def run_structuring_pipeline(
             continue
 
         # ------------------------
+        # RECORD TIMER END
+
+        record_end_time = time.perf_counter()
+
+        total_record_runtime = (
+                record_end_time - record_start_time
+        )
+
+        # ------------------------
         # SAVE RESULTS
 
         clean_structured = clean_for_db(structured_dict)
         clean_mapped = clean_for_db(mapped_output)
 
+        # temporary debug — remove after confirming
+        nulled = {k: v for k, v in clean_structured.items() if v is None}
+        print(f"  Fields that should be None: {list(nulled.keys())}")
+
         try:
             safe_save(
                 {
-                "structured_text": clean_structured,
-                "run_id": run_id,
-                #"timestamp": run_id
-                 },
-
+                    "structured_text": clean_structured,
+                    "run_id": run_id,
+                    "llm_runtime_seconds": llm_runtime_seconds,
+                    "total_record_runtime_seconds": total_record_runtime
+                },
                 table_out,
-                f"{record_id}_{run_id}",
                 record_id
             )
 
             safe_save(
-                {"mapped_fields": clean_mapped,
-                 "run_id": run_id,
-                 #"timestamp": run_id
-                 }, #***
+                {
+                    "mapped_fields": clean_mapped,
+                    "run_id": run_id
+                },
                 "mapped",
                 record_id
             )

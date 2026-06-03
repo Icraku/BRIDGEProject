@@ -103,7 +103,7 @@ FIELD_TYPES = {
     "intercostal_retraction": "str",
 
     # C
-    "capillary_refill_in_seconds": "float",
+    "capillary_refill_in_seconds": "int",
 
     "pallor": "str",
 

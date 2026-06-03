@@ -22,7 +22,7 @@ def normalize(value):
     if value is None:
         return None
 
-    return str(value).strip().lower()
+    return str(value).strip().lower().rstrip(";").strip()
 
 
 # ------------------------

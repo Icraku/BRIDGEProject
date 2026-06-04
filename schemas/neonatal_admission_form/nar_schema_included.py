@@ -1,3 +1,12 @@
+"""
+NARRecord — every field included in the Gold Standard from the NAR form.
+
+Relationship to NARFullRecord (nar_full_schema.py):
+  - NARRecord  = the *required* structured fields used in the Gold Standard
+  - NARFullRecord = everything the LLM should attempt to extract,
+                    including free-text, redacted identifiers and supplementary fields
+"""
+
 from typing import Optional, List
 from datetime import date, datetime, time
 
@@ -123,8 +132,8 @@ class NARRecord(BaseModel):
     given_bilirubin: bool= Field(description="Bilirubin measured")
 
     # Diagnoses
-    primary_admission_diagnosis: str= Field(description="Primary diagnosis")
-    secondary_admission_diagnosis: str= Field(description="Secondary diagnosis")
+    primary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '1'")
+    secondary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '2'")
 
     # Interventions (given)
     given_vitamin_k: bool= Field(description="Vitamin K given")

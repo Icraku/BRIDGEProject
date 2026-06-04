@@ -102,6 +102,6 @@ Current tests are located in `tests/`. To run them:
 - **PDF conversion issues**: install `poppler` for `pdf2image` and check file permissions.
 
 
-## 📜 License
+## License
 
 See `LICENSE` for details.

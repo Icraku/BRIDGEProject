@@ -34,7 +34,9 @@ BRIDGEProject/
 - Ollama server for model inference (e.g., `qwen3.5` / `gemma` families).
 - SurrealDB for persistence (optional but recommended).
 
-> Note: `requirements.txt` is currently empty. If you plan to run the full pipeline, install the libraries referenced in the codebase (e.g., `langchain_ollama`, `ollama`, `pydantic`, `surrealdb`, `pdf2image`, `opencv-python`, `tqdm`, `python-dotenv`, `Pillow`). If you'd like, I can generate a pinned `requirements.txt` for production.
+> If you plan to run the full pipeline, install the libraries referenced in the `requirements.txt` by running `pip install -r requirements.txt`
+
+> Note: Some of the modules require GPU capacity of RAM 8GB and above.
 
 ## Environment variables
 

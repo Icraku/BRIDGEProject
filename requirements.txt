@@ -1,0 +1,75 @@
+aiohappyeyeballs==2.6.1
+aiohttp==3.13.3
+aiosignal==1.4.0
+annotated-types @ file:///home/task_176174487847081/conda-bld/annotated-types_1761744928471/work
+anyio @ file:///home/task_175862240717140/conda-bld/anyio_1758622421932/work
+attrs==25.4.0
+brotlicffi @ file:///home/task_176174499757332/conda-bld/brotlicffi_1761745021887/work
+certifi @ file:///home/task_176313455153976/conda-bld/certifi_1763135329031/work/certifi
+cffi @ file:///home/task_176183214835616/conda-bld/cffi_1761832774688/work
+charset-normalizer @ file:///home/task_176174481524083/conda-bld/charset-normalizer_1761744828711/work
+contourpy==1.3.3
+cycler==0.12.1
+distro @ file:///work/perseverance-python-buildout/croot/distro_1728396110052/work
+fonttools==4.62.1
+frozenlist==1.8.0
+git-filter-repo==2.47.0
+greenlet @ file:///home/task_175740546782543/conda-bld/greenlet_1757405532900/work
+h11 @ file:///home/task_176193111687894/conda-bld/h11_1761931259172/work
+httpcore @ file:///croot/httpcore_1748526048470/work
+httpx @ file:///home/task_176044729083783/conda-bld/httpx_1760447344657/work
+idna @ file:///home/task_176191175488988/conda-bld/idna_1761911981595/work
+iniconfig @ file:///croot/iniconfig_1752653729464/work
+jiter @ file:///home/task_176289731224671/conda-bld/jiter_1762897325108/work
+jsonpatch @ file:///work/perseverance-python-buildout/croot/jsonpatch_1728399595941/work
+jsonpointer @ file:///croot/jsonpointer_1753788433671/work
+kiwisolver==1.5.0
+langchain @ file:///home/task_175974942278234/conda-bld/langchain_1759750091484/work
+langchain-core==1.2.28
+langchain-ollama==1.1.0
+langchain-openai @ file:///croot/langchain-openai_1749072012489/work
+langchain-text-splitters @ file:///home/task_175974703899268/conda-bld/langchain-text-splitters_1759747129051/work
+langsmith @ file:///home/task_175948403984325/conda-bld/langsmith_1759484056480/work
+llmwhisperer-client==2.5.0
+matplotlib==3.10.9
+multidict==6.7.1
+numpy==2.4.3
+ollama==0.6.1
+openai @ file:///home/task_175914019702960/conda-bld/openai_1759140213593/work
+opencv-python==4.13.0.92
+orjson @ file:///home/task_176255014954512/conda-bld/orjson_1762550830911/work
+packaging @ file:///home/task_176104878999627/conda-bld/packaging_1761049078606/work
+pandas==3.0.1
+pdf2image @ file:///io/buildout/croot/pdf2image_1735873274948/work
+pillow @ file:///home/task_176252756300243/conda-bld/pillow_1762528238732/work
+pluggy @ file:///croot/pluggy_1733169602837/work
+propcache==0.4.1
+pycparser @ file:///home/task_175749564936714/conda-bld/pycparser_1757496040682/work
+pydantic @ file:///home/task_176250531594496/conda-bld/pydantic_1762505362412/work
+pydantic_core @ file:///home/task_176059738185733/conda-bld/pydantic-core_1760597433577/work
+Pygments @ file:///home/task_176243137807904/conda-bld/pygments_1762431407645/work
+pyparsing==3.3.2
+PySocks @ file:///home/task_176175235884818/conda-bld/pysocks_1761753009495/work
+pytest @ file:///home/task_175812502822361/conda-bld/pytest_1758125086457/work
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
+PyYAML @ file:///croot/pyyaml_1731006091482/work
+regex @ file:///home/task_175888764744403/conda-bld/regex_1758887948967/work
+requests @ file:///home/task_176235918788486/conda-bld/requests_1762359591632/work
+requests-toolbelt @ file:///work/perseverance-python-buildout/croot/requests-toolbelt_1728411657696/work
+setuptools==78.1.1
+six==1.17.0
+sniffio @ file:///work/perseverance-python-buildout/croot/sniffio_1728386342155/work
+SQLAlchemy @ file:///croot/sqlalchemy_1756710012687/work
+surrealdb==1.0.8
+tenacity @ file:///home/task_176037565462733/conda-bld/tenacity_1760375669253/work
+tiktoken @ file:///croot/tiktoken_1748479152668/work
+tqdm @ file:///home/task_176286304944547/conda-bld/tqdm_1762863349742/work
+typing-inspection @ file:///home/task_176061348700415/conda-bld/typing-inspection_1760614166875/work
+typing_extensions @ file:///croot/typing_extensions_1756280817316/work
+urllib3 @ file:///croot/urllib3_1750775463400/work
+uuid_utils==0.14.1
+websockets==16.0
+wheel==0.45.1
+yarl==1.23.0
+zstandard @ file:///home/task_175818846949212/conda-bld/zstandard_1758189073015/work

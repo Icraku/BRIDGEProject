@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
-from schemas.neonatal_admission_form.nar_schema import NARRecord
+from schemas.neonatal_admission_form.nar_schema_included import NARRecord
 from schemas.internal_transfer_form.itf_schema import ITFRecord
 
 

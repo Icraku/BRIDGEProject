@@ -17,7 +17,8 @@ IP_SERVER = os.getenv("IP_SERVER")
 
 from b_extraction.extraction_pipeline import run_extraction_pipeline
 from c_structuring.structuring_pipeline import run_structuring_pipeline
-from d_evaluation.run_evaluation import run_evaluation, load_and_process_meta
+#from d_evaluation.run_evaluation import run_evaluation, load_and_process_meta
+from d_evaluation.main_evaluation import run_evaluation
 
 # ------------------------
 # CONFIG
@@ -27,9 +28,10 @@ IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/convert
 MODEL_NAME = "qwen3.5:35b"
 MODEL_NAME2 = "gemma4:31b"
 
-EXTRACTION_TABLE = "extractions"
+EXTRACTION_TABLE = "extractions_qwen"
 EXTRACTION_TABLE2 = "extractions_gemma"
-STRUCTURED_TABLE = "structured_Q"
+STRUCTURED_TABLE = "structured_qwen"
+STRUCTURED_TABLE2 = "structured_gemma"
 MAPPED_TABLE = "mapped"
 
 RESUME = True
@@ -64,8 +66,8 @@ if __name__ == "__main__":
 
     processed_ids = run_extraction_pipeline(
         image_dir=IMAGE_DIR,
-        model_name=MODEL_NAME2,
-        table_name=EXTRACTION_TABLE2,
+        model_name=MODEL_NAME,
+        table_name=EXTRACTION_TABLE,
         ground_truth=GT,
         resume=RESUME,
         run_id=datetime.now().isoformat()

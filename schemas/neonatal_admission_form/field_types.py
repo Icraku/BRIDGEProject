@@ -97,8 +97,7 @@ FIELD_TYPES = {
     "has_good_air_entry": "bool",
     "has_central_cyanosis": "bool",
 
-    "chest_indrawing": "bool",
-
+    "chest_indrawing": "str",
     "xiphoid_retraction": "str",
     "intercostal_retraction": "str",
 
@@ -120,11 +119,20 @@ FIELD_TYPES = {
     "umbilicus": "str",
 
     # F2
+    "neuro_examination":"str",
+    "further_examination": "str",
     "has_birth_defects": "bool",
+    "birth_defect_types":"str",
+
+    # Problem List
+    "problem_list": "str",
 
     # Investigations
     "rbs_measured": "bool",
+    "rbs_value": "float",
     "given_bilirubin": "bool",
+    "total_serum_bilirubin": "float",
+    "investigations_other": "str",
 
     # Diagnoses
     "primary_admission_diagnosis": "str",

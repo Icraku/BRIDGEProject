@@ -32,7 +32,6 @@ BOOL_FIELD_LABELS = {
     "has_grunting":                     ["grunting"],
     "has_good_air_entry":               ["good bilateral air entry"],
     "has_central_cyanosis":             ["central cyanosis"],
-    "chest_indrawing":                  ["lower chest indrawing"],
     "has_murmur":                       ["murmur"],
     "has_bulging_fontanelle":           ["bulging fontanelle"],
     "is_irritable":                     ["irritable"],

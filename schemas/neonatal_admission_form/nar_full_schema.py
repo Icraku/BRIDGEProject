@@ -45,7 +45,7 @@ class NARFullRecord(BaseModel):
     baby_age_in_days: Optional[int] = Field(None, description="Age (in days)")
 
     gestation_type: Optional[str] = Field(None, description="Gestation age from? U/S or LMP")
-    gestation_lmp_weeks: Optional[int] = Field(None, description="LMP weeks value (number next to LMP tick)")
+    #gestation_lmp_weeks: Optional[int] = Field(None, description="LMP weeks value (number next to LMP tick)")
 
     apgar_1m: Optional[int] = Field(None, description="APGAR score at 1 minute")
     apgar_5m: Optional[int] = Field(None, description="APGAR score at 5 minutes")

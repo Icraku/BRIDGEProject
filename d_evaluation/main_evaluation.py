@@ -15,7 +15,7 @@ from schemas.neonatal_admission_form.nar_full_schema import (
     inclusion_status,
 )
 
-gt_path = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
+gt_path = "/NAR_metadata.json"
 
 # ------------------------
 # LOAD STRUCTURED DATA FROM DB

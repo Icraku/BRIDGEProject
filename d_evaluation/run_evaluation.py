@@ -22,7 +22,7 @@ def load_structured_outputs(table_name="structured"):
         if not raw_id:
             continue
 
-        # SurrealDB format: "structured:NAR_630001"
+        # SurrealDB format: "table_name:record_name -> structured:NAR_630001"
         record_id = str(raw_id).split(":")[-1]
 
         structured = r.get("structured_text")

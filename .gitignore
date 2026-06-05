@@ -18,8 +18,6 @@
 !/util.py
 !/markdown_exports/
 .env!/qwen.py
-!/qwen_model.py
-!/pdftoImage/
-!/models/
-!/prompt_templates/
 .env
+*.csv
+!/scripts/

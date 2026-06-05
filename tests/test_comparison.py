@@ -1,20 +1,30 @@
 import json
 import os
 import csv
+import pandas as pd
 from datetime import datetime
+from collections import defaultdict
 
 from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES
+from schemas.neonatal_admission_form.nar_full_schema import (
+    FULL_SCHEMA_FIELDS,
+    NAR_REQUIRED_FIELDS,
+    inclusion_status,
+)
 
-gt_path = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/NAR_metadata.json"
-
+gt_path = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 
 # ------------------------
 # LOAD STRUCTURED DATA FROM DB
 
 def load_structured_outputs(table_name="structured"):
+    """
+    Load structured outputs from DB.
+    Works for both the full extraction table and the required-only table.
+    """
     records = fetch_records(table_name)
     predictions = {}
     for r in records:
@@ -27,6 +37,22 @@ def load_structured_outputs(table_name="structured"):
             predictions[record_id] = structured
     return predictions
 
+def load_inclusion_maps(table_name="structured_Q"):
+    """
+    Load the per-record inclusion maps saved alongside full extractions.
+    Falls back to computing from FULL_SCHEMA_FIELDS if not stored.
+    """
+    records = fetch_records(table_name)
+    maps = {}
+    for r in records:
+        raw_id = r.get("id")
+        if not raw_id:
+            continue
+        record_id = str(raw_id).split(":")[-1]
+        inc_map = r.get("inclusion_map")
+        if inc_map:
+            maps[record_id] = inc_map
+    return maps
 
 # ------------------------
 # LOAD + FILTER GROUND TRUTH
@@ -57,7 +83,7 @@ def load_and_process_meta(gt_path: str, predictions: dict):
 
 
 # ------------------------
-# STRUCTURED COMPARISON (qwen vs gemma, no parsing needed)
+# STRUCTURED COMPARISON/VALIDATION (qwen vs gemma)
 
 def check_match(q, g) -> str:
     q_s = str(q).strip().lower() if q not in (None, "", "null") else ""
@@ -83,8 +109,13 @@ def run_structured_comparison(
     all_ids = sorted(set(qwen_structured.keys()) | set(gemma_structured.keys()))
     print(f"Records — qwen: {len(qwen_structured)}, gemma: {len(gemma_structured)}, total unique: {len(all_ids)}")
 
+    # Use all fields present across both models
+    all_fields = sorted(
+        set(FIELD_TYPES.keys()) | FULL_SCHEMA_FIELDS
+    )
+
     csv_rows = [[
-        "record_id", "field", "field_type",
+        "record_id", "field", "field_type", "nar_inclusion",
         "qwen_value", "gemma_value", "match_status",
     ]]
 
@@ -96,24 +127,29 @@ def run_structured_comparison(
 
         field_results = {}
 
-        for field, field_type in FIELD_TYPES.items():
-            q_val = q_fields.get(field, "")
-            g_val = g_fields.get(field, "")
+        for field in all_fields:
+            field_type = FIELD_TYPES.get(field, "unknown")
+            inc        = inclusion_status(field)          # "included" / "not included"
+
+            q_val  = q_fields.get(field, "")
+            g_val  = g_fields.get(field, "")
             status = check_match(q_val, g_val)
 
             field_results[field] = {
-                "field_type":   field_type,
-                "qwen_value":   str(q_val) if q_val not in (None, "") else "",
-                "gemma_value":  str(g_val) if g_val not in (None, "") else "",
-                "match_status": status,
+                "field_type":    field_type,
+                "nar_inclusion": inc,
+                "qwen_value":    str(q_val) if q_val not in (None, "") else "",
+                "gemma_value":   str(g_val) if g_val not in (None, "") else "",
+                "match_status":  status,
             }
 
             if status != "both_empty":
-                print(f"  {field:<35} qwen={str(q_val)!r:<15} gemma={str(g_val)!r:<15} → {status}")
+                print(f"  {field:<40} [{inc:<12}] "
+                    f"qwen={str(q_val)!r:<15} gemma={str(g_val)!r:<15} → {status}"
+                )
 
             csv_rows.append([
-                record_id, field, field_type,
-                str(q_val), str(g_val), status,
+                record_id, field, field_type, inc, str(q_val), str(g_val), status,
             ])
 
         statuses     = [v["match_status"] for v in field_results.values()]
@@ -124,12 +160,11 @@ def run_structured_comparison(
         n_both_empty = statuses.count("both_empty")
         agreement    = round(n_match / n_total * 100, 2) if n_total else 0
 
-        # Per field-type agreement
-        from collections import defaultdict
+        # Agreement by field type
         type_counts = defaultdict(lambda: {"match": 0, "total": 0})
         for f, info in field_results.items():
             ft = info["field_type"]
-            if info["match_status"] not in ("both_empty",):
+            if info["match_status"] != "both_empty":
                 type_counts[ft]["total"] += 1
                 if info["match_status"] == "match":
                     type_counts[ft]["match"] += 1
@@ -139,12 +174,27 @@ def run_structured_comparison(
             for ft, v in type_counts.items()
         }
 
+        # Agreement by inclusion status
+        inc_counts = defaultdict(lambda: {"match": 0, "total": 0})
+        for f, info in field_results.items():
+            inc = info["nar_inclusion"]
+            if info["match_status"] != "both_empty":
+                inc_counts[inc]["total"] += 1
+                if info["match_status"] == "match":
+                    inc_counts[inc]["match"] += 1
+
+        inclusion_agreement = {
+            inc: round(v["match"] / v["total"] * 100, 2) if v["total"] else 0
+            for inc, v in inc_counts.items()
+        }
+
         safe_save(
             {
-                "record_id":        record_id,
-                "run_id":           datetime.now().isoformat(),
-                "fields":           field_results,
-                "by_field_type":    type_agreement,
+                "record_id":           record_id,
+                "run_id":              datetime.now().isoformat(),
+                "fields":              field_results,
+                "by_field_type":       type_agreement,
+                "by_nar_inclusion":    inclusion_agreement,
                 "summary": {
                     "total_fields":  n_total,
                     "matching":      n_match,
@@ -184,13 +234,14 @@ def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
 
     df = build_accuracy_table(predictions, ground_truth)
     df["model"] = model_label
-
+    df["nar_inclusion"] = df["field"].apply(inclusion_status)
     df.to_csv(f"field_accuracy_{model_label}.csv", index=False)
 
     # Field summary
     field_summary = (
-        df.groupby("field")["correct?"]
-        .mean().reset_index()
+        df.groupby(["field", "nar_inclusion"])["correct?"]
+        .mean()
+        .reset_index()
         .rename(columns={"correct?": "avg_accuracy"})
         .sort_values("avg_accuracy", ascending=False)
     )
@@ -208,27 +259,44 @@ def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
     print("\n  Accuracy by field type:")
     print(type_summary.to_string(index=False))
 
+    # Inclusion based summary
+    inclusion_summary = (
+        df.groupby("nar_inclusion")["correct?"]
+        .mean()
+        .reset_index()
+        .rename(columns={"correct?": "avg_accuracy"})
+    )
+    inclusion_summary["avg_accuracy"] = inclusion_summary["avg_accuracy"].round(3)
+    print("\n  Accuracy by NAR inclusion:")
+    print(inclusion_summary.to_string(index=False))
+
     eval_table = f"evaluation_{model_label}"
     for record_id, group in df.groupby("record_id"):
         type_breakdown = (
             group.groupby("field_type")["correct?"]
             .mean().round(3).to_dict()
         )
+        # Inclusion breakdown
+        inclusion_breakdown = (
+            group.groupby("nar_inclusion")["correct?"]
+            .mean().round(3).to_dict()
+        )
         safe_save(
             {
-                "record_id":        record_id,
-                "model":            model_label,
-                "average_accuracy": round(float(group["correct?"].mean()), 3),
-                "by_field_type":    type_breakdown,
+                "record_id":             record_id,
+                "model":                 model_label,
+                "average_accuracy":      round(float(group["correct?"].mean()), 3),
+                "by_field_type":         type_breakdown,
+                "by_nar_inclusion":      inclusion_breakdown,
                 "fields": group[[
                     "field", "correct?",
-                    "ground_truth_val", "predicted_val", "field_type"
+                    "ground_truth_val", "predicted_val",
+                    "field_type", "nar_inclusion",
                 ]].to_dict(orient="records"),
             },
             eval_table,
             record_id,
         )
-
     print(f"\n  Saved {df['record_id'].nunique()} records to {eval_table}")
     return df
 

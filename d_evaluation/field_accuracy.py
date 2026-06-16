@@ -50,15 +50,21 @@ def flatten_dict(d, parent_key="", sep="."):
 # ------------------------
 # FIELD-LEVEL ACCURACY
 
+# Field types where accuracy scoring is not meaningful
+UNSCORABLE_TYPES = {"redacted", "text"}
+
 def compute_field_accuracy(pred: dict, truth: dict):
     """
-    Compare predicted vs ground-truth for every field in the
-    UNION of predicted keys, ground-truth keys, and FULL_SCHEMA_FIELDS.
+    Compare predicted vs ground-truth for every field in the union of:
+      - FULL_SCHEMA_FIELDS
+      - predicted keys
+      - ground-truth keys
 
-    Fields missing from ground truth are treated as None (no GT available).
-    Fields missing from predictions are treated as None (not extracted).
+    Returns dict: field → {accuracy, ground_truth_val, predicted_val, has_gt, scorable}
 
-    Returns dict: field -> {accuracy, ground_truth_val, predicted_val, has_gt}
+    accuracy is None when:
+      - has_gt is False (no ground truth to judge against), OR
+      - scorable is False (field type is redacted or text)
     """
     pred_flat  = flatten_dict(pred)
     truth_flat = flatten_dict(truth)
@@ -70,13 +76,22 @@ def compute_field_accuracy(pred: dict, truth: dict):
     for key in all_keys:
         pred_val  = normalize(pred_flat.get(key))
         truth_val = normalize(truth_flat.get(key))
-        has_gt    = key in truth_flat and truth_flat[key] not in (None, "", "null")
+
+        has_gt   = key in truth_flat and truth_flat[key] not in (None, "", "null")
+        ftype    = FIELD_TYPES.get(key, "unknown")
+        scorable = ftype not in UNSCORABLE_TYPES
+
+        if has_gt and scorable:
+            accuracy = fuzzy_match(pred_val, truth_val)
+        else:
+            accuracy = None
 
         results[key] = {
-            "accuracy":          fuzzy_match(pred_val, truth_val) if has_gt else None,
-            "ground_truth_val":  truth_val,
-            "predicted_val":     pred_val,
-            "has_gt":            has_gt,
+            "accuracy":         accuracy,
+            "ground_truth_val": truth_val,
+            "predicted_val":    pred_val,
+            "has_gt":           has_gt,
+            "scorable":         scorable,
         }
 
     return results
@@ -87,15 +102,13 @@ def compute_field_accuracy(pred: dict, truth: dict):
 
 def build_accuracy_table(predictions: dict, ground_truth: dict) -> pd.DataFrame:
     """
-    predictions:  {record_id: dict}
-    ground_truth: {record_id: dict}
-
     Returns a DataFrame with one row per (record_id, field).
 
     Columns:
       record_id, field, field_type, nar_inclusion,
       correct?,        # fuzzy accuracy 0/1, or None if no GT
       has_gt,          # True if ground truth exists for this field
+      scorable         — False for redacted/text fields
       ground_truth_val, predicted_val
     """
     rows = []
@@ -115,27 +128,27 @@ def build_accuracy_table(predictions: dict, ground_truth: dict) -> pd.DataFrame:
                 "nar_inclusion":    inclusion_status(field),
                 "correct?":         info["accuracy"],   # None if no GT available
                 "has_gt":           info["has_gt"],
+                "scorable":         info["scorable"],
                 "ground_truth_val": info["ground_truth_val"],
                 "predicted_val":    info["predicted_val"],
             })
 
     df = pd.DataFrame(rows)
 
-    # ────────────────────────────────────────────────────
-    total      = len(df["field"].unique())
-    with_gt    = df[df["has_gt"]]["field"].nunique()
-    without_gt = df[~df["has_gt"]]["field"].nunique()
-    included   = df[df["nar_inclusion"] == "included"]["field"].nunique()
-    not_inc    = df[df["nar_inclusion"] == "not included"]["field"].nunique()
+    # ─────────────────────────────────────────────────────────────────
+    scored      = df[df["scorable"] & df["has_gt"]]
+    unscored_gt = df[~df["scorable"] & df["has_gt"]]
+    no_gt       = df[~df["has_gt"]]
 
     print(f"\n[build_accuracy_table] {len(ground_truth)} GT records matched")
-    print(f"  Unique fields total    : {total}")
-    print(f"  Fields with GT         : {with_gt}")
-    print(f"  Fields without GT      : {without_gt}  ← now shown, accuracy=None")
-    print(f"  NARRecord (included)   : {included}")
-    print(f"  Supplementary (not inc): {not_inc}")
-    print(f"  DataFrame shape        : {df.shape}")
-    print(f"  Columns                : {df.columns.tolist()}\n")
+    print(f"  Total rows              : {len(df)}")
+    print(f"  Scored (has_gt+scorable): {len(scored)}  ← accuracy computed")
+    print(f"  Unscorable type (text/redacted) with GT: {len(unscored_gt)}  ← value shown, no score")
+    print(f"  No ground truth         : {len(no_gt)}  ← supplementary fields")
+    print(f"  Unique fields total     : {df['field'].nunique()}")
+    print(f"  NARRecord (included)    : {df[df['nar_inclusion']=='included']['field'].nunique()}")
+    print(f"  Supplementary           : {df[df['nar_inclusion']=='not included']['field'].nunique()}")
+    print(f"  Columns                 : {df.columns.tolist()}\n")
     # ─────────────────────────────────────────────────────────────────
 
     return df

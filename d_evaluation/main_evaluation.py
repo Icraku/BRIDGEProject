@@ -8,7 +8,8 @@ from collections import defaultdict
 from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
-from schemas.neonatal_admission_form.field_types import FIELD_TYPES
+from schemas.neonatal_admission_form.field_types import FIELD_TYPES, HOSPITAL_CODES, decode_hospital
+from schemas.neonatal_admission_form.field_types import HOSPITAL_CODES
 from schemas.neonatal_admission_form.nar_full_schema import (
     FULL_SCHEMA_FIELDS,
     NAR_REQUIRED_FIELDS,
@@ -105,14 +106,9 @@ def run_structured_comparison(
 
     qwen_structured  = load_structured_outputs(qwen_table)
     gemma_structured = load_structured_outputs(gemma_table)
-
     all_ids = sorted(set(qwen_structured.keys()) | set(gemma_structured.keys()))
+    all_fields = sorted(set(FIELD_TYPES.keys()) | FULL_SCHEMA_FIELDS)
     print(f"Records — qwen: {len(qwen_structured)}, gemma: {len(gemma_structured)}, total unique: {len(all_ids)}")
-
-    # Use all fields present across both models
-    all_fields = sorted(
-        set(FIELD_TYPES.keys()) | FULL_SCHEMA_FIELDS
-    )
 
     csv_rows = [[
         "record_id", "field", "field_type", "nar_inclusion",
@@ -121,18 +117,21 @@ def run_structured_comparison(
 
     for record_id in all_ids:
         print(f"\n--- {record_id} ---")
-
         q_fields = qwen_structured.get(record_id, {})
         g_fields = gemma_structured.get(record_id, {})
-
         field_results = {}
 
         for field in all_fields:
             field_type = FIELD_TYPES.get(field, "unknown")
-            inc        = inclusion_status(field)          # "included" / "not included"
+            inc        = inclusion_status(field)
+            q_val      = q_fields.get(field, "")
+            g_val      = g_fields.get(field, "")
 
-            q_val  = q_fields.get(field, "")
-            g_val  = g_fields.get(field, "")
+            # Decode hospital codes for display
+            if field == "hospital":
+                q_val = decode_hospital(q_val) or q_val
+                g_val = decode_hospital(g_val) or g_val
+
             status = check_match(q_val, g_val)
 
             field_results[field] = {
@@ -144,13 +143,12 @@ def run_structured_comparison(
             }
 
             if status != "both_empty":
-                print(f"  {field:<40} [{inc:<12}] "
+                print(
+                    f"  {field:<40} [{inc:<12}] "
                     f"qwen={str(q_val)!r:<15} gemma={str(g_val)!r:<15} → {status}"
                 )
 
-            csv_rows.append([
-                record_id, field, field_type, inc, str(q_val), str(g_val), status,
-            ])
+            csv_rows.append([record_id, field, field_type, inc, str(q_val), str(g_val), status])
 
         statuses     = [v["match_status"] for v in field_results.values()]
         n_total      = len(statuses)
@@ -160,63 +158,41 @@ def run_structured_comparison(
         n_both_empty = statuses.count("both_empty")
         agreement    = round(n_match / n_total * 100, 2) if n_total else 0
 
-        # Agreement by field type
         type_counts = defaultdict(lambda: {"match": 0, "total": 0})
+        inc_counts  = defaultdict(lambda: {"match": 0, "total": 0})
+
         for f, info in field_results.items():
-            ft = info["field_type"]
             if info["match_status"] != "both_empty":
-                type_counts[ft]["total"] += 1
+                type_counts[info["field_type"]]["total"] += 1
+                inc_counts[info["nar_inclusion"]]["total"] += 1
                 if info["match_status"] == "match":
-                    type_counts[ft]["match"] += 1
-
-        type_agreement = {
-            ft: round(v["match"] / v["total"] * 100, 2) if v["total"] else 0
-            for ft, v in type_counts.items()
-        }
-
-        # Agreement by inclusion status
-        inc_counts = defaultdict(lambda: {"match": 0, "total": 0})
-        for f, info in field_results.items():
-            inc = info["nar_inclusion"]
-            if info["match_status"] != "both_empty":
-                inc_counts[inc]["total"] += 1
-                if info["match_status"] == "match":
-                    inc_counts[inc]["match"] += 1
-
-        inclusion_agreement = {
-            inc: round(v["match"] / v["total"] * 100, 2) if v["total"] else 0
-            for inc, v in inc_counts.items()
-        }
+                    type_counts[info["field_type"]]["match"] += 1
+                    inc_counts[info["nar_inclusion"]]["match"] += 1
 
         safe_save(
             {
-                "record_id":           record_id,
-                "run_id":              datetime.now().isoformat(),
-                "fields":              field_results,
-                "by_field_type":       type_agreement,
-                "by_nar_inclusion":    inclusion_agreement,
+                "record_id":        record_id,
+                "run_id":           datetime.now().isoformat(),
+                "fields":           field_results,
+                "by_field_type":    {ft: round(v["match"]/v["total"]*100,2) if v["total"] else 0 for ft,v in type_counts.items()},
+                "by_nar_inclusion": {i:  round(v["match"]/v["total"]*100,2) if v["total"] else 0 for i,  v in inc_counts.items()},
                 "summary": {
-                    "total_fields":  n_total,
-                    "matching":      n_match,
-                    "mismatching":   n_mismatch,
-                    "one_empty":     n_one_empty,
-                    "both_empty":    n_both_empty,
-                    "agreement_pct": agreement,
+                    "total_fields": n_total, "matching": n_match,
+                    "mismatching": n_mismatch, "one_empty": n_one_empty,
+                    "both_empty": n_both_empty, "agreement_pct": agreement,
                 },
             },
-            output_table,
-            record_id,
+            output_table, record_id,
         )
         print(f"  → agreement {agreement}% | saved to {output_table}:{record_id}")
 
     with open(output_csv, "w", newline="") as f:
         csv.writer(f).writerows(csv_rows)
-
     print(f"\nCSV saved: {output_csv}")
 
 
 # ------------------------
-# EVALUATION AGAINST GROUND TRUTH (one model)
+# EVALUATION AGAINST GROUND TRUTH
 
 def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
     if not os.path.exists(gt_path):
@@ -229,73 +205,86 @@ def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
 
     predictions  = load_structured_outputs(structured_table)
     ground_truth = load_and_process_meta(gt_path, predictions)
-
     print(f"  Predictions: {len(predictions)} | GT matched: {len(ground_truth)}")
 
     df = build_accuracy_table(predictions, ground_truth)
     df["model"] = model_label
-    df["nar_inclusion"] = df["field"].apply(inclusion_status)
+
+    # Scored subset: has GT AND is a scorable type (not redacted/text)
+    df_scored = df[df["scorable"] & df["has_gt"]].copy()
     df.to_csv(f"field_accuracy_{model_label}.csv", index=False)
 
-    # Field summary
+    # console summary
+    print(f"\n  All extracted fields    : {df['field'].nunique()} unique")
+    print(f"  Scored (GT + scorable)  : {df_scored['field'].nunique()}")
+    print(f"  Unscored (text/redacted): {df[~df['scorable']]['field'].nunique()}")
+    print(f"  No ground truth         : {df[~df['has_gt']]['field'].nunique()}")
+
+    # full field table (all 120, all records)
+    all_field_summary = (
+        df.groupby(["field", "field_type", "nar_inclusion", "scorable", "has_gt"])
+        .agg(avg_accuracy=("correct?", "mean"), n_records=("record_id", "nunique"))
+        .reset_index()
+        .sort_values(["nar_inclusion", "field_type", "avg_accuracy"],
+                     ascending=[True, True, False])
+    )
+    print(f"\n  All fields ({len(all_field_summary)} rows, sorted by inclusion + type):")
+    print(all_field_summary.to_string(index=False))
+    all_field_summary.to_csv(f"all_fields_{model_label}.csv", index=False)
+
+    # Field summary fo scored fields only
     field_summary = (
-        df.groupby(["field", "nar_inclusion"])["correct?"]
+        df_scored.groupby(["field", "nar_inclusion"])["correct?"]
         .mean()
         .reset_index()
         .rename(columns={"correct?": "avg_accuracy"})
         .sort_values("avg_accuracy", ascending=False)
     )
-    print("\n  Field accuracy (top 10):")
+    print("\n  Field accuracy (top 10 scored fields):")
     print(field_summary.head(10).to_string(index=False))
 
     # Field-type summary
     type_summary = (
-        df.groupby("field_type")["correct?"]
-        .mean().reset_index()
+        df_scored.groupby("field_type")["correct?"]
+        .mean()
+        .reset_index()
         .rename(columns={"correct?": "avg_accuracy"})
         .sort_values("avg_accuracy", ascending=False)
     )
     type_summary["avg_accuracy"] = type_summary["avg_accuracy"].round(3)
-    print("\n  Accuracy by field type:")
+    print("\n  Accuracy by field type (scored only):")
     print(type_summary.to_string(index=False))
 
     # Inclusion based summary
     inclusion_summary = (
-        df.groupby("nar_inclusion")["correct?"]
+        df_scored.groupby("nar_inclusion")["correct?"]
         .mean()
         .reset_index()
         .rename(columns={"correct?": "avg_accuracy"})
     )
     inclusion_summary["avg_accuracy"] = inclusion_summary["avg_accuracy"].round(3)
-    print("\n  Accuracy by NAR inclusion:")
+    print("\n  Accuracy by NAR inclusion (scored only):")
     print(inclusion_summary.to_string(index=False))
 
+    # save to DB
     eval_table = f"evaluation_{model_label}"
     for record_id, group in df.groupby("record_id"):
-        type_breakdown = (
-            group.groupby("field_type")["correct?"]
-            .mean().round(3).to_dict()
-        )
-        # Inclusion breakdown
-        inclusion_breakdown = (
-            group.groupby("nar_inclusion")["correct?"]
-            .mean().round(3).to_dict()
-        )
+        group_scored = group[group["scorable"] & group["has_gt"]]
+
         safe_save(
             {
-                "record_id":             record_id,
-                "model":                 model_label,
-                "average_accuracy":      round(float(group["correct?"].mean()), 3),
-                "by_field_type":         type_breakdown,
-                "by_nar_inclusion":      inclusion_breakdown,
+                "record_id":        record_id,
+                "model":            model_label,
+                "average_accuracy": round(float(group_scored["correct?"].mean()), 3) if len(group_scored) else None,
+                "by_field_type":    group_scored.groupby("field_type")["correct?"].mean().round(3).to_dict(),
+                "by_nar_inclusion": group_scored.groupby("nar_inclusion")["correct?"].mean().round(3).to_dict(),
                 "fields": group[[
-                    "field", "correct?",
+                    "field", "correct?", "has_gt", "scorable",
                     "ground_truth_val", "predicted_val",
                     "field_type", "nar_inclusion",
                 ]].to_dict(orient="records"),
             },
-            eval_table,
-            record_id,
+            eval_table, record_id,
         )
     print(f"\n  Saved {df['record_id'].nunique()} records to {eval_table}")
     return df
@@ -318,20 +307,41 @@ if __name__ == "__main__":
 
     # 3. Side-by-side field-type comparison
     if df_qwen is not None and df_gemma is not None:
-        import pandas as pd
+
+        def _scored(df):
+            return df[df["scorable"] & df["has_gt"]]
+
+        # Field-type comparison
         merged = (
-            df_qwen.groupby("field_type")["correct?"].mean().round(3).reset_index()
+            _scored(df_qwen).groupby("field_type")["correct?"].mean().round(3).reset_index()
             .rename(columns={"correct?": "qwen_accuracy"})
             .merge(
-                df_gemma.groupby("field_type")["correct?"].mean().round(3).reset_index()
+                _scored(df_gemma).groupby("field_type")["correct?"].mean().round(3).reset_index()
                 .rename(columns={"correct?": "gemma_accuracy"}),
-                on="field_type", how="outer"
+                on="field_type", how="outer",
             )
         )
         merged["diff"] = (merged["qwen_accuracy"] - merged["gemma_accuracy"]).round(3)
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("FIELD TYPE COMPARISON: QWEN vs GEMMA")
-        print("="*60)
+        print("=" * 60)
         print(merged.sort_values("qwen_accuracy", ascending=False).to_string(index=False))
         merged.to_csv("field_type_comparison.csv", index=False)
-        print("\nSaved: field_type_comparison.csv")
+
+        # Inclusion comparison
+        inc_merged = (
+            _scored(df_qwen).groupby("nar_inclusion")["correct?"].mean().round(3).reset_index()
+            .rename(columns={"correct?": "qwen_accuracy"})
+            .merge(
+                _scored(df_gemma).groupby("nar_inclusion")["correct?"].mean().round(3).reset_index()
+                .rename(columns={"correct?": "gemma_accuracy"}),
+                on="nar_inclusion", how="outer",
+            )
+        )
+        inc_merged["diff"] = (inc_merged["qwen_accuracy"] - inc_merged["gemma_accuracy"]).round(3)
+        print("\n" + "=" * 60)
+        print("INCLUSION STATUS COMPARISON: QWEN vs GEMMA")
+        print("=" * 60)
+        print(inc_merged.to_string(index=False))
+        inc_merged.to_csv("inclusion_comparison.csv", index=False)
+        print("\nSaved: field_type_comparison.csv, inclusion_comparison.csv")

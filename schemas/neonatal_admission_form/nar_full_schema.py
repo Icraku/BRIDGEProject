@@ -11,7 +11,7 @@ of this file are used by the evaluation pipeline to tag each field as
 "included" (in NARRecord) or "not included".
 """
 
-from typing import Optional
+from typing import Optional, Literal
 from datetime import date, time
 from pydantic import BaseModel, Field
 
@@ -32,8 +32,8 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------ #
 
     # Identifiers are redacted on real forms but present structurally
-    infant_name: Optional[str] = Field(None, description="Infant name (redacted/black bar)")
-    ip_no: Optional[str] = Field(None, description="IP number (redacted/black bar)")
+    infant_name: Optional[Literal["redacted"]] = Field(None, description="Infant name (redacted/black bar)")
+    ip_no: Optional[Literal["redacted"]] = Field(None, description="IP number (redacted/black bar)")
 
     admission_date: Optional[date] = Field(None, description="Date of Admission")
     time_seen: Optional[time] = Field(None, description="Time baby seen (24 hr clock)")
@@ -66,22 +66,22 @@ class NARFullRecord(BaseModel):
     # SECTION B: Mother's details                                         #
     # ------------------------------------------------------------------ #
 
-    mum_name: Optional[str] = Field(None, description="Mother name (redacted/black bar)")
-    mum_ip_no: Optional[str] = Field(None, description="Mother IP number (redacted/black bar)")
+    mum_name: Optional[Literal["redacted"]] = Field(None, description="Mother name (redacted/black bar)")
+    mum_ip_no: Optional[Literal["redacted"]] = Field(None, description="Mother IP number (redacted/black bar)")
 
     mum_age_in_years: Optional[int] = Field(None, description="Age (years)")
     parity_live: Optional[int] = Field(None, description="Parity live births")
     parity_abortions: Optional[int] = Field(None, description="Parity abortions/losses")
-    parity_total: Optional[str] = Field(None, description="Raw parity string as written, e.g. '2 + 1'")
+    parity_total: Optional[int] = Field(None, description="Raw parity string as written, e.g. '2 + 1'")
 
     date_estimated_delivery_date: Optional[date] = Field(None, description="EDD")
 
-    anc_clinic_name: Optional[str] = Field(None, description="ANC Clinic Name (redacted/black bar)")
+    anc_clinic_name: Optional[Literal["redacted"]] = Field(None, description="ANC Clinic Name (redacted/black bar)")
     anc_visits: Optional[int] = Field(None, description="ANC no. of visits")
 
     mum_has_anc_ultrasound: Optional[bool] = Field(None, description="ANC U/S done: Y/N")
     anc_us_trimester: Optional[str] = Field(None, description="ANC U/S trimester if yes")
-    us_findings: Optional[str] = Field(None, description="U/S findings free text")
+    us_findings: Optional[Literal["text"]] = Field(None, description="U/S findings free text")
 
     blood_group: Optional[str] = Field(None, description="Blood group: A / B / AB / O / Unknown")
     rhesus: Optional[str] = Field(None, description="Rhesus: Pos / Neg / Unknown")
@@ -101,7 +101,7 @@ class NARFullRecord(BaseModel):
     # SECTION C: Maternal illness free text                               #
     # ------------------------------------------------------------------ #
 
-    maternal_illness_notes: Optional[str] = Field(
+    maternal_illness_notes: Optional[Literal["text"]] = Field(
         None, description="Section C: any maternal illness / fever / TB / antibiotics (free text)"
     )
 
@@ -109,7 +109,7 @@ class NARFullRecord(BaseModel):
     # SECTION D: Infant presenting problems free text                     #
     # ------------------------------------------------------------------ #
 
-    infant_presenting_problems: Optional[str] = Field(
+    infant_presenting_problems: Optional[Literal["text"]] = Field(
         None, description="Section D: infant presenting problems narrative (free text)"
     )
 
@@ -176,10 +176,10 @@ class NARFullRecord(BaseModel):
     # SECTION F2: Further examination                                     #
     # ------------------------------------------------------------------ #
 
-    neuro_examination: Optional[str] = Field(
+    neuro_examination: Optional[Literal["text"]] = Field(
         None, description="F2 neuro: abnormal posture/movement and reflexes (free text)"
     )
-    further_examination: Optional[str] = Field(
+    further_examination: Optional[Literal["text"]] = Field(
         None, description="F2 further exam of Resp/CVS/GIT/GU/Skin/Birth Trauma (free text)"
     )
 
@@ -198,7 +198,7 @@ class NARFullRecord(BaseModel):
     # SECTION G: Summary of presentation                                  #
     # ------------------------------------------------------------------ #
 
-    problem_list: Optional[str] = Field(None, description="Section G: problem list free text (most important first)")
+    problem_list: Optional[Literal["text"]] = Field(None, description="Section G: problem list free text (most important first)")
 
     # ------------------------------------------------------------------ #
     # SECTION H: Investigations                                           #
@@ -208,14 +208,14 @@ class NARFullRecord(BaseModel):
     rbs_value: Optional[float] = Field(None, description="RBS result value (µmol/L or mmol/L)")
     given_bilirubin: Optional[bool] = Field(None, description="Bilirubin: Y/N")
     total_serum_bilirubin: Optional[float] = Field(None, description="Total serum bilirubin value (µmol/L)")
-    investigations_other: Optional[str] = Field(None, description="List other investigations ordered (free text)")
+    investigations_other: Optional[Literal["text"]] = Field(None, description="List other investigations ordered (free text)")
 
     # ------------------------------------------------------------------ #
     # SECTION I: Diagnoses                                                #
     # ------------------------------------------------------------------ #
 
-    primary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '1'")
-    secondary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '2'")
+    primary_admission_diagnosis: Optional[Literal["text"]] = Field(None, description="Primary diagnosis where the ticked box is tick box '1'")
+    secondary_admission_diagnosis: Optional[Literal["text"]] = Field(None, description="Primary diagnosis where the ticked box is tick box '2'")
 
     # ------------------------------------------------------------------ #
     # SECTION J: Interventions                                            #
@@ -243,8 +243,8 @@ class NARFullRecord(BaseModel):
     # SECTION K: Action plan                                              #
     # ------------------------------------------------------------------ #
 
-    clinician_name: Optional[str] = Field(None, description="Clinician name (redacted/black bar)")
-    clinician_signature: Optional[str] = Field(None, description="Clinician signature (redacted/black bar)")
+    clinician_name: Optional[Literal["redacted"]] = Field(None, description="Clinician name (redacted/black bar)")
+    clinician_signature: Optional[Literal["redacted"]] = Field(None, description="Clinician signature (redacted/black bar)")
     action_plan_time: Optional[time] = Field(None, description="Action plan time (24 hr)")
     action_plan_date: Optional[date] = Field(None, description="Action plan date (dd-mm-yyyy)")
 

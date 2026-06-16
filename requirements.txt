@@ -9,6 +9,7 @@ certifi @ file:///home/task_176313455153976/conda-bld/certifi_1763135329031/work
 cffi @ file:///home/task_176183214835616/conda-bld/cffi_1761832774688/work
 charset-normalizer @ file:///home/task_176174481524083/conda-bld/charset-normalizer_1761744828711/work
 contourpy==1.3.3
+click-8.4.1
 cycler==0.12.1
 distro @ file:///work/perseverance-python-buildout/croot/distro_1728396110052/work
 fonttools==4.62.1
@@ -20,6 +21,7 @@ httpcore @ file:///croot/httpcore_1748526048470/work
 httpx @ file:///home/task_176044729083783/conda-bld/httpx_1760447344657/work
 idna @ file:///home/task_176191175488988/conda-bld/idna_1761911981595/work
 iniconfig @ file:///croot/iniconfig_1752653729464/work
+jiwer-4.0.0
 jiter @ file:///home/task_176289731224671/conda-bld/jiter_1762897325108/work
 jsonpatch @ file:///work/perseverance-python-buildout/croot/jsonpatch_1728399595941/work
 jsonpointer @ file:///croot/jsonpointer_1753788433671/work
@@ -54,6 +56,7 @@ pytest @ file:///home/task_175812502822361/conda-bld/pytest_1758125086457/work
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 PyYAML @ file:///croot/pyyaml_1731006091482/work
+rapidfuzz-3.14.5
 regex @ file:///home/task_175888764744403/conda-bld/regex_1758887948967/work
 requests @ file:///home/task_176235918788486/conda-bld/requests_1762359591632/work
 requests-toolbelt @ file:///work/perseverance-python-buildout/croot/requests-toolbelt_1728411657696/work

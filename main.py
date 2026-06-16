@@ -2,6 +2,7 @@ import json
 import os
 from dotenv import load_dotenv
 from datetime import datetime, date, time
+import openpyxl
 
 # ------------------------
 # LOAD ENV VARIABLES

@@ -34,8 +34,8 @@ from ollama import Client
 
 from a_input.image_utils import load_images
 from b_extraction.prompts.prompt_loader import load_prompt_config, load_prompts
-from c_structuring.markdown_formatter import dict_to_markdown
-from c_structuring.markdown_parser import markdown_to_dict
+from c_structuring.markdown_utils import dict_to_markdown
+from c_structuring.markdown_utils import markdown_to_dict
 from d_evaluation.accuracy import compute_accuracy
 from database_utils.db_save import safe_save
 from database_utils.db_utils import fetch_record

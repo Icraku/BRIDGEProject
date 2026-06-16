@@ -10,7 +10,7 @@ IP_SERVER = os.getenv("IP_SERVER")
 
 from utils.image_encoding import image_to_base64
 
-from a_input.load_images import load_images
+from a_input.image_utils import load_images
 from b_extraction.merge_extraction import merge_predictions
 from c_structuring.markdown_parser import markdown_to_dict
 from d_evaluation.accuracy import compute_accuracy

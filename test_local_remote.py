@@ -3,7 +3,7 @@ import os
 from ollama import Client
 from dotenv import load_dotenv
 from datetime import datetime
-from a_input.load_images import load_images
+from a_input.image_utils import load_images
 from b_extraction.extraction_pipeline import process_image, run_extraction_pipeline
 from b_extraction.prompts.prompt_loader import load_prompts, load_prompt_config
 from c_structuring.structuring_pipeline import run_structuring_pipeline

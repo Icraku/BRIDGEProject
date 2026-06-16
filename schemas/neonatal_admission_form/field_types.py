@@ -19,8 +19,8 @@ Categories:
 FIELD_TYPES: dict[str, str] = {
 
     # ------------------------------------------------------------------ #
-    # SECTION A: Infant details                                           #
-    # ------------------------------------------------------------------ #
+    # SECTION A: Infant details
+
     "infant_name":              "redacted",
     "ip_no":                    "redacted",
     "admission_date":           "date",
@@ -44,8 +44,8 @@ FIELD_TYPES: dict[str, str] = {
     "born_where":               "str",
 
     # ------------------------------------------------------------------ #
-    # SECTION B: Mother's details                                         #
-    # ------------------------------------------------------------------ #
+    # SECTION B: Mother's details
+
     "mum_name":                             "redacted",
     "mum_ip_no":                            "redacted",
     "mum_age_in_years":                     "int",
@@ -72,14 +72,14 @@ FIELD_TYPES: dict[str, str] = {
     "prolonged_labour":                     "bool",
 
     # ------------------------------------------------------------------ #
-    # SECTION C & D: Free text                                            #
-    # ------------------------------------------------------------------ #
+    # SECTION C & D: Free text
+
     "maternal_illness_notes":       "text",
     "infant_presenting_problems":   "text",
 
     # ------------------------------------------------------------------ #
-    # SECTION E: Anthropometry & Vital signs                             #
-    # ------------------------------------------------------------------ #
+    # SECTION E: Anthropometry & Vital signs
+
     "head_circumference":           "int",
     "length":                       "int",
     "temparature":                  "float",
@@ -102,8 +102,8 @@ FIELD_TYPES: dict[str, str] = {
     "has_diarhoea":                 "bool",
 
     # ------------------------------------------------------------------ #
-    # SECTION F1: General examination                                     #
-    # ------------------------------------------------------------------ #
+    # SECTION F1: General examination
+
     "skin":                         "str",
     "jaundice":                     "str",
     "appearance":                   "str",
@@ -125,21 +125,21 @@ FIELD_TYPES: dict[str, str] = {
     "umbilicus":                    "str",
 
     # ------------------------------------------------------------------ #
-    # SECTION F2: Further examination                                     #
-    # ------------------------------------------------------------------ #
+    # SECTION F2: Further examination
+
     "neuro_examination":            "text",
     "further_examination":          "text",
     "has_birth_defects":            "bool",
     "birth_defect_types":           "str",
 
     # ------------------------------------------------------------------ #
-    # SECTION G: Problem list                                             #
-    # ------------------------------------------------------------------ #
+    # SECTION G: Problem list
+
     "problem_list":                 "text",
 
     # ------------------------------------------------------------------ #
-    # SECTION H: Investigations                                           #
-    # ------------------------------------------------------------------ #
+    # SECTION H: Investigations
+
     "rbs_measured":                 "bool",
     "rbs_value":                    "float",
     "given_bilirubin":              "bool",
@@ -147,15 +147,15 @@ FIELD_TYPES: dict[str, str] = {
     "investigations_other":         "text",
 
     # ------------------------------------------------------------------ #
-    # SECTION I: Diagnoses                                                #
-    # ------------------------------------------------------------------ #
+    # SECTION I: Diagnoses
+
     "primary_admission_diagnosis":      "text",
     "secondary_admission_diagnosis":    "text",
     "other_diagnoses": "text",
 
     # ------------------------------------------------------------------ #
-    # SECTION J: Interventions                                            #
-    # ------------------------------------------------------------------ #
+    # SECTION J: Interventions
+
     "given_vitamin_k":              "bool",
     "given_bcg":                    "bool",
     "given_chlorhexidine":          "bool",
@@ -174,31 +174,37 @@ FIELD_TYPES: dict[str, str] = {
     "prescribed_incubator":         "bool",
 
     # ------------------------------------------------------------------ #
-    # SECTION K: Action plan                                              #
-    # ------------------------------------------------------------------ #
+    # SECTION K: Action plan
+
     "clinician_name":       "redacted",
     "clinician_signature":  "redacted",
     "action_plan_time":     "time",
     "action_plan_date":     "date",
 
     # ------------------------------------------------------------------ #
-    # Internal / derived                                                  #
-    # ------------------------------------------------------------------ #
+    # Internal / derived
+
     "hospital":         "coded_int",    # integer code → facility name
     "record_type":      "str",
 }
 
 # ------------------------------------------------------------------ #
-# Hospital code → name lookup                                         #
+# Filename → hospital code lookup
 # ------------------------------------------------------------------ #
 HOSPITAL_CODES: dict[int, str] = {
-    8: "63000002_NAR_",
-    9: "64000002_NAR_",
+    2: "NAR_52000",
+    3: "NAR_53000",
+    4: "NAR_7200",
+    5: "NAR_41000",
+    6: "NAR_40000",
+    7: "NAR_63000",
+    8: "NAR_76000",
+    17: "NAR_1700000",
 }
 
-
-def decode_hospital(code: int | None) -> str | None:
-    """Return the name(facility code) for a code(hospital record_name), or None if unknown."""
-    if code is None:
-        return None
-    return HOSPITAL_CODES.get(int(code))
+def encode_hospital(filename: str) -> int | None:
+    """Return hospital code from a filename prefix."""
+    for code, prefix in HOSPITAL_CODES.items():
+        if filename.startswith(prefix):
+            return code
+    return None

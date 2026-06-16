@@ -8,8 +8,7 @@ from collections import defaultdict
 from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
-from schemas.neonatal_admission_form.field_types import FIELD_TYPES, HOSPITAL_CODES, decode_hospital
-from schemas.neonatal_admission_form.field_types import HOSPITAL_CODES
+from schemas.neonatal_admission_form.field_types import FIELD_TYPES, HOSPITAL_CODES, encode_hospital
 from schemas.neonatal_admission_form.nar_full_schema import (
     FULL_SCHEMA_FIELDS,
     NAR_REQUIRED_FIELDS,
@@ -127,10 +126,10 @@ def run_structured_comparison(
             q_val      = q_fields.get(field, "")
             g_val      = g_fields.get(field, "")
 
-            # Decode hospital codes for display
+            # Encode filenames to hospital codes for display
             if field == "hospital":
-                q_val = decode_hospital(q_val) or q_val
-                g_val = decode_hospital(g_val) or g_val
+                q_val = encode_hospital(q_val) or q_val
+                g_val = encode_hospital(g_val) or g_val
 
             status = check_match(q_val, g_val)
 
@@ -290,58 +289,152 @@ def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
     return df
 
 
-# ------------------------
+# ================================================================== #
+# FULL METRICS — calls all 5 modules
+
+from d_evaluation.classification_metrics import run_classification_metrics
+from d_evaluation.text_metrics           import run_text_metrics
+from d_evaluation.schema_compliance      import run_schema_compliance
+from d_evaluation.runtime_analysis       import run_runtime_analysis
+from d_evaluation.hallucination_analysis import run_hallucination_detection
+
+
+def run_full_metrics_suite(
+    gt_path:       str,
+    model_configs: list[dict],
+) -> dict:
+    """
+    Run all five metric functions for every model and produce a combined report dict.
+
+    Args:
+        gt_path      : path to NAR_metadata.json ground truth file
+        model_configs: list of dicts, each with:
+                         model_label   — "qwen" / "gemma" / "medgemma"
+                         eval_table    — DB table for accuracy eval (structured_required)
+                         full_table    — DB table with full extraction (structured_Q)
+
+    Example:
+        run_full_metrics_suite(
+            gt_path = "/NAR_metadata.json",
+            model_configs = [
+                {"model_label": "qwen",
+                 "eval_table":  "structured_required",
+                 "full_table":  "structured_Q"},
+                {"model_label": "gemma",
+                 "eval_table":  "structured_gemma",
+                 "full_table":  "structured_gemma"},
+                {"model_label": "medgemma",
+                 "eval_table":  "structured_medgemma",
+                 "full_table":  "structured_medgemma"},
+            ]
+        )
+    """
+    results = {}
+
+    # ---------- Steps 1 + 2 per model (need accuracy df) ----------
+    eval_dfs = {}
+    for cfg in model_configs:
+        label = cfg["model_label"]
+        print(f"\n\n{'#'*60}")
+        print(f"# MODEL: {label.upper()}")
+        print(f"{'#'*60}")
+
+        # Core accuracy df (reuse existing run_evaluation function)
+        df = run_evaluation(gt_path,
+                            structured_table=cfg["eval_table"],
+                            model_label=label)
+        eval_dfs[label] = df
+
+        if df is not None:
+            # Step 1 — F1 / Precision / Recall
+            m1 = run_classification_metrics(df, model_label=label)
+
+            # Step 2 — CER / WER
+            m2 = run_text_metrics(df, model_label=label)
+
+            results[label] = {"accuracy_df": df, "metrics": m1, "text": m2}
+
+    # ---------- Step 3 — Check for schema compliance (per model, no GT needed) --
+    for cfg in model_configs:
+        label = cfg["model_label"]
+        m3 = run_schema_compliance(
+            structured_table=cfg["full_table"],
+            model_label=label,
+        )
+        results.setdefault(label, {})["compliance"] = m3
+
+    # ---------- Step 4 — Runtime comparison (all models together) ----------------
+    runtime_cfgs = [
+        {"model_label": c["model_label"], "table_name": c["full_table"]}
+        for c in model_configs
+    ]
+    runtime_df = run_runtime_analysis(runtime_cfgs)
+    results["runtime"] = runtime_df
+
+    # ---------- Step 5 — Hallucination (per model) --------------------
+    for cfg in model_configs:
+        label = cfg["model_label"]
+        m5 = run_hallucination_detection(
+            structured_table=cfg["full_table"],
+            model_label=label,
+        )
+        results.setdefault(label, {})["hallucination"] = m5
+
+    # ---------- Cross-model F1 comparison table -----------------------
+    print(f"\n\n{'='*60}")
+    print("  CROSS-MODEL SUMMARY")
+    print(f"{'='*60}")
+    summary_rows = []
+    for label, res in results.items():
+        if label == "runtime" or "metrics" not in res:
+            continue
+        overall = res["metrics"]["summaries"]["overall"]
+        comp    = res.get("compliance", {}).get("summary", {})
+        hall    = res.get("hallucination", {})
+        text    = res.get("text", {})
+        summary_rows.append({
+            "model":                   label,
+            "macro_f1":                overall["macro_f1"].values[0],
+            "macro_precision":         overall["macro_precision"].values[0],
+            "macro_recall":            overall["macro_recall"].values[0],
+            "avg_exact_acc":           overall["avg_exact_acc"].values[0],
+            "schema_compliant_pct":    comp.get("schema_compliant_pct"),
+            "mean_required_coverage":  comp.get("mean_required_coverage"),
+            "hallucination_rate_pct":  hall.get("hallucination_rate_pct"),
+            "overall_cer":             text.get("overall_cer"),
+            "overall_wer":             text.get("overall_wer"),
+        })
+
+    if summary_rows:
+        summary_df = pd.DataFrame(summary_rows)
+        print(summary_df.to_string(index=False))
+        summary_df.to_csv("cross_model_summary.csv", index=False)
+        print("\n  Saved: cross_model_summary.csv")
+
+    return results
+
+
+# ================================================================== #
 # ENTRY POINT
 
 if __name__ == "__main__":
+    MODEL_CONFIGS = [
+        {
+            "model_label": "qwen",
+            "eval_table":  "structured_required",   # 98 NARRecord fields
+            "full_table":  "structured_Q",          # all 120 fields
+        },
+        {
+            "model_label": "gemma",
+            "eval_table":  "structured_gemma",
+            "full_table":  "structured_gemma",
+        },
+        # For MedGemma (uncomment when MedGemma runs are complete)
+        # {
+        #     "model_label": "medgemma",
+        #     "eval_table":  "structured_medgemma",
+        #     "full_table":  "structured_medgemma",
+        # },
+    ]
 
-    # 1. Compare qwen vs gemma structured outputs
-    run_structured_comparison(
-        qwen_table="structured",
-        gemma_table="structured_gemma",
-    )
-
-    # 2. Evaluate each model against ground truth
-    df_qwen  = run_evaluation(gt_path, structured_table="structured",        model_label="qwen")
-    df_gemma = run_evaluation(gt_path, structured_table="structured_gemma",  model_label="gemma")
-
-    # 3. Side-by-side field-type comparison
-    if df_qwen is not None and df_gemma is not None:
-
-        def _scored(df):
-            return df[df["scorable"] & df["has_gt"]]
-
-        # Field-type comparison
-        merged = (
-            _scored(df_qwen).groupby("field_type")["correct?"].mean().round(3).reset_index()
-            .rename(columns={"correct?": "qwen_accuracy"})
-            .merge(
-                _scored(df_gemma).groupby("field_type")["correct?"].mean().round(3).reset_index()
-                .rename(columns={"correct?": "gemma_accuracy"}),
-                on="field_type", how="outer",
-            )
-        )
-        merged["diff"] = (merged["qwen_accuracy"] - merged["gemma_accuracy"]).round(3)
-        print("\n" + "=" * 60)
-        print("FIELD TYPE COMPARISON: QWEN vs GEMMA")
-        print("=" * 60)
-        print(merged.sort_values("qwen_accuracy", ascending=False).to_string(index=False))
-        merged.to_csv("field_type_comparison.csv", index=False)
-
-        # Inclusion comparison
-        inc_merged = (
-            _scored(df_qwen).groupby("nar_inclusion")["correct?"].mean().round(3).reset_index()
-            .rename(columns={"correct?": "qwen_accuracy"})
-            .merge(
-                _scored(df_gemma).groupby("nar_inclusion")["correct?"].mean().round(3).reset_index()
-                .rename(columns={"correct?": "gemma_accuracy"}),
-                on="nar_inclusion", how="outer",
-            )
-        )
-        inc_merged["diff"] = (inc_merged["qwen_accuracy"] - inc_merged["gemma_accuracy"]).round(3)
-        print("\n" + "=" * 60)
-        print("INCLUSION STATUS COMPARISON: QWEN vs GEMMA")
-        print("=" * 60)
-        print(inc_merged.to_string(index=False))
-        inc_merged.to_csv("inclusion_comparison.csv", index=False)
-        print("\nSaved: field_type_comparison.csv, inclusion_comparison.csv")
+    run_full_metrics_suite(gt_path=gt_path, model_configs=MODEL_CONFIGS)

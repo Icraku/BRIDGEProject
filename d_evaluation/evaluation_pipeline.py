@@ -8,6 +8,7 @@ from collections import defaultdict
 from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
+from d_evaluation.field_accuracy import load_structured_outputs
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES, HOSPITAL_CODES, encode_hospital
 from schemas.neonatal_admission_form.nar_full_schema import (
     FULL_SCHEMA_FIELDS,
@@ -17,25 +18,6 @@ from schemas.neonatal_admission_form.nar_full_schema import (
 
 gt_path = "/NAR_metadata.json"
 
-# ------------------------
-# LOAD STRUCTURED DATA FROM DB
-
-def load_structured_outputs(table_name="structured"):
-    """
-    Load structured outputs from DB.
-    Works for both the full extraction table and the required-only table.
-    """
-    records = fetch_records(table_name)
-    predictions = {}
-    for r in records:
-        raw_id = r.get("id")
-        if not raw_id:
-            continue
-        record_id = str(raw_id).split(":")[-1]
-        structured = r.get("structured_text")
-        if structured:
-            predictions[record_id] = structured
-    return predictions
 
 def load_inclusion_maps(table_name="structured_Q"):
     """
@@ -283,7 +265,7 @@ def run_evaluation(gt_path, structured_table="structured", model_label="qwen"):
                     "field_type", "nar_inclusion",
                 ]].to_dict(orient="records"),
             },
-            eval_table, record_id,
+            eval_table, str(record_id),
         )
     print(f"\n  Saved {df['record_id'].nunique()} records to {eval_table}")
     return df
@@ -296,7 +278,7 @@ from d_evaluation.classification_metrics import run_classification_metrics
 from d_evaluation.text_metrics           import run_text_metrics
 from d_evaluation.schema_compliance      import run_schema_compliance
 from d_evaluation.runtime_analysis       import run_runtime_analysis
-from d_evaluation.hallucination_analysis import run_hallucination_detection
+from d_evaluation.hallucination_detector import run_hallucination_detection
 
 
 def run_full_metrics_suite(

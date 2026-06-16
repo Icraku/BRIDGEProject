@@ -27,8 +27,7 @@ from schemas.neonatal_admission_form.nar_full_schema import FULL_SCHEMA_FIELDS, 
 
 
 # ------------------------------------------------------------------ #
-# ALLOWLISTS — extend as more GT data is collected                    #
-# ------------------------------------------------------------------ #
+# ALLOWLISTS — extend as more GT data is collected
 
 ALLOWLISTS: dict[str, set] = {
     # bool fields — only these string representations are valid
@@ -114,8 +113,7 @@ TIME_RE = re.compile(r"^\d{1,2}:\d{2}(:\d{2})?$")
 
 
 # ------------------------------------------------------------------ #
-# DETECTION LOGIC                                                      #
-# ------------------------------------------------------------------ #
+# DETECTION LOGIC
 
 def _is_empty(v) -> bool:
     return v in (None, "", "none", "null", "n/a", "na") or (

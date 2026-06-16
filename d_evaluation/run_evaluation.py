@@ -5,32 +5,10 @@ import csv
 from database_utils.db_utils import fetch_records
 from database_utils.db_save import safe_save
 from d_evaluation.field_accuracy import build_accuracy_table
+from d_evaluation.field_accuracy import load_structured_outputs
 
 gt_path="/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/metadata/NAR_metadata.json"
 
-# ------------------------
-# LOAD STRUCTURED DATA FROM DB
-
-def load_structured_outputs(table_name="structured"):
-    records = fetch_records(table_name)
-
-    predictions = {}
-
-    for r in records:
-        raw_id = r.get("id")
-
-        if not raw_id:
-            continue
-
-        # SurrealDB format: "table_name:record_name -> structured:NAR_630001"
-        record_id = str(raw_id).split(":")[-1]
-
-        structured = r.get("structured_text")
-
-        if structured:
-            predictions[record_id] = structured
-
-    return predictions
 
 # ------------------------
 

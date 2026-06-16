@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 from datetime import date, time
 from database_utils.db_utils import fetch_records
+from d_evaluation.field_accuracy import load_structured_outputs
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES
 from schemas.neonatal_admission_form.nar_full_schema import (
     NARFullRecord, FULL_SCHEMA_FIELDS, NAR_REQUIRED_FIELDS, inclusion_status
@@ -148,24 +149,6 @@ def check_record_compliance(
         "schema_compliant":     schema_compliant,
         "field_detail":         field_detail,
     }
-
-
-# ------------------------
-# LOAD + RUN
-
-def load_structured_outputs(table_name: str) -> dict:
-    records = fetch_records(table_name)
-    out = {}
-    for r in records:
-        raw_id = r.get("id")
-        if not raw_id:
-            continue
-        record_id  = str(raw_id).split(":")[-1]
-        structured = r.get("structured_text")
-        if structured:
-            out[record_id] = structured
-    return out
-
 
 def run_schema_compliance(
     structured_table: str = "structured_Q",

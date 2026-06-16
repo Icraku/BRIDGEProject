@@ -21,6 +21,7 @@ Outputs:
 import re
 import pandas as pd
 import numpy as np
+from d_evaluation.field_accuracy import load_structured_outputs
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES
 from schemas.neonatal_admission_form.nar_full_schema import FULL_SCHEMA_FIELDS, inclusion_status
 
@@ -179,25 +180,6 @@ def detect_hallucination(field: str, raw_value) -> tuple[bool, str]:
             return True, f"non_float: {v!r}"
 
     return False, ""
-
-
-# ------------------------------------------------------------------ #
-# LOAD + RUN                                                           #
-# ------------------------------------------------------------------ #
-
-def load_structured_outputs(table_name: str) -> dict:
-    from database_utils.db_utils import fetch_records
-    records = fetch_records(table_name)
-    out = {}
-    for r in records:
-        raw_id = r.get("id")
-        if not raw_id:
-            continue
-        record_id  = str(raw_id).split(":")[-1]
-        structured = r.get("structured_text")
-        if structured:
-            out[record_id] = structured
-    return out
 
 
 def run_hallucination_detection(

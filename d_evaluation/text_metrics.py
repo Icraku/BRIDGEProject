@@ -1,24 +1,43 @@
 """
+d_evaluation/text_metrics.py
+========================================
 Character Error Rate (CER) and Word Error Rate (WER) for free-text fields.
-Only applied to rows where field_type == "text" AND has_gt == True.
 
-CER = edit_distance(chars) / len(reference_chars)
-WER = edit_distance(words) / len(reference_words).
+This module evaluates text extraction quality by comparing predictions
+against ground truth for rows where:
+    - field_type == "text"
+    - has_gt == True
 
-Outputs:
-  cer_wer_{model}.csv       — per (record, field) CER + WER
-  text_field_summary_{model}.csv — per-field averages
+Metrics
+-------
+CER = edit_distance(characters) / len(reference_characters)
+WER = edit_distance(words) / len(reference_words)
+
+.. note::
+- Division by zero is handled by returning 0.0 when reference is empty.
+
+Outputs
+-------
+``cer_wer_{model}.csv``
+    Per (record_id, field) CER and WER scores.
+
+``text_field_summary_{model}.csv``
+    Aggregated mean metrics per field.
 """
+
+import logging
 
 import pandas as pd
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 try:
     from jiwer import cer, wer
     JIWER_AVAILABLE = True
 except ImportError:
     JIWER_AVAILABLE = False
-    print("[text_metrics] WARNING: jiwer not installed. Run: pip install jiwer")
+    logger.warning("jiwer not installed — text metrics will be skipped. Run: pip install jiwer")
 
 
 # ------------------------
@@ -79,7 +98,7 @@ def compute_text_metrics(df: pd.DataFrame) -> pd.DataFrame:
     ].copy()
 
     if text_df.empty:
-        print("  [text_metrics] No text fields with GT found.")
+        logger.warning("  [text_metrics] No text fields with GT found.")
         return pd.DataFrame()
 
     # Use norm columns if available
@@ -146,36 +165,36 @@ def run_text_metrics(
 
     Returns dict with keys: row_df, summary_df, file paths written.
     """
-    print(f"\n{'='*60}")
-    print(f"  TEXT METRICS (CER + WER) — {model_label.upper()}")
-    print(f"{'='*60}")
+    logger.info("\n" + "=" * 60)
+    logger.info(f"  TEXT METRICS (CER + WER) — {model_label.upper()}")
+    logger.info("=" * 60)
 
     if not JIWER_AVAILABLE:
-        print("  Skipped — install jiwer first: pip install jiwer")
+        logger.warning("Skipped — install jiwer first: pip install jiwer")
         return {}
 
     row_df     = compute_text_metrics(df)
     summary_df = summarise_text_metrics(row_df)
 
     if summary_df.empty:
-        print("  No text fields with ground truth — nothing to score.")
+        logger.warning("No text fields with ground truth — nothing to score.")
         return {}
 
-    print(f"\n  Text fields with GT: {summary_df['field'].nunique()}")
-    print(f"  Records scored     : {row_df['record_id'].nunique()}")
-    print("\n  Per-field CER / WER:")
-    print(summary_df.to_string(index=False))
+    logger.info(f"\nText fields with GT: {summary_df['field'].nunique()}")
+    logger.info(f"Records scored     : {row_df['record_id'].nunique()}")
+    logger.info("\nPer-field CER / WER:")
+    logger.info("\n" + summary_df.to_string(index=False))
 
     overall_cer = round(row_df["cer"].dropna().mean(), 4)
     overall_wer = round(row_df["wer"].dropna().mean(), 4)
-    print(f"\n  Overall mean CER: {overall_cer}")
-    print(f"  Overall mean WER: {overall_wer}")
+    logger.info(f"\nOverall mean CER: {overall_cer}")
+    logger.info(f"Overall mean WER: {overall_wer}")
 
     f1 = f"cer_wer_{model_label}.csv"
     f2 = f"text_field_summary_{model_label}.csv"
     row_df.to_csv(f1, index=False)
     summary_df.to_csv(f2, index=False)
-    print(f"\n  Saved: {f1}, {f2}")
+    logger.info(f"\nSaved: {f1}, {f2}")
 
     return {
         "row_df":     row_df,

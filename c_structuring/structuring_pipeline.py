@@ -37,8 +37,7 @@ from tqdm import tqdm
 
 from c_structuring.bool_nullifier import BOOL_FIELD_LABELS, nullify_unticked_bools
 from c_structuring.nar_schema_mapper import map_to_schema
-from database_utils.db_save import safe_save
-from database_utils.db_utils import fetch_record, fetch_records
+from database_utils.db_utils import fetch_record, fetch_records, safe_save
 from database_utils.queries import get_processed_ids
 from schemas.neonatal_admission_form.nar_full_schema import (
     NAR_REQUIRED_FIELDS,

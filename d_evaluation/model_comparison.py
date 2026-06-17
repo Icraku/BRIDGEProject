@@ -1,183 +1,221 @@
-import os
-import re
+"""
+d_evaluation/model_comparison.py
+==================================
+Compares raw markdown extraction outputs between two models
+(e.g. Qwen vs Gemma) at the field level, **before** structured output
+is produced.
+
+This module operates on the ``extractions_*`` tables written by Stage A
+(``b_extraction/extraction_pipeline.py``), not the structured output tables.
+It parses each model's raw markdown independently and compares normalised
+field values side-by-side.
+
+Use this when you want to understand inter-model agreement at the extraction
+stage, independently of ground truth.  For GT-based accuracy comparison use
+``evaluation_pipeline.run_full_metrics_suite`` instead.
+
+Outputs
+-------
+``extraction_comparison.csv``
+    One row per ``(record_id, field)`` with both models' raw and normalised
+    values and a ``match_status`` column.
+
+SurrealDB table ``comparison``
+    Per-record agreement summary and full field-level comparison dict,
+    for interactive exploration.
+
+Public API
+----------
+run_comparison(qwen_table, gemma_table, output_table, output_csv)
+    Run the full extraction-level comparison.
+"""
+
+from __future__ import annotations
+
 import csv
+import logging
+import re
 from datetime import datetime
-from dotenv import load_dotenv
+from pathlib import Path
 
 from database_utils.db_utils import fetch_records, save_record
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-# ------------------------
-# CONFIG
+# ---------------------------------------------------------------------------
+# Configuration defaults
 
-QWEN_TABLE   = "extractions"
-GEMMA_TABLE  = "extractions_gemma"
-OUTPUT_TABLE = "comparison"
-OUTPUT_CSV   = "extraction_comparison.csv"
+_DEFAULT_QWEN_TABLE   = "extractions"
+_DEFAULT_GEMMA_TABLE  = "extractions_gemma"
+_DEFAULT_OUTPUT_TABLE = "comparison"
+_DEFAULT_OUTPUT_CSV   = "extraction_comparison.csv"
 
-# canonical field → all label variants (lowercased, stripped of punctuation/markdown)
-FIELD_ALIASES = {
-    "admission_date":                   ["date of admission"],
-    "time_seen":                        ["time baby seen (24 hr clock)", "time baby seen"],
-    "sex":                              ["sex"],
-    "date_of_birth":                    ["dob", "date of birth"],
-    "time_birth":                       ["time of birth (24 hr clock)", "time of birth"],
-    "gestation_in_weeks":               ["gestation (in weeks)", "gestation"],
-    "baby_age_in_days":                 ["age (in days)", "age in days"],
-    "gestation_type":                   ["gestation age from?", "gestation age from"],
-    "_apgar_combined":                  ["apgar"],
-    "delivery_type":                    ["delivery"],
-    "had_cs":                           ["if cs, type"],
-    "was_resuscitated":                 ["bvm resus at birth?", "bvm resus at birth"],
-    "rapture_of_membrane":              ["rom"],
-    "is_multiple_delivery":             ["multiple delivery"],
-    "multiple_delivery_num":            ["if yes, number"],
-    "born_before_arrival":              ["born outside facility?", "born outside facility"],
-    "born_where":                       ["if yes, where?"],
-    "mum_age_in_years":                 ["age (years)"],
-    "_parity_combined":                 ["parity"],
-    "date_estimated_delivery_date":     ["edd"],
-    "anc_visits":                       ["anc no. of visits", "anc no of visits"],
-    "mum_has_anc_ultrasound":           ["anc u/s", "anc"],
-    "blood_group":                      ["blood group"],
-    "rhesus":                           ["rhesus"],
-    "given_anti_D_medication":          ["anti d"],
-    "mum_had_vdrl":                     ["vdrl"],
-    "mum_pmtct_status":                 ["pmtct status"],
-    "mum_on_arvs":                      ["mother on arvs"],
-    "mum_had_hepatitis_b":              ["hep b"],
-    "mum_given_HBIG_treatment":         ["hep b ig given"],
-    "mum_had_hypertension_in_pregnancy":["htn in pregnancy?", "htn in pregnancy"],
-    "mum_had_antepartum_haemorrhage":   ["aph"],
-    "mum_had_diabetes":                 ["diabetes"],
-    "prolonged_labour":                 ["prolonged 2nd stage?", "prolonged 2nd stage"],
-    "head_circumference":               ["head circumference (cm)", "head circumference"],
-    "length":                           ["length (cm)", "length"],
-    "temparature":                      ["temp"],
-    "respiratory_rate":                 ["resp rate"],
-    "_bp_combined":                     ["blood pressure"],
-    "pulse_rate":                       ["pulse"],
-    "pulse_oximetry":                   ["o2 sat (%)", "o2 sat"],
-    "birth_weight":                     ["birth weight (grams)", "birth weight"],
-    "weight":                           ["weight now (grams)", "weight now"],
-    "has_fever":                        ["fever"],
-    "passed_meconium":                  ["passed meconium/stool", "passed meconium"],
-    "has_difficulty_breathing":         ["difficulty breathing"],
-    "passed_urine":                     ["passed urine in the last 12 hours", "passed urine"],
-    "has_difficulty_feeding":           ["inability to feed"],
-    "has_convulsions":                  ["convulsions / twitching", "convulsions"],
-    "has_apnoea":                       ["apnoea"],
-    "has_vomiting":                     ["bilious vomiting"],
-    # Page 2
-    "skin":                             ["skin"],
-    "jaundice":                         ["jaundice"],
-    "appearance":                       ["appearance"],
-    "cry":                              ["cry"],
-    "has_crackles":                     ["crackles", "cracles"],
-    "has_grunting":                     ["grunting"],
-    "has_good_air_entry":               ["good bilateral air entry"],
-    "has_central_cyanosis":             ["central cyanosis"],
-    "chest_indrawing":                  ["lower chest indrawing"],
-    "xiphoid_retraction":               ["xiphoid retraction"],
-    "intercostal_retraction":           ["intercostal retraction"],
-    "capillary_refill_in_seconds":      ["capillary refill (sternal)", "capillary refill"],
-    "pallor":                           ["pallor/anaemia", "pallor"],
-    "has_murmur":                       ["murmur"],
-    "has_bulging_fontanelle":           ["bulging fontanelle"],
-    "is_irritable":                     ["irritable"],
-    "tone":                             ["tone"],
-    "is_distended":                     ["distension"],
-    "umbilicus":                        ["umbilicus"],
-    "has_birth_defects":                ["birth defects?", "birth defects"],
-    "given_bilirubin":                  ["bilirubin"],
-    "rbs_measured":                     ["rbs"],
-    "given_vitamin_k":                  ["vit k & teo", "vit k & theo", "vit k"],
-    "prescribed_caffeine_citrate":      ["caffeine citrate"],
-    "prescribed_oxygen":                ["oxygen"],
-    "given_prophylaxis_pmtct":          ["prophylaxis for pmtct"],
-    "given_bcg":                        ["bcg"],
-    "given_chlorhexidine":              ["chlorhexidine"],
-    "prescribed_kmc":                   ["kmc"],
-    "prescribed_incubator":             ["incubator/ keep warm", "incubator"],
-    "prescribed_transfusion":           ["transfusion"],
-    "prescribed_phototherapy":          ["phototherapy"],
-    "prescribed_cpap":                  ["cpap"],
-    "prescribed_iv_fluids":             ["iv fluids"],
-    "prescribed_antibiotics":           ["antibiotics"],
-    "prescribed_feeds":                 ["nutrition/feeds", "feeds"],
-    "prescribed_opv":                   ["opv"],
-    "prescribed_surfactant":            ["surfactant"],
+# ---------------------------------------------------------------------------
+# Field alias map
+
+# Maps each canonical schema field name to the label variants that appear in
+# raw markdown output.  Multiple variants handle differences in how Qwen, Medgemma and
+# Gemma render the same form label.
+
+FIELD_ALIASES: dict[str, list[str]] = {
+    "admission_date":                    ["date of admission"],
+    "time_seen":                         ["time baby seen (24 hr clock)", "time baby seen"],
+    "sex":                               ["sex"],
+    "date_of_birth":                     ["dob", "date of birth"],
+    "time_birth":                        ["time of birth (24 hr clock)", "time of birth"],
+    "gestation_in_weeks":                ["gestation (in weeks)", "gestation"],
+    "baby_age_in_days":                  ["age (in days)", "age in days"],
+    "gestation_type":                    ["gestation age from?", "gestation age from"],
+    "_apgar_combined":                   ["apgar"],
+    "delivery_type":                     ["delivery"],
+    "had_cs":                            ["if cs, type"],
+    "was_resuscitated":                  ["bvm resus at birth?", "bvm resus at birth"],
+    "rapture_of_membrane":               ["rom"],
+    "is_multiple_delivery":              ["multiple delivery"],
+    "multiple_delivery_num":             ["if yes, number"],
+    "born_before_arrival":               ["born outside facility?", "born outside facility"],
+    "born_where":                        ["if yes, where?"],
+    "mum_age_in_years":                  ["age (years)"],
+    "_parity_combined":                  ["parity"],
+    "date_estimated_delivery_date":      ["edd"],
+    "anc_visits":                        ["anc no. of visits", "anc no of visits"],
+    "mum_has_anc_ultrasound":            ["anc u/s", "anc"],
+    "blood_group":                       ["blood group"],
+    "rhesus":                            ["rhesus"],
+    "given_anti_D_medication":           ["anti d"],
+    "mum_had_vdrl":                      ["vdrl"],
+    "mum_pmtct_status":                  ["pmtct status"],
+    "mum_on_arvs":                       ["mother on arvs"],
+    "mum_had_hepatitis_b":               ["hep b"],
+    "mum_given_HBIG_treatment":          ["hep b ig given"],
+    "mum_had_hypertension_in_pregnancy": ["htn in pregnancy?", "htn in pregnancy"],
+    "mum_had_antepartum_haemorrhage":    ["aph"],
+    "mum_had_diabetes":                  ["diabetes"],
+    "prolonged_labour":                  ["prolonged 2nd stage?", "prolonged 2nd stage"],
+    "head_circumference":                ["head circumference (cm)", "head circumference"],
+    "length":                            ["length (cm)", "length"],
+    "temparature":                       ["temp"],
+    "respiratory_rate":                  ["resp rate"],
+    "_bp_combined":                      ["blood pressure"],
+    "pulse_rate":                        ["pulse"],
+    "pulse_oximetry":                    ["o2 sat (%)", "o2 sat"],
+    "birth_weight":                      ["birth weight (grams)", "birth weight"],
+    "weight":                            ["weight now (grams)", "weight now"],
+    "has_fever":                         ["fever"],
+    "passed_meconium":                   ["passed meconium/stool", "passed meconium"],
+    "has_difficulty_breathing":          ["difficulty breathing"],
+    "passed_urine":                      ["passed urine in the last 12 hours", "passed urine"],
+    "has_difficulty_feeding":            ["inability to feed"],
+    "has_convulsions":                   ["convulsions / twitching", "convulsions"],
+    "has_apnoea":                        ["apnoea"],
+    "has_vomiting":                      ["bilious vomiting"],
+    "skin":                              ["skin"],
+    "jaundice":                          ["jaundice"],
+    "appearance":                        ["appearance"],
+    "cry":                               ["cry"],
+    "has_crackles":                      ["crackles", "cracles"],
+    "has_grunting":                      ["grunting"],
+    "has_good_air_entry":                ["good bilateral air entry"],
+    "has_central_cyanosis":              ["central cyanosis"],
+    "chest_indrawing":                   ["lower chest indrawing"],
+    "xiphoid_retraction":                ["xiphoid retraction"],
+    "intercostal_retraction":            ["intercostal retraction"],
+    "capillary_refill_in_seconds":       ["capillary refill (sternal)", "capillary refill"],
+    "pallor":                            ["pallor/anaemia", "pallor"],
+    "has_murmur":                        ["murmur"],
+    "has_bulging_fontanelle":            ["bulging fontanelle"],
+    "is_irritable":                      ["irritable"],
+    "tone":                              ["tone"],
+    "is_distended":                      ["distension"],
+    "umbilicus":                         ["umbilicus"],
+    "has_birth_defects":                 ["birth defects?", "birth defects"],
+    "given_bilirubin":                   ["bilirubin"],
+    "rbs_measured":                      ["rbs"],
+    "given_vitamin_k":                   ["vit k & teo", "vit k & theo", "vit k"],
+    "prescribed_caffeine_citrate":       ["caffeine citrate"],
+    "prescribed_oxygen":                 ["oxygen"],
+    "given_prophylaxis_pmtct":           ["prophylaxis for pmtct"],
+    "given_bcg":                         ["bcg"],
+    "given_chlorhexidine":               ["chlorhexidine"],
+    "prescribed_kmc":                    ["kmc"],
+    "prescribed_incubator":              ["incubator/ keep warm", "incubator"],
+    "prescribed_transfusion":            ["transfusion"],
+    "prescribed_phototherapy":           ["phototherapy"],
+    "prescribed_cpap":                   ["cpap"],
+    "prescribed_iv_fluids":              ["iv fluids"],
+    "prescribed_antibiotics":            ["antibiotics"],
+    "prescribed_feeds":                  ["nutrition/feeds", "feeds"],
+    "prescribed_opv":                    ["opv"],
+    "prescribed_surfactant":             ["surfactant"],
 }
 
-# Reverse lookup: label → canonical
-LABEL_TO_FIELD = {}
-for canonical, labels in FIELD_ALIASES.items():
-    for label in labels:
-        LABEL_TO_FIELD[label] = canonical
-
-# Bullet-list section headings → field
-BULLET_SECTION_MAP = {
-    "skin": "skin", "jaundice": "jaundice",
-    "appearance": "appearance", "cry": "cry",
+# Reverse lookup: lowercased label → canonical field name
+LABEL_TO_FIELD: dict[str, str] = {
+    label: canonical
+    for canonical, labels in FIELD_ALIASES.items()
+    for label in labels
 }
 
+# Section headings whose content is a bullet list of options (not a KV pair)
+_BULLET_SECTION_MAP: dict[str, str] = {
+    "skin": "skin",
+    "jaundice": "jaundice",
+    "appearance": "appearance",
+    "cry": "cry",
+}
 
-# ------------------------
-# HELPERS
+# ---------------------------------------------------------------------------
+# Label and cell helpers
 
-def clean_label(raw: str) -> str:
+def _clean_label(raw: str) -> str:
+    """Strip Markdown syntax and normalise whitespace from a label string."""
     s = re.sub(r"[*_`#\[\]]", "", raw)
     s = re.sub(r"\s+", " ", s).strip().lower()
-    # strip trailing punctuation except ? which matters for some aliases
     s = re.sub(r"[:\.,]+$", "", s).strip()
     return s
 
 
-def get_canonical(label: str) -> str | None:
-    return LABEL_TO_FIELD.get(clean_label(label))
+def _get_canonical(label: str) -> str | None:
+    """Return the canonical field name for *label*, or ``None`` if unknown."""
+    return LABEL_TO_FIELD.get(_clean_label(label))
 
 
-def checked_label_from_cell(cell: str) -> str:
-    """
-    Find the label associated with [x] in a cell containing multiple options.
+def _checked_label_from_cell(cell: str) -> str:
+    """Find the label associated with ``[x]`` in a Markdown table cell.
 
-    Handles both orderings:
-      qwen:  A [ ] B [ ] AB [ ] O [x] Unkn [ ]  → label BEFORE [x] → 'O'
-      gemma: [ ] A [ ] B [ ] AB [x] O [ ] Unkn  → label AFTER  [x] → 'O'
+    Handles both VLM output orderings:
 
-    Strategy: tokenise the cell into (label | bracket) tokens, find the [x]
-    bracket, then pick the nearest adjacent label token. The label token that
-    is IMMEDIATELY adjacent to [x] (before or after) is the selected value.
-    Ties go to the token before the bracket (qwen style).
+    - Qwen:  ``A [ ]  B [ ]  AB [ ]  O [x]  Unkn [ ]``  → label *before* ``[x]`` → ``"O"``
+    - Gemma: ``[ ] A  [ ] B  [ ] AB  [x] O  [ ] Unkn``  → label *after*  ``[x]`` → ``"O"``
+
+    Returns
+    -------
+    str
+        The selected label (normalised to ``Y`` / ``N`` / ``Unkn`` where
+        applicable), or ``""`` if nothing was ticked.
     """
     cell = cell.strip()
-
-    # bare Y/N shortcut
     if re.match(r"^[YN]$", cell, re.IGNORECASE):
         return cell.upper()
 
-    # Tokenise: split into (position, kind, text) where kind = 'bracket' or 'label'
-    tokens = []
-    for m in re.finditer(r"\[([xX ])\]|([A-Za-z][A-Za-z0-9+/\-]*(?:\s+[A-Za-z0-9+/\-]+)*)", cell):
+    tokens: list[tuple[str, str, int]] = []
+    for m in re.finditer(
+        r"\[([xX ])\]|([A-Za-z][A-Za-z0-9+/\-]*(?:\s+[A-Za-z0-9+/\-]+)*)", cell
+    ):
         if m.group(1) is not None:
             tokens.append(("bracket", m.group(1), m.start()))
         elif m.group(2):
             tokens.append(("label", m.group(2).strip(), m.start()))
 
-    # Find index of the [x] bracket
-    checked_idx = None
-    for i, (kind, val, _) in enumerate(tokens):
-        if kind == "bracket" and val.lower() == "x":
-            checked_idx = i
-            break
-
+    checked_idx = next(
+        (i for i, (kind, val, _) in enumerate(tokens)
+         if kind == "bracket" and val.lower() == "x"),
+        None,
+    )
     if checked_idx is None:
-        return ""  # nothing checked
+        return ""
 
-    # Prefer the label token immediately BEFORE the bracket (qwen: O [x])
-    # Fall back to immediately AFTER the bracket (gemma: [x] O)
     candidate = ""
     if checked_idx > 0 and tokens[checked_idx - 1][0] == "label":
         candidate = tokens[checked_idx - 1][1]
@@ -187,176 +225,155 @@ def checked_label_from_cell(cell: str) -> str:
     if not candidate:
         return ""
 
-    # Normalise semantic values
     lab = candidate.strip().upper()
-    if lab in ("Y", "YES"):          return "Y"
-    if lab in ("N", "NO"):           return "N"
-    if "UNKN" in lab:                return "Unkn"
-    if lab in ("POS", "POSITIVE"):   return "Y"
-    if lab in ("NEG", "NEGATIVE"):   return "N"
+    if lab in ("Y", "YES") or lab in ("POS", "POSITIVE"):
+        return "Y"
+    if lab in ("N", "NO") or lab in ("NEG", "NEGATIVE"):
+        return "N"
+    if "UNKN" in lab:
+        return "Unkn"
     return candidate.strip()
 
 
-def yn_from_cell(cell: str) -> str:
-    """Wrapper: returns Y/N/Unkn/'' for boolean fields."""
-    return checked_label_from_cell(cell)
+def _yn_from_cell(cell: str) -> str:
+    return _checked_label_from_cell(cell)
 
 
-def severity_from_cell(cell: str) -> str:
-    """
-    Return categorical label (not Y/N) adjacent to [x].
-    Used for fields like chest_indrawing (None/Mild/Severe), tone, skin, etc.
-    """
-    result = checked_label_from_cell(cell)
-    if result and result.upper() not in ("Y", "N"):
-        return result
-    return ""
+def _severity_from_cell(cell: str) -> str:
+    result = _checked_label_from_cell(cell)
+    return result if result and result.upper() not in ("Y", "N") else ""
 
 
-def parse_apgar(cell: str) -> dict:
-    out = {}
-    for minute, score in re.findall(r"(\d+)M\s*[\[\(](\d+)[\]\)]", cell, re.IGNORECASE):
-        out[f"apgar_{minute}m"] = score
-    # gemma plain format: 1M 5 5M 9 10M 10
-    for minute, score in re.findall(r"(\d+)M\s+(\d+)", cell, re.IGNORECASE):
-        key = f"apgar_{minute}m"
-        if key not in out:
-            out[key] = score
-    return out
-
-
-def parse_parity(cell: str) -> dict:
-    m = re.match(r"(\d+)\s*[\+/]\s*(\d+)", cell.strip())
-    if m:
-        return {"parity_live": m.group(1), "parity_abortions": m.group(2)}
-    return {}
-
-
-def parse_bp(cell: str) -> dict:
-    m = re.search(r"(\d+)\s*/\s*(\d+)", cell)
-    if m:
-        return {"systolic_blood_pressure": m.group(1),
-                "diastolic_blood_pressure": m.group(2)}
-    return {}
-
-
-def is_placeholder(val: str) -> bool:
-    """True if value is a blank placeholder like HH:MM, [ ], [blank], etc."""
+def _is_placeholder(val: str) -> bool:
     v = val.strip()
     if not v:
         return True
     if re.fullmatch(r"[\[\]\s\:HhMmDdYy/\-\.\?]+", v):
         return True
-    if v.lower() in ("[blank]", "blank", "[ ]", "n/a", "-", "—"):
-        return True
-    return False
+    return v.lower() in ("[blank]", "blank", "[ ]", "n/a", "-", "—")
 
 
-# ------------------------
-# TABLE ROW PARSER
+# ---------------------------------------------------------------------------
+# Composite-field parsers
 
-def parse_table_rows(lines: list, fields: dict):
+def _parse_apgar(cell: str) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for minute, score in re.findall(r"(\d+)M\s*[\[\(](\d+)[\]\)]", cell, re.IGNORECASE):
+        out[f"apgar_{minute}m"] = score
+    for minute, score in re.findall(r"(\d+)M\s+(\d+)", cell, re.IGNORECASE):
+        out.setdefault(f"apgar_{minute}m", score)
+    return out
+
+
+def _parse_parity(cell: str) -> dict[str, str]:
+    m = re.match(r"(\d+)\s*[\+/]\s*(\d+)", cell.strip())
+    return {"parity_live": m.group(1), "parity_abortions": m.group(2)} if m else {}
+
+
+def _parse_bp(cell: str) -> dict[str, str]:
+    m = re.search(r"(\d+)\s*/\s*(\d+)", cell)
+    return (
+        {"systolic_blood_pressure": m.group(1), "diastolic_blood_pressure": m.group(2)}
+        if m else {}
+    )
+
+
+# ---------------------------------------------------------------------------
+# Markdown parsers
+
+def _parse_table_rows(lines: list[str], fields: dict) -> None:
+    """Extract field values from Markdown table rows into *fields*."""
     for line in lines:
         if "|" not in line:
             continue
         if re.match(r"^\s*\|[\s:\-|]+\|\s*$", line):
-            continue  # separator
+            continue  # separator row
 
-        cells = [re.sub(r"\*+", "", c).strip()
-                 for c in line.strip().strip("|").split("|")]
-
+        cells = [
+            re.sub(r"\*+", "", c).strip()
+            for c in line.strip().strip("|").split("|")
+        ]
         if len(cells) < 2:
             continue
 
-        # ── Symptom table (6-col): Symptom | Y | N | Symptom | Y | N
-        if len(cells) >= 3:
-            def is_yn_cell(c):
-                return bool(re.search(r"\[[ xX]\]|^[YN]$", c)) or c.strip() == ""
+        # Symptom table: Symptom | Y | N | Symptom | Y | N
+        def _is_yn_cell(c: str) -> bool:
+            return bool(re.search(r"\[[ xX]\]|^[YN]$", c)) or c.strip() == ""
 
-            if is_yn_cell(cells[1]) and (len(cells) < 3 or is_yn_cell(cells[2])):
-                for i in range(0, len(cells) - 2, 3):
-                    label = cells[i]
-                    y_cell = cells[i+1] if i+1 < len(cells) else ""
-                    n_cell = cells[i+2] if i+2 < len(cells) else ""
-                    canonical = get_canonical(label)
-                    if not canonical:
-                        continue
-                    y_hit = bool(re.search(r"\[x\]|^Y$", y_cell, re.IGNORECASE))
-                    n_hit = bool(re.search(r"\[x\]|^N$", n_cell, re.IGNORECASE))
-                    if y_hit:   fields[canonical] = "Y"
-                    elif n_hit: fields[canonical] = "N"
-                continue
+        if len(cells) >= 3 and _is_yn_cell(cells[1]) and _is_yn_cell(cells[2]):
+            for i in range(0, len(cells) - 2, 3):
+                canonical = _get_canonical(cells[i])
+                if not canonical:
+                    continue
+                y_hit = bool(re.search(r"\[x\]|^Y$", cells[i + 1], re.IGNORECASE))
+                n_hit = bool(re.search(r"\[x\]|^N$", cells[i + 2], re.IGNORECASE))
+                if y_hit:
+                    fields[canonical] = "Y"
+                elif n_hit:
+                    fields[canonical] = "N"
+            continue
 
-        # ── Diagnosis table: rows with cells[1] matching [ ]/[x]/[1]/[2]
-        def looks_diag(c):
+        # Diagnosis table: Label | [x]/[ ] | [x]/[ ]
+        def _looks_diag(c: str) -> bool:
             return bool(re.match(r"^\[[ x12]\]$", c.strip()))
 
-        if len(cells) >= 3 and looks_diag(cells[1]):
+        if len(cells) >= 3 and _looks_diag(cells[1]):
             for i in range(0, len(cells) - 2, 3):
-                diag_label = clean_label(cells[i])
-                p_cell = cells[i+1] if i+1 < len(cells) else ""
-                s_cell = cells[i+2] if i+2 < len(cells) else ""
+                diag_label = _clean_label(cells[i])
                 if not diag_label:
                     continue
-                if bool(re.search(r"\[1\]|\[x\]", p_cell, re.IGNORECASE)):
+                p_cell = cells[i + 1] if i + 1 < len(cells) else ""
+                s_cell = cells[i + 2] if i + 2 < len(cells) else ""
+                if re.search(r"\[1\]|\[x\]", p_cell, re.IGNORECASE):
                     fields["primary_admission_diagnosis"] = diag_label.title()
-                elif bool(re.search(r"\[2\]|\[x\]", s_cell, re.IGNORECASE)):
+                elif re.search(r"\[2\]|\[x\]", s_cell, re.IGNORECASE):
                     existing = fields.get("secondary_admission_diagnosis", "")
                     fields["secondary_admission_diagnosis"] = (
                         (existing + ", " + diag_label.title()).lstrip(", ")
                     )
             continue
 
-        # ── Intervention table: label | Y-cell | N-cell  (repeated)
-        canonical0 = get_canonical(cells[0])
+        # Intervention table: label | Y-cell | N-cell
+        canonical0 = _get_canonical(cells[0])
         if canonical0 and len(cells) >= 3:
-            yn_val = yn_from_cell(cells[1] + " " + cells[2])
+            yn_val = _yn_from_cell(cells[1] + " " + cells[2])
             if yn_val:
                 fields[canonical0] = yn_val
-            # check remaining pairs in same row
             for i in range(3, len(cells) - 1, 3):
-                canN = get_canonical(cells[i])
-                if canN and i+2 < len(cells):
-                    v = yn_from_cell(cells[i+1] + " " + cells[i+2])
+                can_n = _get_canonical(cells[i])
+                if can_n and i + 2 < len(cells):
+                    v = _yn_from_cell(cells[i + 1] + " " + cells[i + 2])
                     if v:
-                        fields[canN] = v
+                        fields[can_n] = v
             continue
 
-        # ── Standard Field | Value (repeated pairs)
+        # Standard Field | Value pairs
         for i in range(0, len(cells) - 1, 2):
-            label = cells[i]
-            val   = cells[i+1].strip() if i+1 < len(cells) else ""
-            canonical = get_canonical(label)
-            if not canonical:
+            canonical = _get_canonical(cells[i])
+            val = cells[i + 1].strip() if i + 1 < len(cells) else ""
+            if not canonical or _is_placeholder(val):
                 continue
-            if is_placeholder(val):
-                continue
-
             if canonical == "_apgar_combined":
-                fields.update(parse_apgar(val))
+                fields.update(_parse_apgar(val))
             elif canonical == "_parity_combined":
-                fields.update(parse_parity(val))
+                fields.update(_parse_parity(val))
             elif canonical == "_bp_combined":
-                fields.update(parse_bp(val))
+                fields.update(_parse_bp(val))
             elif "[" in val:
-                # categorical: find checked label
-                sev = severity_from_cell(val)
+                sev = _severity_from_cell(val)
                 if sev:
                     fields[canonical] = sev
                 else:
-                    yn = yn_from_cell(val)
-                    # Only store if something was actually checked
+                    yn = _yn_from_cell(val)
                     if yn:
                         fields[canonical] = yn
             else:
                 fields[canonical] = val.strip()
 
 
-# ------------------------
-# BULLET / PLAIN LINE PARSER
-
-def parse_bullet_and_plain(lines: list, fields: dict):
-    current_section = None
+def _parse_bullet_and_plain(lines: list[str], fields: dict) -> None:
+    """Extract field values from bullet lists and plain key-value lines."""
+    current_section: str | None = None
 
     for line in lines:
         stripped = line.strip()
@@ -366,76 +383,72 @@ def parse_bullet_and_plain(lines: list, fields: dict):
         # Section heading
         h = re.match(r"^#{1,4}\s+(.+)$", stripped)
         if h:
-            heading = clean_label(h.group(1))
-            heading = re.sub(r"\s*[\|/].*$", "", heading).strip()  # strip "| F2" suffixes
+            heading = _clean_label(h.group(1))
+            heading = re.sub(r"\s*[\|/].*$", "", heading).strip()
             heading = re.sub(r"\s*\(.*\)", "", heading).strip()
-            current_section = BULLET_SECTION_MAP.get(heading)
+            current_section = _BULLET_SECTION_MAP.get(heading)
             continue
 
-        # ── Bullet section items: [x] Normal  or  - [x] Normal
+        # Bullet section item: [x] Normal
         if current_section:
             bm = re.match(r"^[-*]?\s*\[([xX ])\]\s+(.+)$", stripped)
             if bm and bm.group(1).lower() == "x":
                 fields[current_section] = bm.group(2).strip()
-                current_section = None  # take first checked only
+                current_section = None
                 continue
 
-        # ── Bold inline: **Crackles**: [x] Y, [ ] N
-        # or plain:       Crackles: [x] Y  [ ] N
+        # Bold / plain key-value: **Label**: value  or  Label: value
         kv = re.match(r"^\*{0,2}(.+?)\*{0,2}\s*:\s*(.+)$", stripped)
         if kv:
-            label = kv.group(1).strip()
+            canonical = _get_canonical(kv.group(1).strip())
             val_raw = kv.group(2).strip()
-            canonical = get_canonical(label)
             if canonical:
                 if canonical == "_apgar_combined":
-                    fields.update(parse_apgar(val_raw))
+                    fields.update(_parse_apgar(val_raw))
                 elif canonical == "_parity_combined":
-                    fields.update(parse_parity(val_raw))
+                    fields.update(_parse_parity(val_raw))
                 elif canonical == "_bp_combined":
-                    fields.update(parse_bp(val_raw))
+                    fields.update(_parse_bp(val_raw))
                 elif "[" in val_raw:
-                    sev = severity_from_cell(val_raw)
+                    sev = _severity_from_cell(val_raw)
                     if sev:
                         fields[canonical] = sev
                     else:
-                        yn = yn_from_cell(val_raw)
+                        yn = _yn_from_cell(val_raw)
                         if yn:
                             fields[canonical] = yn
-                elif not is_placeholder(val_raw):
+                elif not _is_placeholder(val_raw):
                     fields[canonical] = val_raw.strip()
             continue
 
-        # ── Bullet key-value: * Blood group: [ ] A [ ] B [x] O
+        # Bullet KV: * Blood group: [ ] A [ ] B [x] O
         bkv = re.match(r"^[*\-]\s+(.+?)\s*:\s*(.+)$", stripped)
         if bkv:
-            label = bkv.group(1).strip()
+            canonical = _get_canonical(bkv.group(1).strip())
             val_raw = bkv.group(2).strip()
-            canonical = get_canonical(label)
             if canonical and "[" in val_raw:
-                sev = severity_from_cell(val_raw)
-                if sev:
-                    fields[canonical] = sev
-                else:
-                    yn = yn_from_cell(val_raw)
-                    if yn:
-                        fields[canonical] = yn
+                sev = _severity_from_cell(val_raw)
+                fields[canonical] = sev if sev else _yn_from_cell(val_raw)
             continue
 
-        # ── Plain Y/N bullet (gemma page 2 symptoms): [ ] Y [x] N Fever
-        plain_yn = re.match(r"^[*\-]?\s*\[([xX ])\]\s*Y\s+\[([xX ])\]\s*N\s+(.+)$", stripped)
+        # Plain Y/N bullet (Gemma page 2): [ ] Y [x] N Fever
+        plain_yn = re.match(
+            r"^[*\-]?\s*\[([xX ])\]\s*Y\s+\[([xX ])\]\s*N\s+(.+)$", stripped
+        )
         if plain_yn:
             y_mark, n_mark, label = plain_yn.groups()
-            canonical = get_canonical(label.strip())
+            canonical = _get_canonical(label.strip())
             if canonical:
-                if y_mark.lower() == "x":   fields[canonical] = "Y"
-                elif n_mark.lower() == "x": fields[canonical] = "N"
+                if y_mark.lower() == "x":
+                    fields[canonical] = "Y"
+                elif n_mark.lower() == "x":
+                    fields[canonical] = "N"
             continue
 
-        # ── Diagnosis plain line: Birth Asphyxia: [ ] 1 [ ] 2
-        diag_line = re.match(r"^(.+?)\s*:\s*\[([xX ])\]\s*1\s+\[([xX ])\]\s*2$", stripped)
-        if diag_line:
-            diag_label, p_mark, s_mark = diag_line.groups()
+        # Diagnosis line: Birth Asphyxia: [ ] 1 [ ] 2
+        diag = re.match(r"^(.+?)\s*:\s*\[([xX ])\]\s*1\s+\[([xX ])\]\s*2$", stripped)
+        if diag:
+            diag_label, p_mark, s_mark = diag.groups()
             if p_mark.lower() == "x":
                 fields["primary_admission_diagnosis"] = diag_label.strip().title()
             elif s_mark.lower() == "x":
@@ -445,9 +458,12 @@ def parse_bullet_and_plain(lines: list, fields: dict):
                 )
             continue
 
-        # ── Others diagnosis plain: Others diagnoses (List below): [x] 1 [ ] 2 | TTN
-        others = re.match(r"^others diagnoses.*:\s*\[([xX ])\]\s*1\s+\[([xX ])\]\s*2\s*\|\s*(.+)$",
-                          stripped, re.IGNORECASE)
+        # Others diagnosis: Others diagnoses...: [x] 1 [ ] 2 | TTN
+        others = re.match(
+            r"^others diagnoses.*:\s*\[([xX ])\]\s*1\s+\[([xX ])\]\s*2\s*\|\s*(.+)$",
+            stripped,
+            re.IGNORECASE,
+        )
         if others:
             p_mark, s_mark, label = others.groups()
             if p_mark.lower() == "x":
@@ -457,24 +473,21 @@ def parse_bullet_and_plain(lines: list, fields: dict):
                 fields["secondary_admission_diagnosis"] = (
                     (existing + ", " + label.strip().title()).lstrip(", ")
                 )
-            continue
 
 
-# ------------------------
-# MASTER PARSER
-
-def parse_markdown(text: str) -> dict:
-    fields = {}
-    lines = text.split("\n")
-    parse_table_rows(lines, fields)
-    parse_bullet_and_plain(lines, fields)
+def _parse_markdown(text: str) -> dict:
+    """Parse raw markdown into a flat field-value dict."""
+    fields: dict = {}
+    lines = text.splitlines()
+    _parse_table_rows(lines, fields)
+    _parse_bullet_and_plain(lines, fields)
     return fields
 
 
-# ------------------------
-# NORMALIZERS
+# ---------------------------------------------------------------------------
+# Value normalisation
 
-def normalize_date(val: str) -> str:
+def _normalize_date(val: str) -> str:
     val = re.sub(r"[^\d/\-]", "", val).strip()
     for fmt in ("%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%y", "%d/%m/%y"):
         try:
@@ -483,122 +496,137 @@ def normalize_date(val: str) -> str:
             continue
     return val
 
-def normalize_int(val: str) -> str:
+
+def _normalize_int(val: str) -> str:
     m = re.search(r"\d+", val)
     return m.group() if m else ""
 
-def normalize_float(val: str) -> str:
+
+def _normalize_float(val: str) -> str:
     m = re.search(r"[\d.]+", val)
     return m.group() if m else ""
 
-def normalize_bool(val: str) -> str:
+
+def _normalize_bool(val: str) -> str:
     v = val.strip().upper()
-    if v in ("Y", "YES", "TRUE", "1", "POS", "POSITIVE"): return "Y"
-    if v in ("N", "NO", "FALSE", "0", "NEG", "NEGATIVE"):  return "N"
-    if "UNKN" in v: return "Unkn"
+    if v in ("Y", "YES", "TRUE", "1", "POS", "POSITIVE"):
+        return "Y"
+    if v in ("N", "NO", "FALSE", "0", "NEG", "NEGATIVE"):
+        return "N"
+    if "UNKN" in v:
+        return "Unkn"
     return val
 
-def normalize_time(val: str) -> str:
+
+def _normalize_time(val: str) -> str:
     val = re.sub(r"[^\d:]", "", val)
     m = re.match(r"(\d{1,2}):?(\d{2})", val)
-    if m:
-        return f"{int(m.group(1)):02d}:{m.group(2)}"
-    return ""   # empty if no real time found
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else ""
 
-def normalize_value(val: str, field_type: str) -> str:
+
+def _normalize_value(val: str, field_type: str) -> str:
+    """Normalise *val* according to its *field_type*."""
     if not val:
         return ""
     val = val.strip()
-    if field_type == "date":  return normalize_date(val)
-    if field_type == "int":   return normalize_int(val)
-    if field_type == "float": return normalize_float(val)
-    if field_type == "bool":  return normalize_bool(val)
-    if field_type == "time":  return normalize_time(val)
+    if field_type == "date":   return _normalize_date(val)
+    if field_type == "int":    return _normalize_int(val)
+    if field_type == "float":  return _normalize_float(val)
+    if field_type == "bool":   return _normalize_bool(val)
+    if field_type == "time":   return _normalize_time(val)
     return val.upper() if len(val) <= 5 else val.title()
 
 
-# ------------------------
-# MATCH
-
-def check_match(q: str, g: str) -> str:
-    if not q and not g: return "both_empty"
-    if not q or not g:  return "one_empty"
+def _check_match(q: str, g: str) -> str:
+    if not q and not g:
+        return "both_empty"
+    if not q or not g:
+        return "one_empty"
     return "match" if q.lower() == g.lower() else "mismatch"
 
 
-# ------------------------
-# RECORD HELPERS
+# ---------------------------------------------------------------------------
+# Record-level helpers
+# ---------------------------------------------------------------------------
 
-def get_base_id(record: dict) -> str:
+
+def _get_base_id(record: dict) -> str:
     raw = str(record.get("id", "")).split(":")[-1]
     raw = re.sub(r"_page_\d+.*$", "", raw)
     raw = re.sub(r"_base$", "", raw)
     return raw
 
-def combine_pages(records_list: list) -> str:
+
+def _combine_pages(records_list: list[dict]) -> str:
     return "\n\n".join(
-        r.get("extracted_text", "")
+        r["extracted_text"]
         for r in sorted(records_list, key=lambda x: str(x.get("id", "")))
         if r.get("extracted_text")
     )
 
 
-# ------------------------
-# MAIN
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
-def run_comparison():
-    print("Fetching records...")
-    qwen_records  = fetch_records(QWEN_TABLE)
-    gemma_records = fetch_records(GEMMA_TABLE)
 
-    def index_records(records):
-        idx = {}
+def run_comparison(
+    qwen_table:   str = _DEFAULT_QWEN_TABLE,
+    gemma_table:  str = _DEFAULT_GEMMA_TABLE,
+    output_table: str = _DEFAULT_OUTPUT_TABLE,
+    output_csv:   str = _DEFAULT_OUTPUT_CSV,
+) -> None:
+    """Compare raw extraction outputs from Qwen and Gemma field-by-field.
+
+    Parameters
+    ----------
+    qwen_table: SurrealDB table containing Qwen extraction records.
+    gemma_table: SurrealDB table containing Gemma extraction records.
+    output_table: SurrealDB table to write per-record comparison summaries to.
+    output_csv: Path for the flat CSV output.
+    """
+    logger.info("Fetching records from '%s' and '%s'...", qwen_table, gemma_table)
+    qwen_records  = fetch_records(qwen_table)
+    gemma_records = fetch_records(gemma_table)
+
+    def _index(records: list[dict]) -> dict[str, list[dict]]:
+        idx: dict[str, list[dict]] = {}
         for r in records:
-            base = get_base_id(r)
-            idx.setdefault(base, []).append(r)
+            idx.setdefault(_get_base_id(r), []).append(r)
         return idx
 
-    qwen_idx  = index_records(qwen_records)
-    gemma_idx = index_records(gemma_records)
+    qwen_idx  = _index(qwen_records)
+    gemma_idx = _index(gemma_records)
+    all_ids   = sorted(set(qwen_idx) | set(gemma_idx))
 
-    all_ids = sorted(set(list(qwen_idx.keys()) + list(gemma_idx.keys())))
-    print(f"Found {len(all_ids)} unique records\n")
+    logger.info("Unique records found: %d", len(all_ids))
 
-    csv_rows = [[
+    csv_header = [
         "record_id", "field", "field_type",
         "qwen_raw", "gemma_raw",
         "qwen_normalized", "gemma_normalized",
         "match_status",
-    ]]
+    ]
+    csv_rows: list[list] = [csv_header]
 
     for base_id in all_ids:
-        print(f"--- {base_id} ---")
+        qwen_text  = _combine_pages(qwen_idx.get(base_id, []))
+        gemma_text = _combine_pages(gemma_idx.get(base_id, []))
 
-        qwen_text  = combine_pages(qwen_idx.get(base_id, []))
-        gemma_text = combine_pages(gemma_idx.get(base_id, []))
+        qwen_fields  = _parse_markdown(qwen_text)
+        gemma_fields = _parse_markdown(gemma_text)
 
-        qwen_fields  = parse_markdown(qwen_text)
-        gemma_fields = parse_markdown(gemma_text)
-
-        record_comparison = {}
+        record_comparison: dict[str, dict] = {}
+        statuses: list[str] = []
 
         for field in sorted(FIELD_TYPES.keys()):
             ftype  = FIELD_TYPES[field]
             q_raw  = qwen_fields.get(field, "")
             g_raw  = gemma_fields.get(field, "")
-            q_norm = normalize_value(q_raw, ftype)
-            g_norm = normalize_value(g_raw, ftype)
-            status = check_match(q_norm, g_norm)
-
-            if status != "both_empty":
-                print(f"  {field:<35} qwen={q_norm!r:<12} gemma={g_norm!r:<12} → {status}")
-
-            csv_rows.append([
-                base_id, field, ftype,
-                q_raw, g_raw,
-                q_norm, g_norm,
-                status,
-            ])
+            q_norm = _normalize_value(q_raw, ftype)
+            g_norm = _normalize_value(g_raw, ftype)
+            status = _check_match(q_norm, g_norm)
+            statuses.append(status)
 
             record_comparison[field] = {
                 "field_type":       ftype,
@@ -608,38 +636,41 @@ def run_comparison():
                 "gemma_normalized": g_norm,
                 "match_status":     status,
             }
+            csv_rows.append(
+                [base_id, field, ftype, q_raw, g_raw, q_norm, g_norm, status]
+            )
 
-        statuses    = [v["match_status"] for v in record_comparison.values()]
-        n_total     = len(statuses)
-        n_match     = statuses.count("match")
-        n_mismatch  = statuses.count("mismatch")
-        n_one_empty = statuses.count("one_empty")
-        n_both      = statuses.count("both_empty")
-        agreement   = round(n_match / n_total * 100, 1) if n_total else 0
+        n_total   = len(statuses)
+        n_match   = statuses.count("match")
+        agreement = round(n_match / n_total * 100, 1) if n_total else 0.0
 
-        save_record({
-            "record_id": base_id,
-            "run_id":    datetime.now().isoformat(),
-            "fields":    record_comparison,
-            "summary": {
-                "total_fields":  n_total,
-                "matching":      n_match,
-                "mismatching":   n_mismatch,
-                "one_empty":     n_one_empty,
-                "both_empty":    n_both,
-                "agreement_pct": agreement,
+        save_record(
+            {
+                "record_id": base_id,
+                "run_id":    datetime.now().isoformat(),
+                "fields":    record_comparison,
+                "summary": {
+                    "total_fields":  n_total,
+                    "matching":      n_match,
+                    "mismatching":   statuses.count("mismatch"),
+                    "one_empty":     statuses.count("one_empty"),
+                    "both_empty":    statuses.count("both_empty"),
+                    "agreement_pct": agreement,
+                },
             },
-        }, OUTPUT_TABLE, base_id)
+            output_table,
+            base_id,
+        )
+        logger.info("  %s — agreement %.1f%%", base_id, agreement)
 
-        print(f"  → agreement {agreement}% | saved to {OUTPUT_TABLE}:{base_id}\n")
-
-    with open(OUTPUT_CSV, "w", newline="") as f:
-        csv.writer(f).writerows(csv_rows)
-
-    print(f"CSV:  {OUTPUT_CSV}")
-    print(f"DB:   {OUTPUT_TABLE}")
-    print(f"Records compared: {len(all_ids)}")
+    Path(output_csv).write_text(
+        "\n".join(",".join(str(c) for c in row) for row in csv_rows),
+        encoding="utf-8",
+    )
+    logger.info("CSV saved: %s | DB table: %s | Records: %d",
+                output_csv, output_table, len(all_ids))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     run_comparison()

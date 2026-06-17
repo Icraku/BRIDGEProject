@@ -36,9 +36,8 @@ from a_input.image_utils import load_images
 from b_extraction.prompts.prompt_loader import load_prompt_config, load_prompts
 from c_structuring.markdown_utils import dict_to_markdown
 from c_structuring.markdown_utils import markdown_to_dict
-from d_evaluation.accuracy import compute_accuracy
-from database_utils.db_save import safe_save
-from database_utils.db_utils import fetch_record
+from d_evaluation.field_accuracy import compute_accuracy
+from database_utils.db_utils import fetch_record, safe_save
 from utils.image_encoding import image_to_base64
 
 logger = logging.getLogger(__name__)

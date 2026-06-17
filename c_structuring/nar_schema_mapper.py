@@ -8,7 +8,7 @@ Function
 ``map_to_schema`` handles the key-name variants produced by different VLMs
 so that downstream evaluation always works with consistent field names.
 
-note::
+.. note::
     This mapper operates on the **required** 98-field subset
     (``NARRecord``), not the full 120-field schema.  It is called after
     ``nullify_unticked_bools`` and before DB persistence.

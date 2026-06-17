@@ -43,7 +43,7 @@ def _parse_markdown_kv(text: str) -> dict:
     look empty or missing (``""``, ``"-"``, ``"n/a"``, ``"na"``) are stored
     as the string ``"N/A"`` for downstream normalisation.
 
-    note::
+    .. note::
         The ``"N/A"`` sentinel is intentional here: it preserves the
         distinction between a field the LLM explicitly left blank versus a
         field it never mentioned.  Downstream normalisation in

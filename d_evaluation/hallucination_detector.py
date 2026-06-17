@@ -1,129 +1,184 @@
 """
+d_evaluation/hallucination_detector.py
+========================================
 Detects hallucinated values: predictions that are non-empty but fall
 outside the known valid value space for that field.
 
-Three detection strategies:
-  1. ALLOWLIST   — field has a closed set of valid values (bool, coded str,
-                   severity, sex, blood_group, etc.). Any value outside this
-                   set is a hallucination.
-  2. RANGE       — numeric fields (int, float) with physiologically plausible
-                   bounds. Values outside the range are flagged.
-  3. FORMAT      — date/time fields validated by regex. Malformed = hallucinated.
+Three detection strategies
+--------------------------
+1. **Allowlist** — fields with a closed set of valid values (booleans, coded
+   strings, severity levels, sex, blood group, etc.).  Any value outside the
+   allowlist is flagged.
+2. **Range** — numeric fields (``int``, ``float``) with physiologically
+   plausible bounds.  Values outside the range are flagged.
+3. **Format** — ``date`` and ``time`` fields validated by regex.  Values that
+   do not match the expected format are flagged.
 
-Fields of type "text", "redacted", or "unknown" are skipped
-(open vocabulary — cannot define an allowlist).
+Fields of type ``"text"``, ``"redacted"``, or ``"unknown"`` are skipped
+because they have an open vocabulary and cannot define an allowlist.
 
-Outputs:
-  hallucinations_{model}.csv       — every flagged (record, field, value)
-  hallucination_summary_{model}.csv — per-field hallucination rate
+.. note::
+    After the first real evaluation run, review ``hallucinations_{model}.csv``
+    for false positives and extend ``ALLOWLISTS`` if needed.
+
+Outputs
+-------
+``hallucinations_{model}.csv``
+    Every flagged ``(record_id, field, raw_value, reason)`` triple.
+``hallucination_summary_{model}.csv``
+    Per-field hallucination rate with example values.
 """
 
+from __future__ import annotations
+
+import logging
 import re
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 from d_evaluation.field_accuracy import load_structured_outputs
 from schemas.neonatal_admission_form.field_types import FIELD_TYPES
 from schemas.neonatal_admission_form.nar_full_schema import FULL_SCHEMA_FIELDS, inclusion_status
 
+logger = logging.getLogger(__name__)
 
-# ------------------------------------------------------------------ #
-# ALLOWLISTS — extend as more GT data is collected
+# ---------------------------------------------------------------------------
+# Allowlists — extend after reviewing false positives
 
-ALLOWLISTS: dict[str, set] = {
-    # bool fields — only these string representations are valid
-    **{f: {"true", "false", "none", "null", "", "1", "0", "yes", "no", "y", "n"}
-       for f in [
-           "was_resuscitated","is_multiple_delivery","born_before_arrival",
-           "mum_has_anc_ultrasound","has_fever","passed_meconium",
-           "has_difficulty_breathing","passed_urine","has_difficulty_feeding",
-           "has_convulsions","has_apnoea","is_floppy","has_vomiting","has_diarhoea",
-           "has_crackles","has_grunting","has_good_air_entry","has_central_cyanosis",
-           "chest_indrawing","has_murmur","has_bulging_fontanelle","is_irritable",
-           "is_distended","has_birth_defects","rbs_measured","given_bilirubin",
-           "given_vitamin_k","given_bcg","given_chlorhexidine","given_prophylaxis_pmtct",
-           "prescribed_transfusion","prescribed_phototherapy","prescribed_cpap",
-           "prescribed_iv_fluids","prescribed_antibiotics","prescribed_feeds",
-           "prescribed_opv","prescribed_surfactant","prescribed_caffeine_citrate",
-           "prescribed_oxygen","prescribed_kmc","prescribed_incubator",
-           "prolonged_labour",
-       ]},
-    # tri-state fields
-    **{f: {"true","false","pos","neg","positive","negative","unkn","unknown","none","null",""}
-       for f in [
-           "mum_had_vdrl","mum_pmtct_status","mum_on_arvs","mum_had_hepatitis_b",
-           "mum_given_HBIG_treatment","mum_had_hypertension_in_pregnancy",
-           "mum_had_antepartum_haemorrhage","mum_had_diabetes","rhesus",
-       ]},
-    "sex":          {"m","f","i","male","female","indeterminate",""},
-    "blood_group":  {"a","b","ab","o","unknown","unkn",""},
-    "delivery_type":{"svd","cs","c/s","breach","breech","forceps","vacuum",
-                     "normal","svd cs","cs svd",""},
-    "had_cs":       {"emergency","elective","emcs","elcs",""},
-    "gestation_type":{"us","u/s","lmp","ultrasound","us lmp","lmp us",""},
-    "rapture_of_membrane":{"<18","lt18",">=18","gte18",">=18h","<18h",
-                            "unknown","unkn",""},
-    "given_anti_D_medication":{"y","n","yes","no",""},
-    "jaundice":     {"none","no","+","mild","1+","++","moderate","2+",
-                     "+++","severe","3+",""},
-    "pallor":       {"none","no","+","mild","+++","severe",""},
-    "xiphoid_retraction":   {"none","mild","severe",""},
-    "intercostal_retraction":{"none","mild","severe",""},
-    "appearance":   {"well","sick","ill","unwell","dysmorphic",""},
-    "cry":          {"normal","weak","weak/absent","weak / absent",
-                     "weak-absent","absent","hoarse",""},
-    "tone":         {"normal","increased","reduced","high","low",
-                     "hypertonic","hypotonic","floppy",""},
-    "skin":         {"normal","bruising","bruised","rash","pustules",
-                     "mottling","mottled","dry","peeling","wrinkled",
-                     "dry/peeling","dry peeling","dry-peeling",""},
-    "umbilicus":    {"clean","local pus","localpus","pus","pus + red skin",
-                     "pus and red skin","pus+red skin","others","other",""},
+_BOOL_FIELDS: list[str] = [
+    "was_resuscitated", "is_multiple_delivery", "born_before_arrival",
+    "mum_has_anc_ultrasound", "has_fever", "passed_meconium",
+    "has_difficulty_breathing", "passed_urine", "has_difficulty_feeding",
+    "has_convulsions", "has_apnoea", "is_floppy", "has_vomiting", "has_diarhoea",
+    "has_crackles", "has_grunting", "has_good_air_entry", "has_central_cyanosis",
+    "chest_indrawing", "has_murmur", "has_bulging_fontanelle", "is_irritable",
+    "is_distended", "has_birth_defects", "rbs_measured", "given_bilirubin",
+    "given_vitamin_k", "given_bcg", "given_chlorhexidine", "given_prophylaxis_pmtct",
+    "prescribed_transfusion", "prescribed_phototherapy", "prescribed_cpap",
+    "prescribed_iv_fluids", "prescribed_antibiotics", "prescribed_feeds",
+    "prescribed_opv", "prescribed_surfactant", "prescribed_caffeine_citrate",
+    "prescribed_oxygen", "prescribed_kmc", "prescribed_incubator",
+    "prolonged_labour",
+]
+
+_TRISTATE_FIELDS: list[str] = [
+    "mum_had_vdrl", "mum_pmtct_status", "mum_on_arvs", "mum_had_hepatitis_b",
+    "mum_given_HBIG_treatment", "mum_had_hypertension_in_pregnancy",
+    "mum_had_antepartum_haemorrhage", "mum_had_diabetes", "rhesus",
+]
+
+_BOOL_VALID: set[str] = {
+    "true", "false", "none", "null", "", "1", "0", "yes", "YES", "no", "NO", "y", "n", "Y", "N"
 }
 
-# Plausible numeric ranges  {field: (min, max)}
-RANGES: dict[str, tuple] = {
-    "gestation_in_weeks":       (22,  44),
-    "baby_age_in_days":         (0,   28),
-    "apgar_1m":                 (0,   10),
-    "apgar_5m":                 (0,   10),
-    "apgar_10m":                (0,   10),
-    "birth_weight":             (300, 6000),
-    "weight":                   (300, 6000),
-    "head_circumference":       (20,  45),
-    "length":                   (25,  60),
-    "temparature":              (34.0,42.0),
-    "respiratory_rate":         (10,  120),
-    "pulse_rate":               (40,  250),
-    "pulse_oximetry":           (50,  100),
-    "systolic_blood_pressure":  (30,  120),
-    "diastolic_blood_pressure": (10,  80),
-    "capillary_refill_in_seconds": (0, 10),
-    "rbs_value":                (0.5, 30.0),
-    "total_serum_bilirubin":    (0,   500),
-    "mum_age_in_years":         (12,  60),
-    "anc_visits":               (0,   20),
-    "parity_live":              (0,   15),
-    "parity_abortions":         (0,   10),
-    "parity_total":             (0,   15),
-    "multiple_delivery_num":    (1,   6),
+_TRISTATE_VALID: set[str] = {
+    "true", "false", "pos", "POS", "positive", "POSITIVE", "neg", "NEG", "negative", "NEGATIVE",
+    "unkn", "UNKN", "unknown", "UNKNOWN", "none", "null", "",
 }
 
-DATE_RE = re.compile(r"^\d{2}-\d{2}-\d{4}$|^\d{4}-\d{2}-\d{2}$|^\d{2}/\d{2}/\d{4}$")
-TIME_RE = re.compile(r"^\d{1,2}:\d{2}(:\d{2})?$")
+ALLOWLISTS: dict[str, set[str]] = {
+    **{f: _BOOL_VALID    for f in _BOOL_FIELDS},
+    **{f: _TRISTATE_VALID for f in _TRISTATE_FIELDS},
+    "sex":           {"m", "M", "f", "F", "i", "male", "MALE", "female", "FEMALE", "indeterminate", ""},
+    "blood_group":   {"a", "b", "ab", "o", "unknown", "unkn", ""},
+    "delivery_type": {
+        "svd", "cs", "c/s", "breach", "breech", "forceps", "vacuum",
+        "normal", "svd cs", "cs svd", "",
+    },
+    "had_cs":              {"emergency", "elective", "emcs", "elcs", ""},
+    "gestation_type":      {"us", "u/s", "lmp", "ultrasound", "us lmp", "lmp us", ""},
+    "rapture_of_membrane": {
+        "<18", "lt18", ">=18", "gte18", ">=18h", "<18h", "unknown", "unkn", "",
+    },
+    "given_anti_D_medication": {"y", "n", "yes", "no", ""},
+    "jaundice": {
+        "none", "no", "+", "mild", "1+", "++", "moderate",
+        "2+", "+++", "severe", "3+", "",
+    },
+    "pallor":                 {"none", "no", "+", "mild", "+++", "severe", ""},
+    "xiphoid_retraction":     {"none", "mild", "severe", ""},
+    "intercostal_retraction": {"none", "mild", "severe", ""},
+    "appearance": {"well", "sick", "ill", "unwell", "dysmorphic", ""},
+    "cry": {
+        "normal", "weak", "weak/absent", "weak / absent",
+        "weak-absent", "absent", "hoarse", "",
+    },
+    "tone": {
+        "normal", "increased", "reduced", "high", "low",
+        "hypertonic", "hypotonic", "floppy", "",
+    },
+    "skin": {
+        "normal", "bruising", "bruised", "rash", "pustules", "mottling",
+        "mottled", "dry", "peeling", "wrinkled", "dry/peeling",
+        "dry peeling", "dry-peeling", "",
+    },
+    "umbilicus": {
+        "clean", "local pus", "localpus", "pus", "pus + red skin",
+        "pus and red skin", "pus+red skin", "others", "other", "",
+    },
+}
+
+# Physiologically plausible numeric ranges {field: (min, max)}
+RANGES: dict[str, tuple[float, float]] = {
+    "gestation_in_weeks":          (22,   44),
+    "baby_age_in_days":            (0,    28),
+    "apgar_1m":                    (0,    10),
+    "apgar_5m":                    (0,    10),
+    "apgar_10m":                   (0,    10),
+    "birth_weight":                (300,  6000),
+    "weight":                      (300,  6000),
+    "head_circumference":          (20,   45),
+    "length":                      (25,   60),
+    "temparature":                 (34.0, 42.0),
+    "respiratory_rate":            (10,   120),
+    "pulse_rate":                  (40,   250),
+    "pulse_oximetry":              (50,   100),
+    "systolic_blood_pressure":     (30,   120),
+    "diastolic_blood_pressure":    (10,   80),
+    "capillary_refill_in_seconds": (0,    10),
+    "rbs_value":                   (0.5,  30.0),
+    "total_serum_bilirubin":       (0,    500),
+    "mum_age_in_years":            (12,   60),
+    "anc_visits":                  (0,    20),
+    "parity_live":                 (0,    15),
+    "parity_abortions":            (0,    10),
+    "parity_total":                (0,    15),
+    "multiple_delivery_num":       (1,    6),
+}
+
+_DATE_RE = re.compile(
+    r"^\d{2}-\d{2}-\d{4}$|^\d{4}-\d{2}-\d{2}$|^\d{2}/\d{2}/\d{4}$"
+)
+_TIME_RE = re.compile(r"^\d{1,2}:\d{2}(:\d{2})?$")
+
+# ---------------------------------------------------------------------------
+# Detection logic
+# ---------------------------------------------------------------------------
 
 
-# ------------------------------------------------------------------ #
-# DETECTION LOGIC
-
-def _is_empty(v) -> bool:
-    return v in (None, "", "none", "null", "n/a", "na") or (
-        isinstance(v, float) and np.isnan(v)
+def _is_empty(value: object) -> bool:
+    """Return ``True`` if *value* is semantically absent."""
+    return value in (None, "", "none", "null", "n/a", "na") or (
+        isinstance(value, float) and np.isnan(value)
     )
 
 
-def detect_hallucination(field: str, raw_value) -> tuple[bool, str]:
-    """
-    Returns (is_hallucination, reason).
+def detect_hallucination(field: str, raw_value: object) -> tuple[bool, str]:
+    """Check a single field value against its allowlist / range / format.
+
+    Parameters
+    ----------
+    field:
+        Schema field name.
+    raw_value:
+        The value produced by the LLM for this field.
+
+    Returns
+    -------
+    tuple[bool, str]
+        ``(is_hallucination, reason)`` — reason is an empty string when not
+        flagged.
     """
     if _is_empty(raw_value):
         return False, ""
@@ -131,7 +186,6 @@ def detect_hallucination(field: str, raw_value) -> tuple[bool, str]:
     v = str(raw_value).strip().lower()
     ftype = FIELD_TYPES.get(field, "unknown")
 
-    # Skip open-vocabulary fields
     if ftype in ("text", "redacted", "unknown"):
         return False, ""
 
@@ -153,18 +207,19 @@ def detect_hallucination(field: str, raw_value) -> tuple[bool, str]:
                 return True, f"non_numeric: {v!r}"
         return False, ""
 
-    # 3. Format check
+    # 3. Format check — date
     if ftype == "date":
-        if not DATE_RE.match(v):
+        if not _DATE_RE.match(v):
             return True, f"bad_date_format: {v!r}"
         return False, ""
 
+    # 4. Format check — time
     if ftype == "time":
-        if not TIME_RE.match(v):
+        if not _TIME_RE.match(v):
             return True, f"bad_time_format: {v!r}"
         return False, ""
 
-    # 4. Bare type check for int/float not covered by range
+    # 5. Bare type check for int/float not covered by a range
     if ftype in ("int", "coded_int"):
         try:
             int(float(v))
@@ -180,23 +235,38 @@ def detect_hallucination(field: str, raw_value) -> tuple[bool, str]:
     return False, ""
 
 
+# ---------------------------------------------------------------------------
+# Public API
+
 def run_hallucination_detection(
     structured_table: str = "structured_Q",
-    model_label:      str = "qwen",
+    model_label: str = "qwen",
 ) -> dict:
-    """
-    Main entry point called from run_evaluation.py.
+    """Scan all structured outputs for hallucinated values.
 
-    Returns dict with keys: row_df, summary_df.
+    Called by ``run_evaluation.run_full_metrics_suite``.
+
+    Parameters
+    ----------
+    structured_table:
+        SurrealDB table containing full 120-field structured outputs.
+    model_label:
+        Used for output CSV filenames.
+
+    Returns
+    -------
+    dict with keys:
+        ``row_df``, ``summary_df``, ``total_checked``,
+        ``n_hallucinations``, ``hallucination_rate_pct``.
     """
-    print(f"\n{'='*60}")
-    print(f"  HALLUCINATION DETECTION — {model_label.upper()}  (table: {structured_table})")
-    print(f"{'='*60}")
+    logger.info(
+        "Hallucination detection: model=%s, table=%s", model_label, structured_table
+    )
 
     predictions = load_structured_outputs(structured_table)
-    print(f"  Records loaded: {len(predictions)}")
+    logger.info("  Records loaded: %d", len(predictions))
 
-    rows = []
+    rows: list[dict] = []
     total_checked = 0
 
     for record_id, structured in predictions.items():
@@ -222,32 +292,38 @@ def run_hallucination_detection(
     row_df = pd.DataFrame(rows)
 
     if row_df.empty:
-        print("  No hallucinations detected.")
-        return {"row_df": row_df, "summary_df": pd.DataFrame()}
+        logger.info("  No hallucinations detected.")
+        return {
+            "row_df": row_df,
+            "summary_df": pd.DataFrame(),
+            "total_checked": total_checked,
+            "n_hallucinations": 0,
+            "hallucination_rate_pct": 0.0,
+        }
 
-    # Per-field summary
     summary_df = (
         row_df.groupby(["field", "field_type", "nar_inclusion"])
         .agg(
-            n_hallucinations = ("record_id", "count"),
-            n_records_affected = ("record_id", "nunique"),
-            example_values = ("raw_value", lambda x: " | ".join(x.unique()[:3])),
-            reasons = ("reason", lambda x: " | ".join(x.unique()[:3])),
+            n_hallucinations   =("record_id", "count"),
+            n_records_affected =("record_id", "nunique"),
+            example_values     =("raw_value", lambda x: " | ".join(x.unique()[:3])),
+            reasons            =("reason",    lambda x: " | ".join(x.unique()[:3])),
         )
         .reset_index()
         .sort_values("n_hallucinations", ascending=False)
     )
 
-    total_records = len(predictions)
-    hall_rate = round(len(row_df) / total_checked * 100, 2) if total_checked > 0 else 0
+    hall_rate = (
+        round(len(row_df) / total_checked * 100, 2) if total_checked > 0 else 0.0
+    )
 
-    print(f"\n  Total field-values checked : {total_checked}")
-    print(f"  Hallucinations detected    : {len(row_df)} ({hall_rate}%)")
-    print(f"  Records affected           : {row_df['record_id'].nunique()} / {total_records}")
-    print(f"\n  Top hallucinated fields:")
-    print(summary_df.head(15).to_string(index=False))
+    logger.info(
+        "  Checked: %d | Hallucinations: %d (%.2f%%) | Records affected: %d / %d",
+        total_checked, len(row_df), hall_rate,
+        row_df["record_id"].nunique(), len(predictions),
+    )
 
-    # By field type
+    """# By field type
     by_type = (
         row_df.groupby("field_type")["record_id"]
         .count().reset_index()
@@ -265,17 +341,18 @@ def run_hallucination_detection(
     )
     print(f"\n  Hallucinations by NAR inclusion:")
     print(by_inc.to_string(index=False))
+"""
 
     f1 = f"hallucinations_{model_label}.csv"
     f2 = f"hallucination_summary_{model_label}.csv"
     row_df.to_csv(f1, index=False)
     summary_df.to_csv(f2, index=False)
-    print(f"\n  Saved: {f1}, {f2}")
+    logger.info("  Saved: %s, %s", f1, f2)
 
     return {
-        "row_df":     row_df,
-        "summary_df": summary_df,
-        "total_checked":    total_checked,
-        "n_hallucinations": len(row_df),
+        "row_df":                 row_df,
+        "summary_df":             summary_df,
+        "total_checked":          total_checked,
+        "n_hallucinations":       len(row_df),
         "hallucination_rate_pct": hall_rate,
     }

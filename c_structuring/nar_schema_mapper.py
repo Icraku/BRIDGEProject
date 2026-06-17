@@ -21,7 +21,7 @@ map_to_schema(structured_output) -> dict
 
 from __future__ import annotations
 
-from utils.schema_helpers import get_true_option  # type: ignore[import]
+from c_structuring.schema_helpers import get_true_option  # type: ignore[import]
 
 
 def map_to_schema(structured_output: dict) -> dict:

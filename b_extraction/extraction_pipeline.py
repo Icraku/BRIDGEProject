@@ -38,7 +38,7 @@ from c_structuring.markdown_utils import dict_to_markdown
 from c_structuring.markdown_utils import markdown_to_dict
 from d_evaluation.field_accuracy import compute_accuracy
 from database_utils.db_utils import fetch_record, safe_save
-from utils.image_encoding import image_to_base64
+from a_input.image_encoding import image_to_base64
 
 logger = logging.getLogger(__name__)
 

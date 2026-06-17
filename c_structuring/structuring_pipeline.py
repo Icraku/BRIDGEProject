@@ -47,7 +47,7 @@ from schemas.neonatal_admission_form.nar_full_schema import (
 # Required downstream schema (structured subset)
 from schemas.neonatal_admission_form.nar_schema_included import NARRecord
 from schemas.internal_transfer_form.itf_schema import ITFRecord
-from utils.text_cleaning import strip_markdown_fences
+from c_structuring.text_cleaning import strip_markdown_fences
 
 logger = logging.getLogger(__name__)
 

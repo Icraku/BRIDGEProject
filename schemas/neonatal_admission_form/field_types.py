@@ -1,26 +1,33 @@
 """
-field_types.py
+schemas/neonatal_admission_form/field_types.py
+===============================================
+Maps every field in ``NARFullRecord`` to its data-type category, and
+provides hospital code lookup utilities.
 
-Maps every field in NARFullRecord to its data type category.
-Used by the evaluation pipeline for accuracy breakdowns by type.
+This mapping is used by the evaluation pipeline to:
+- Break down accuracy metrics by field type (e.g. bool vs int vs str)
+- Drive type-compliance checks in ``schema_compliance.py``
+- Gate hallucination detection strategies in ``hallucination_detector.py``
 
-Categories:
-  bool        — Y/N checkboxes (None = unknown/not ticked)
-  int         — whole numbers
-  float       — decimal numbers
-  str         — coded strings, short categorical values
-  text        — free-text fields (Literal["text"] in schema)
-  date        — calendar dates
-  time        — clock times
-  redacted    — fields that are black-barred on real forms (Literal["redacted"])
-  coded_int   — integer codes mapping to named values (e.g. hospital codes)
+Type categories
+---------------
+bool        Y/N checkboxes (``None`` = unknown / not ticked)
+int         Whole numbers
+float       Decimal numbers
+str         Coded strings and short categorical values
+text        Free-text fields (``Literal["text"]`` in schema)
+date        Calendar dates
+time        Clock times
+redacted    Black-barred fields on real forms (``Literal["redacted"]``)
+coded_int   Integer codes mapping to named values (e.g. hospital codes)
 """
+
+from __future__ import annotations
 
 FIELD_TYPES: dict[str, str] = {
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION A: Infant details
-
     "infant_name":              "redacted",
     "ip_no":                    "redacted",
     "admission_date":           "date",
@@ -43,9 +50,8 @@ FIELD_TYPES: dict[str, str] = {
     "born_before_arrival":      "bool",
     "born_where":               "str",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION B: Mother's details
-
     "mum_name":                             "redacted",
     "mum_ip_no":                            "redacted",
     "mum_age_in_years":                     "int",
@@ -71,15 +77,13 @@ FIELD_TYPES: dict[str, str] = {
     "mum_had_diabetes":                     "bool",
     "prolonged_labour":                     "bool",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION C & D: Free text
-
     "maternal_illness_notes":       "text",
     "infant_presenting_problems":   "text",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION E: Anthropometry & Vital signs
-
     "head_circumference":           "int",
     "length":                       "int",
     "temparature":                  "float",
@@ -101,9 +105,8 @@ FIELD_TYPES: dict[str, str] = {
     "has_vomiting":                 "bool",
     "has_diarhoea":                 "bool",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION F1: General examination
-
     "skin":                         "str",
     "jaundice":                     "str",
     "appearance":                   "str",
@@ -115,7 +118,7 @@ FIELD_TYPES: dict[str, str] = {
     "chest_indrawing":              "bool",
     "xiphoid_retraction":           "str",
     "intercostal_retraction":       "str",
-    "capillary_refill_in_seconds":  "int",
+    "capillary_refill_in_seconds":  "float",
     "pallor":                       "str",
     "has_murmur":                   "bool",
     "has_bulging_fontanelle":       "bool",
@@ -124,38 +127,33 @@ FIELD_TYPES: dict[str, str] = {
     "is_distended":                 "bool",
     "umbilicus":                    "str",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION F2: Further examination
-
     "neuro_examination":            "text",
     "further_examination":          "text",
     "has_birth_defects":            "bool",
     "birth_defect_types":           "str",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION G: Problem list
-
     "problem_list":                 "text",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION H: Investigations
-
     "rbs_measured":                 "bool",
     "rbs_value":                    "float",
     "given_bilirubin":              "bool",
     "total_serum_bilirubin":        "float",
     "investigations_other":         "text",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION I: Diagnoses
+    "primary_admission_diagnosis":   "text",
+    "secondary_admission_diagnosis": "text",
+    "other_diagnoses":               "text",
 
-    "primary_admission_diagnosis":      "text",
-    "secondary_admission_diagnosis":    "text",
-    "other_diagnoses": "text",
-
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION J: Interventions
-
     "given_vitamin_k":              "bool",
     "given_bcg":                    "bool",
     "given_chlorhexidine":          "bool",
@@ -173,38 +171,71 @@ FIELD_TYPES: dict[str, str] = {
     "prescribed_kmc":               "bool",
     "prescribed_incubator":         "bool",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # SECTION K: Action plan
-
     "clinician_name":       "redacted",
     "clinician_signature":  "redacted",
     "action_plan_time":     "time",
     "action_plan_date":     "date",
 
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
     # Internal / derived
-
-    "hospital":         "coded_int",    # integer code → facility name
-    "record_type":      "str",
+    "hospital":     "coded_int",
+    "record_type":  "str",
 }
 
-# ------------------------------------------------------------------ #
+# ------------------------------------------------------------------
 # Filename → hospital code lookup
-# ------------------------------------------------------------------ #
+# ------------------------------------------------------------------
+# Extendable dict
+# Key   = integer code stored in the ``hospital`` field
+# Value = NAR filename prefix for records from that facility
+
 HOSPITAL_CODES: dict[int, str] = {
-    2: "NAR_52000",
-    3: "NAR_53000",
-    4: "NAR_7200",
-    5: "NAR_41000",
-    6: "NAR_40000",
-    7: "NAR_63000",
-    8: "NAR_76000",
+    2:  "NAR_52000",
+    3:  "NAR_53000",
+    4:  "NAR_7200",
+    5:  "NAR_41000",
+    6:  "NAR_40000",
+    7:  "NAR_63000",
+    8:  "NAR_76000",
     17: "NAR_1700000",
 }
 
+
 def encode_hospital(filename: str) -> int | None:
-    """Return hospital code from a filename prefix."""
+    """Return the integer hospital code for a given NAR filename.
+
+    Parameters
+    ----------
+    filename: A NAR record filename or ID string (e.g. ``"NAR_40000001_page1"``).
+
+    Returns
+    -------
+    int | None
+        The matching hospital code, or ``None`` if the prefix is not
+        recognised.
+    """
     for code, prefix in HOSPITAL_CODES.items():
         if filename.startswith(prefix):
             return code
     return None
+
+
+def decode_hospital(code: int) -> str | None:
+    """Return the filename prefix for a given integer hospital code.
+
+    This is the inverse of ``encode_hospital``.  Used by
+    ``run_evaluation.py`` when displaying structured comparison output.
+
+    Parameters
+    ----------
+    code: Integer hospital code (e.g. ``6``).
+
+    Returns
+    -------
+    str | None
+        The filename prefix (e.g. ``"NAR_40000"``), or ``None`` if the
+        code is not in ``HOSPITAL_CODES``.
+    """
+    return HOSPITAL_CODES.get(code)

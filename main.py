@@ -19,7 +19,7 @@ IP_SERVER = os.getenv("IP_SERVER")
 from b_extraction.extraction_pipeline import run_extraction_pipeline
 from c_structuring.structuring_pipeline import run_structuring_pipeline
 #from d_evaluation.run_evaluation import run_evaluation, load_and_process_meta
-from d_evaluation.main_evaluation import run_evaluation
+from d_evaluation.run_evaluation_pipeline import run_evaluation
 
 # ------------------------
 # CONFIG

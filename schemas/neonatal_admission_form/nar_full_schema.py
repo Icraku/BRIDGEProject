@@ -1,39 +1,61 @@
 """
-NARFullRecord — every field visible on the NAR form.
+schemas/neonatal_admission_form/nar_full_schema.py
+====================================================
+``NARFullRecord`` — the complete extraction schema for the Neonatal
+Admission Record (NAR) form.
 
-Relationship to NARRecord (nar_schema_included.py):
-  - NARRecord  = the *required* structured fields used downstream
-  - NARFullRecord = everything the LLM should attempt to extract,
-                    including free-text, identifiers, and supplementary fields
+Relationship to ``NARRecord`` (``nar_schema_included.py``)
+----------------------------------------------------------
+- ``NARRecord``    = the 98 *required* fields used for ground-truth
+                     evaluation and further analysis.
+- ``NARFullRecord`` = all 120 fields the LLM is asked to extract,
+                      including redacted identifiers, free-text sections
+                      and 22 supplementary fields not present in the GT.
 
-The `FULL_SCHEMA_FIELDS` set and `NAR_REQUIRED_FIELDS` set at the bottom
-of this file are used by the evaluation pipeline to tag each field as
-"included" (in NARRecord) or "not included".
+All fields are ``Optional`` with a default of ``None`` so that the LLM's
+structured-output layer never raises a validation error for missing values.
+
+The sets ``FULL_SCHEMA_FIELDS``, ``NAR_REQUIRED_FIELDS``, and
+``SUPPLEMENTARY_FIELDS`` at the bottom of this file are imported by every
+evaluation module to tag fields as ``"included"`` or ``"not included"``.
 """
 
-from typing import Optional, Literal
+from __future__ import annotations
+
 from datetime import date, time
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
+
+# NARRecord is imported here (not at the bottom) so the dependency is
+# explicit and linters can resolve it correctly.
+from schemas.neonatal_admission_form.nar_schema_included import NARRecord as _NARRecord
 
 
 class NARFullRecord(BaseModel):
+    """Complete extraction schema for the two-page NAR form.
+
+    Type conventions
+    ----------------
+    ``Optional[bool]``              Y/N checkboxes  (``None`` = blank / unknown)
+    ``Optional[int]``               Whole numbers
+    ``Optional[float]``             Decimal numbers
+    ``Optional[str]``               Coded strings and short categorical values
+    ``Optional[Literal["text"]]``   Free-text fields (not accuracy-scored vs GT)
+    ``Optional[Literal["redacted"]]`` Black-barred identifiers on real forms
+    ``Optional[date]``              Calendar dates
+    ``Optional[time]``              Clock times
     """
-    Complete extraction schema for the Neonatal Admission Record.
 
-    Y/N  → bool   (None = unknown / not ticked)
-    text → str
-    num  → int
-    date → date
-    time → time
-    """
+    # ------------------------------------------------------------------
+    # SECTION A: Infant details
 
-    # ------------------------------------------------------------------ #
-    # SECTION A: Infant details                                           #
-    # ------------------------------------------------------------------ #
-
-    # Identifiers are redacted on real forms but present structurally
-    infant_name: Optional[Literal["redacted"]] = Field(None, description="Infant name (redacted/black bar)")
-    ip_no: Optional[Literal["redacted"]] = Field(None, description="IP number (redacted/black bar)")
+    # Identifiers are physically redacted (black bar) on real forms
+    infant_name: Optional[Literal["redacted"]] = Field(
+        None, description="Infant name (redacted on real form)"
+    )
+    ip_no: Optional[Literal["redacted"]] = Field(
+        None, description="IP number (redacted on real form)"
+    )
 
     admission_date: Optional[date] = Field(None, description="Date of Admission")
     time_seen: Optional[time] = Field(None, description="Time baby seen (24 hr clock)")
@@ -44,85 +66,129 @@ class NARFullRecord(BaseModel):
     gestation_in_weeks: Optional[int] = Field(None, description="Gestation (in weeks)")
     baby_age_in_days: Optional[int] = Field(None, description="Age (in days)")
 
-    gestation_type: Optional[str] = Field(None, description="Gestation age from? U/S or LMP")
-    #gestation_lmp_weeks: Optional[int] = Field(None, description="LMP weeks value (number next to LMP tick)")
-
+    gestation_type: Optional[str] = Field(
+        None, description="Gestation age from: U/S or LMP"
+    )
     apgar_1m: Optional[int] = Field(None, description="APGAR score at 1 minute")
     apgar_5m: Optional[int] = Field(None, description="APGAR score at 5 minutes")
     apgar_10m: Optional[int] = Field(None, description="APGAR score at 10 minutes")
 
-    delivery_type: Optional[str] = Field(None, description="Delivery: SVD / CS / Breach / Forceps / Vacuum")
+    delivery_type: Optional[str] = Field(
+        None, description="Delivery: SVD / CS / Breach / Forceps / Vacuum"
+    )
     had_cs: Optional[str] = Field(None, description="If CS, type: Emergency / Elective")
     was_resuscitated: Optional[bool] = Field(None, description="BVM resus at birth: Y/N")
-    rapture_of_membrane: Optional[str] = Field(None, description="ROM: <18h / >=18h / Unknown")
+    rapture_of_membrane: Optional[str] = Field(
+        None, description="ROM: <18h / >=18h / Unknown"
+    )
 
     is_multiple_delivery: Optional[bool] = Field(None, description="Multiple delivery: Y/N")
-    multiple_delivery_num: Optional[int] = Field(None, description="If YES, number of babies")
+    multiple_delivery_num: Optional[int] = Field(
+        None, description="If YES, number of babies"
+    )
 
-    born_before_arrival: Optional[bool] = Field(None, description="Born outside facility: Y/N")
-    born_where: Optional[str] = Field(None, description="If yes, where: Home/roadside / Other facility")
+    born_before_arrival: Optional[bool] = Field(
+        None, description="Born outside facility: Y/N"
+    )
+    born_where: Optional[str] = Field(
+        None, description="If yes, where: Home/roadside / Other facility"
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION B: Mother's details                                         #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION B: Mother's details
 
-    mum_name: Optional[Literal["redacted"]] = Field(None, description="Mother name (redacted/black bar)")
-    mum_ip_no: Optional[Literal["redacted"]] = Field(None, description="Mother IP number (redacted/black bar)")
+    mum_name: Optional[Literal["redacted"]] = Field(
+        None, description="Mother name (redacted on real form)"
+    )
+    mum_ip_no: Optional[Literal["redacted"]] = Field(
+        None, description="Mother IP number (redacted on real form)"
+    )
 
     mum_age_in_years: Optional[int] = Field(None, description="Age (years)")
     parity_live: Optional[int] = Field(None, description="Parity live births")
     parity_abortions: Optional[int] = Field(None, description="Parity abortions/losses")
-    parity_total: Optional[int] = Field(None, description="Raw parity string as written, e.g. '2 + 1'")
+    parity_total: Optional[int] = Field(
+        None, description="Total parity as written on form, e.g. '2 + 1'"
+    )
 
     date_estimated_delivery_date: Optional[date] = Field(None, description="EDD")
 
-    anc_clinic_name: Optional[Literal["redacted"]] = Field(None, description="ANC Clinic Name (redacted/black bar)")
+    anc_clinic_name: Optional[Literal["redacted"]] = Field(
+        None, description="ANC Clinic Name (redacted on real form)"
+    )
     anc_visits: Optional[int] = Field(None, description="ANC no. of visits")
 
     mum_has_anc_ultrasound: Optional[bool] = Field(None, description="ANC U/S done: Y/N")
-    anc_us_trimester: Optional[str] = Field(None, description="ANC U/S trimester if yes")
-    us_findings: Optional[Literal["text"]] = Field(None, description="U/S findings free text")
+    anc_us_trimester: Optional[str] = Field(
+        None, description="ANC U/S trimester (1st / 2nd / 3rd)"
+    )
+    us_findings: Optional[Literal["text"]] = Field(
+        None, description="U/S findings free text"
+    )
 
-    blood_group: Optional[str] = Field(None, description="Blood group: A / B / AB / O / Unknown")
+    blood_group: Optional[str] = Field(
+        None, description="Blood group: A / B / AB / O / Unknown"
+    )
     rhesus: Optional[str] = Field(None, description="Rhesus: Pos / Neg / Unknown")
     given_anti_D_medication: Optional[str] = Field(None, description="Anti D given: Y / N")
 
-    mum_had_vdrl: Optional[bool] = Field(None, description="VDRL: Pos=True / Neg=False / Unknown=None")
-    mum_pmtct_status: Optional[bool] = Field(None, description="PMTCT status: Pos=True / Neg=False / Unknown=None")
-    mum_on_arvs: Optional[bool] = Field(None, description="Mother on ARVs: Y=True / N=False / Unknown=None")
-    mum_had_hepatitis_b: Optional[bool] = Field(None, description="Hep B: Pos=True / Neg=False / Unknown=None")
-    mum_given_HBIG_treatment: Optional[bool] = Field(None, description="Hep B IG given: Y=True / N=False / Unknown=None")
-    mum_had_hypertension_in_pregnancy: Optional[bool] = Field(None, description="HTN in pregnancy: Y=True / N=False / Unknown=None")
-    mum_had_antepartum_haemorrhage: Optional[bool] = Field(None, description="APH: Y=True / N=False / Unknown=None")
-    mum_had_diabetes: Optional[bool] = Field(None, description="Diabetes: Y=True / N=False / Unknown=None")
-    prolonged_labour: Optional[bool] = Field(None, description="Prolonged 2nd stage: Y=True / N=False / Unknown=None")
+    mum_had_vdrl: Optional[bool] = Field(
+        None, description="VDRL: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_pmtct_status: Optional[bool] = Field(
+        None, description="PMTCT status: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_on_arvs: Optional[bool] = Field(
+        None, description="Mother on ARVs: Y=True / N=False / Unknown=None"
+    )
+    mum_had_hepatitis_b: Optional[bool] = Field(
+        None, description="Hep B: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_given_HBIG_treatment: Optional[bool] = Field(
+        None, description="Hep B IG given: Y=True / N=False / Unknown=None"
+    )
+    mum_had_hypertension_in_pregnancy: Optional[bool] = Field(
+        None, description="HTN in pregnancy: Y=True / N=False / Unknown=None"
+    )
+    mum_had_antepartum_haemorrhage: Optional[bool] = Field(
+        None, description="APH: Y=True / N=False / Unknown=None"
+    )
+    mum_had_diabetes: Optional[bool] = Field(
+        None, description="Diabetes: Y=True / N=False / Unknown=None"
+    )
+    prolonged_labour: Optional[bool] = Field(
+        None, description="Prolonged 2nd stage: Y=True / N=False / Unknown=None"
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION C: Maternal illness free text                               #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION C: Maternal illness free text
 
     maternal_illness_notes: Optional[Literal["text"]] = Field(
-        None, description="Section C: any maternal illness / fever / TB / antibiotics (free text)"
+        None,
+        description=(
+            "Section C: any maternal illness / fever / TB / antibiotics (free text)"
+        ),
     )
 
-    # ------------------------------------------------------------------ #
-    # SECTION D: Infant presenting problems free text                     #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION D: Infant presenting problems free text
 
     infant_presenting_problems: Optional[Literal["text"]] = Field(
-        None, description="Section D: infant presenting problems narrative (free text)"
+        None,
+        description="Section D: infant presenting problems narrative (free text)",
     )
 
-    # ------------------------------------------------------------------ #
-    # SECTION E: Anthropometry & Vital signs                             #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION E: Anthropometry & Vital signs
 
     head_circumference: Optional[int] = Field(None, description="Head circumference (cm)")
     length: Optional[int] = Field(None, description="Length (cm)")
     temparature: Optional[float] = Field(None, description="Temp (°C)")
     respiratory_rate: Optional[int] = Field(None, description="Resp Rate (breaths/min)")
     systolic_blood_pressure: Optional[int] = Field(None, description="Systolic BP (mmHg)")
-    diastolic_blood_pressure: Optional[int] = Field(None, description="Diastolic BP (mmHg)")
+    diastolic_blood_pressure: Optional[int] = Field(
+        None, description="Diastolic BP (mmHg)"
+    )
     pulse_rate: Optional[int] = Field(None, description="Pulse (/min)")
     pulse_oximetry: Optional[int] = Field(None, description="O₂ Sat (%)")
     birth_weight: Optional[int] = Field(None, description="Birth Weight (grams)")
@@ -131,146 +197,224 @@ class NARFullRecord(BaseModel):
     # Symptoms (checkboxes)
     has_fever: Optional[bool] = Field(None, description="Fever: Y/N")
     passed_meconium: Optional[bool] = Field(None, description="Passed meconium/stool: Y/N")
-    has_difficulty_breathing: Optional[bool] = Field(None, description="Difficulty breathing: Y/N")
-    passed_urine: Optional[bool] = Field(None, description="Passed urine in last 12 hours: Y/N")
-    has_difficulty_feeding: Optional[bool] = Field(None, description="Inability to feed: Y/N")
-    has_convulsions: Optional[bool] = Field(None, description="Convulsions / Twitching: Y/N")
+    has_difficulty_breathing: Optional[bool] = Field(
+        None, description="Difficulty breathing: Y/N"
+    )
+    passed_urine: Optional[bool] = Field(
+        None, description="Passed urine in last 12 hours: Y/N"
+    )
+    has_difficulty_feeding: Optional[bool] = Field(
+        None, description="Inability to feed: Y/N"
+    )
+    has_convulsions: Optional[bool] = Field(
+        None, description="Convulsions / Twitching: Y/N"
+    )
     has_apnoea: Optional[bool] = Field(None, description="Apnoea: Y/N")
-    is_floppy: Optional[bool] = Field(None, description="Reduced / Absent movement: Y/N")
+    is_floppy: Optional[bool] = Field(
+        None, description="Reduced / Absent movement: Y/N"
+    )
     has_vomiting: Optional[bool] = Field(None, description="Bilious Vomiting: Y/N")
     has_diarhoea: Optional[bool] = Field(None, description="Bloody stool: Y/N")
 
-    # ------------------------------------------------------------------ #
-    # SECTION F1: General examination                                     #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION F1: General examination
 
-    skin: Optional[str] = Field(None, description="Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled")
+    skin: Optional[str] = Field(
+        None,
+        description=(
+            "Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled"
+        ),
+    )
     jaundice: Optional[str] = Field(None, description="Jaundice: None / + / +++")
-    appearance: Optional[str] = Field(None, description="Appearance: Well / Sick / Dysmorphic")
-    cry: Optional[str] = Field(None, description="Cry: Normal / Weak-Absent / Hoarse")
+    appearance: Optional[str] = Field(
+        None, description="Appearance: Well / Sick / Dysmorphic"
+    )
+    cry: Optional[str] = Field(
+        None, description="Cry: Normal / Weak-Absent / Hoarse"
+    )
 
-    # A & B
+    # A & B (Respiratory)
     has_crackles: Optional[bool] = Field(None, description="Crackles: Y/N")
     has_grunting: Optional[bool] = Field(None, description="Grunting: Y/N")
-    has_good_air_entry: Optional[bool] = Field(None, description="Good bilateral air entry: Y/N")
-    has_central_cyanosis: Optional[bool] = Field(None, description="Central cyanosis: Y/N")
-    chest_indrawing: Optional[bool] = Field(None, description="Lower chest indrawing: Y/N")
-    xiphoid_retraction: Optional[str] = Field(None, description="Xiphoid retraction: None / Mild / Severe")
-    intercostal_retraction: Optional[str] = Field(None, description="Intercostal retraction: None / Mild / Severe")
+    has_good_air_entry: Optional[bool] = Field(
+        None, description="Good bilateral air entry: Y/N"
+    )
+    has_central_cyanosis: Optional[bool] = Field(
+        None, description="Central cyanosis: Y/N"
+    )
+    chest_indrawing: Optional[bool] = Field(
+        None, description="Lower chest indrawing: Y/N"
+    )
+    xiphoid_retraction: Optional[str] = Field(
+        None, description="Xiphoid retraction: None / Mild / Severe"
+    )
+    intercostal_retraction: Optional[str] = Field(
+        None, description="Intercostal retraction: None / Mild / Severe"
+    )
 
-    # C
-    capillary_refill_in_seconds: Optional[float] = Field(None, description="Capillary refill (seconds)")
+    # C (Cardiovascular)
+    capillary_refill_in_seconds: Optional[float] = Field(
+        None, description="Capillary refill (seconds)"
+    )
     pallor: Optional[str] = Field(None, description="Pallor/Anaemia: None / + / +++")
     has_murmur: Optional[bool] = Field(None, description="Murmur: Y/N")
 
-    # D
-    has_bulging_fontanelle: Optional[bool] = Field(None, description="Bulging fontanelle: Y/N")
+    # D (Neurological)
+    has_bulging_fontanelle: Optional[bool] = Field(
+        None, description="Bulging fontanelle: Y/N"
+    )
     is_irritable: Optional[bool] = Field(None, description="Irritable: Y/N")
-    tone: Optional[str] = Field(None, description="Tone: Normal / Increased / Reduced")
+    tone: Optional[str] = Field(
+        None, description="Tone: Normal / Increased / Reduced"
+    )
 
     # Abdomen
-    is_distended: Optional[bool] = Field(None, description="Abdominal distension: Y/N")
-    umbilicus: Optional[str] = Field(None, description="Umbilicus: Clean / Local pus / Pus+Red skin / Others")
+    is_distended: Optional[bool] = Field(
+        None, description="Abdominal distension: Y/N"
+    )
+    umbilicus: Optional[str] = Field(
+        None,
+        description="Umbilicus: Clean / Local pus / Pus+Red skin / Others",
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION F2: Further examination                                     #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION F2: Further examination
 
     neuro_examination: Optional[Literal["text"]] = Field(
-        None, description="F2 neuro: abnormal posture/movement and reflexes (free text)"
+        None,
+        description=(
+            "F2 neuro: abnormal posture / movement and reflexes (free text)"
+        ),
     )
     further_examination: Optional[Literal["text"]] = Field(
-        None, description="F2 further exam of Resp/CVS/GIT/GU/Skin/Birth Trauma (free text)"
+        None,
+        description=(
+            "F2 further exam of Resp / CVS / GIT / GU / Skin / Birth Trauma (free text)"
+        ),
     )
 
     has_birth_defects: Optional[bool] = Field(None, description="Birth defects: Y/N")
     birth_defect_types: Optional[str] = Field(
         None,
         description=(
-            "Birth defect types if yes (checkboxes that are comma-separated from: "
-            "Major GI abnormality, Hydrocephalus, Cleft lip/palate, "
-            "Microcephaly, Neural tube defects, Spina bifida, "
-            "Limb abnormalities, Birth injury/abnormalities)"
+            "Birth defect types if yes (comma-separated from: Major GI abnormality, "
+            "Hydrocephalus, Cleft lip/palate, Microcephaly, Neural tube defects, "
+            "Spina bifida, Limb abnormalities, Birth injury/abnormalities)"
         ),
     )
 
-    # ------------------------------------------------------------------ #
-    # SECTION G: Summary of presentation                                  #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION G: Summary of presentation
 
-    problem_list: Optional[Literal["text"]] = Field(None, description="Section G: problem list free text (most important first)")
+    problem_list: Optional[Literal["text"]] = Field(
+        None,
+        description="Section G: problem list free text (most important first)",
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION H: Investigations                                           #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION H: Investigations
 
-    rbs_measured: Optional[bool] = Field(None, description="RBS: Y/N")
-    rbs_value: Optional[float] = Field(None, description="RBS result value (µmol/L or mmol/L)")
-    given_bilirubin: Optional[bool] = Field(None, description="Bilirubin: Y/N")
-    total_serum_bilirubin: Optional[float] = Field(None, description="Total serum bilirubin value (µmol/L)")
-    investigations_other: Optional[Literal["text"]] = Field(None, description="List other investigations ordered (free text)")
+    rbs_measured: Optional[bool] = Field(None, description="RBS measured: Y/N")
+    rbs_value: Optional[float] = Field(None, description="RBS result value (mmol/L)")
+    given_bilirubin: Optional[bool] = Field(None, description="Bilirubin measured: Y/N")
+    total_serum_bilirubin: Optional[float] = Field(
+        None, description="Total serum bilirubin value (µmol/L)"
+    )
+    investigations_other: Optional[Literal["text"]] = Field(
+        None, description="Other investigations ordered (free text)"
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION I: Diagnoses                                                #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION I: Diagnoses
 
-    primary_admission_diagnosis: Optional[Literal["text"]] = Field(None, description="Primary diagnosis where the ticked box is tick box '1'")
-    secondary_admission_diagnosis: Optional[Literal["text"]] = Field(None, description="Primary diagnosis where the ticked box is tick box '2'")
+    primary_admission_diagnosis: Optional[Literal["text"]] = Field(
+        None, description="Primary diagnosis (tick box '1')"
+    )
+    secondary_admission_diagnosis: Optional[Literal["text"]] = Field(
+        None, description="Secondary diagnosis (tick box '2')"
+    )
+    other_diagnoses: Optional[Literal["text"]] = Field(
+        None, description="Other diagnoses (free text, listed below tick boxes)"
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION J: Interventions                                            #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION J: Interventions
 
-    given_vitamin_k: Optional[bool] = Field(None, description="Vitamin K (& TEO) given: Y/N")
+    given_vitamin_k: Optional[bool] = Field(
+        None, description="Vitamin K (& TEO) given: Y/N"
+    )
     given_bcg: Optional[bool] = Field(None, description="BCG given: Y/N")
-    given_chlorhexidine: Optional[bool] = Field(None, description="Chlorhexidine given: Y/N")
-    given_prophylaxis_pmtct: Optional[bool] = Field(None, description="PMTCT prophylaxis given: Y/N")
-
-    prescribed_transfusion: Optional[bool] = Field(None, description="Transfusion prescribed: Y/N")
-    prescribed_phototherapy: Optional[bool] = Field(None, description="Phototherapy prescribed: Y/N")
+    given_chlorhexidine: Optional[bool] = Field(
+        None, description="Chlorhexidine given: Y/N"
+    )
+    given_prophylaxis_pmtct: Optional[bool] = Field(
+        None, description="PMTCT prophylaxis given: Y/N"
+    )
+    prescribed_transfusion: Optional[bool] = Field(
+        None, description="Transfusion prescribed: Y/N"
+    )
+    prescribed_phototherapy: Optional[bool] = Field(
+        None, description="Phototherapy prescribed: Y/N"
+    )
     prescribed_cpap: Optional[bool] = Field(None, description="CPAP prescribed: Y/N")
-    prescribed_iv_fluids: Optional[bool] = Field(None, description="IV fluids prescribed: Y/N")
-    prescribed_antibiotics: Optional[bool] = Field(None, description="Antibiotics prescribed: Y/N")
-    prescribed_feeds: Optional[bool] = Field(None, description="Feeds/Nutrition prescribed: Y/N")
+    prescribed_iv_fluids: Optional[bool] = Field(
+        None, description="IV fluids prescribed: Y/N"
+    )
+    prescribed_antibiotics: Optional[bool] = Field(
+        None, description="Antibiotics prescribed: Y/N"
+    )
+    prescribed_feeds: Optional[bool] = Field(
+        None, description="Feeds/Nutrition prescribed: Y/N"
+    )
     prescribed_opv: Optional[bool] = Field(None, description="OPV prescribed: Y/N")
-    prescribed_surfactant: Optional[bool] = Field(None, description="Surfactant prescribed: Y/N")
-    prescribed_caffeine_citrate: Optional[bool] = Field(None, description="Caffeine citrate prescribed: Y/N")
+    prescribed_surfactant: Optional[bool] = Field(
+        None, description="Surfactant prescribed: Y/N"
+    )
+    prescribed_caffeine_citrate: Optional[bool] = Field(
+        None, description="Caffeine citrate prescribed: Y/N"
+    )
     prescribed_oxygen: Optional[bool] = Field(None, description="Oxygen prescribed: Y/N")
     prescribed_kmc: Optional[bool] = Field(None, description="KMC prescribed: Y/N")
-    prescribed_incubator: Optional[bool] = Field(None, description="Incubator/keep warm prescribed: Y/N")
+    prescribed_incubator: Optional[bool] = Field(
+        None, description="Incubator/keep warm prescribed: Y/N"
+    )
 
-    # ------------------------------------------------------------------ #
-    # SECTION K: Action plan                                              #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # SECTION K: Action plan
 
-    clinician_name: Optional[Literal["redacted"]] = Field(None, description="Clinician name (redacted/black bar)")
-    clinician_signature: Optional[Literal["redacted"]] = Field(None, description="Clinician signature (redacted/black bar)")
+    clinician_name: Optional[Literal["redacted"]] = Field(
+        None, description="Clinician name (redacted on real form)"
+    )
+    clinician_signature: Optional[Literal["redacted"]] = Field(
+        None, description="Clinician signature (redacted on real form)"
+    )
     action_plan_time: Optional[time] = Field(None, description="Action plan time (24 hr)")
-    action_plan_date: Optional[date] = Field(None, description="Action plan date (dd-mm-yyyy)")
+    action_plan_date: Optional[date] = Field(
+        None, description="Action plan date (dd-mm-yyyy)"
+    )
 
-    # ------------------------------------------------------------------ #
-    # Internal / derived                                                  #
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # Internal / derived
 
-    record_type: str = "NAR"
+    record_type: str = Field(default="NAR", description="Record type identifier")
 
 
-# ------------------------------------------------------------------ #
-# Field membership sets — used by the evaluation pipeline            #
-# ------------------------------------------------------------------ #
+# ---------------------------------------------------------------------------
+# Fields membership in schemas — imported by every evaluation module
+# ---------------------------------------------------------------------------
 
-from schemas.neonatal_admission_form.nar_schema_included import NARRecord as _NARRecord
-
-# All fields the full extraction schema covers
+# All fields extracted (120 fields)
 FULL_SCHEMA_FIELDS: set[str] = set(NARFullRecord.model_fields.keys())
 
-# Fields that are also in the required NARRecord
+# Fields required in the NARRecord (98 fields)
+# NAR_REQUIRED_FIELDS is derived from NARRecord at import time, adding
+# or removing a field from nar_schema_included.py updates this automatically.
 NAR_REQUIRED_FIELDS: set[str] = set(_NARRecord.model_fields.keys())
 
-# Convenience: fields present in full schema but NOT required downstream
+# Fields present in full schema but NOT required downstream (22 supplementary)
 SUPPLEMENTARY_FIELDS: set[str] = FULL_SCHEMA_FIELDS - NAR_REQUIRED_FIELDS
 
 
 def inclusion_status(field: str) -> str:
-    """Return 'included' if the field is in NARRecord, else 'not included'."""
+    """Return ``"included"`` if *field* is in ``NARRecord``, else ``"not included"``."""
     return "included" if field in NAR_REQUIRED_FIELDS else "not included"

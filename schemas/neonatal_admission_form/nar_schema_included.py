@@ -1,161 +1,242 @@
 """
-NARRecord — every field included in the Gold Standard from the NAR form.
+schemas/neonatal_admission_form/nar_schema_included.py
+=======================================================
+``NARRecord`` — the 98 required fields used for ground-truth evaluation.
 
-Relationship to NARFullRecord (nar_full_schema.py):
-  - NARRecord  = the *required* structured fields used in the Gold Standard
-  - NARFullRecord = everything the LLM should attempt to extract,
-                    including free-text, redacted identifiers and supplementary fields
+Relationship to ``NARFullRecord`` (``nar_full_schema.py``)
+----------------------------------------------------------
+- ``NARRecord``     = this file: the *required* structured fields present in
+                      the ground-truth (``NAR_metadata.json``).
+                      Used by ``build_accuracy_table`` and ``map_to_schema``.
+- ``NARFullRecord`` = the full 120-field schema the LLM extracts against.
+
+Design note — strict non-Optional types
+----------------------------------------
+All fields here are non-Optional (no default values) so that Pydantic
+raises a ``ValidationError`` if the structuring pipeline tries to create a
+``NARRecord`` with missing required fields to make
+incomplete extractions visible early.  The LLM extraction step uses
+``NARFullRecord`` (all Optional) and only the final schema-mapped output
+is validated against ``NARRecord``.
+
+``NARSchema`` at the bottom is provided for batch-validation use and is not
+used by the active pipeline.
 """
 
-from typing import Optional, List
-from datetime import date, datetime, time
+from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from datetime import date, time
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class NARRecord(BaseModel):
+    """Required NAR fields matched against ground truth.
+
+    Type conventions
+    ----------------
+    bool    Y/N checkboxes (``None`` = blank / unknown, stored as ``"null"``
+            in SurrealDB via ``clean_for_db`` to prevent coercion to ``false``)
+    str     Coded strings and short categorical values
+    int     Whole numbers
+    float   Decimal numbers
+    date    Calendar dates (``dd-mm-yyyy`` on the form)
+    time    Clock times (24-hour)
     """
-    Y/N - bool
-    words - str
-    numbers - int
-    dates - date
-    """
-    _id: str
 
-    anc_visits: int= Field(description="ANC no. of visits")
-    apgar_10m: int= Field(description="APGAR score at 10 minutes")
-    apgar_1m: int= Field(description="APGAR score at 1 minute")
-    apgar_5m:  int= Field(description="APGAR score at 5 minutes")
-    baby_age_in_days:  int= Field(description="Age (in days)")
-    birth_date:  date= Field(description="DOB")
-    birth_weight: int= Field(description="Birth Weight (grams)")
-    blood_group: str= Field(description="Blood group")
+    # ------------------------------------------------------------------
+    # SECTION A: Infant details
 
-    born_before_arrival: bool= Field(description="Born outside facility?")
-    born_where: str= Field(description="If yes, where?")
-    admission_date: date= Field(description="DOB")
-    date_estimated_delivery_date: date= Field(description="EDD")
-    delivery_type: str= Field(description="Delivery")
+    admission_date: date = Field(description="Date of Admission")
+    time_seen: time = Field(description="Time baby seen (24 hr clock)")
+    sex: str = Field(description="Sex: F / M / I")
 
-    diastolic_blood_pressure: int= Field(description="Diastolic Blood pressure")
-    gestation_in_weeks: int= Field(description="Gestation (in weeks)")
-    gestation_type: str= Field(description="Gestation age from?")
-    given_anti_D_medication: str= Field(description="Anti D") ############## check if str returns null and change for mothers section
-    had_cs: str= Field(description="If yes, type")
+    birth_date: date = Field(description="DOB")
+    time_birth: time = Field(description="Time of birth (24 hr clock)")
+    gestation_in_weeks: int = Field(description="Gestation (in weeks)")
+    baby_age_in_days: int = Field(description="Age (in days)")
+    gestation_type: str = Field(description="Gestation age from: U/S or LMP")
 
-    has_apnoea: bool= Field(description="Apnoea")
-    has_convulsions:  bool= Field(description="Convulsions / Twitching")
-    has_diarhoea:  bool= Field(description="Bloody stool")
-    has_difficulty_breathing:  bool= Field(description="Difficulty breathing")
-    has_difficulty_feeding:  bool= Field(description="Inability to feed")
-    has_fever:  bool= Field(description="Fever")
-    has_vomiting: bool= Field(description="Bilious Vomiting")
+    apgar_1m: int = Field(description="APGAR score at 1 minute")
+    apgar_5m: int = Field(description="APGAR score at 5 minutes")
+    apgar_10m: int = Field(description="APGAR score at 10 minutes")
 
-    head_circumference: int= Field(description="Head circumference (cm)")
-    #hospital: str= None#??? will come from the record name/record id #####################################
-    is_floppy: bool= Field(description="Reduced / Absent movement")
-    is_multiple_delivery: bool= Field(description="Multiple delivery")
-    length: int= Field(description="Length (cm)")
-    multiple_delivery_num: int= Field(description="If YES, number")
+    delivery_type: str = Field(
+        description="Delivery: SVD / CS / Breach / Forceps / Vacuum"
+    )
+    had_cs: str = Field(description="If CS, type: Emergency / Elective")
+    was_resuscitated: bool = Field(
+        description="BVM resus at birth: True=Y / False=N / None=Unknown"
+    )
+    rapture_of_membrane: str = Field(description="ROM: <18h / >=18h / Unknown")
 
-    mum_age_in_years: int= Field(description="Age (years)")
-    mum_given_HBIG_treatment: bool= Field(description="Hep B IG given: True = Y, False = N, None = Unknown")
-    mum_had_antepartum_haemorrhage: bool= Field(description="APH: True = Y, False = N, None = Unknown")
-    mum_had_diabetes: bool= Field(description="Diabetes: True = Y, False = N, None = Unknown")
-    mum_had_hepatitis_b: bool= Field(description="Hep B: True = Pos, False = Neg, None = Unknown")
-    mum_had_hypertension_in_pregnancy: bool= Field(description="HTN in pregnancy?: True = Y, False = N, None = Unknown")
-    mum_had_vdrl: bool= Field(description="VDRL: True = Pos, False = Neg, None = Unknown")
-    mum_has_anc_ultrasound: bool= Field(description="ANC U/S")
-    mum_on_arvs: bool= Field(description="Mother on ARVs: True = Y, False = N, None = Unknown")
-    mum_pmtct_status: bool= Field(description="PMTCT status: True = Pos, False = Neg, None = Unknown")
+    is_multiple_delivery: bool = Field(description="Multiple delivery: Y/N")
+    multiple_delivery_num: int = Field(description="If YES, number of babies")
 
-    parity_abortions: int=Field(description="Parity abortions")
-    parity_live: int=Field(description="Parity live")
-    passed_meconium: bool= Field(description="Passed meconium/stool")
-    passed_urine: bool= Field(description="Passed urine in the last 12 hours")
+    born_before_arrival: bool = Field(description="Born outside facility: Y/N")
+    born_where: str = Field(description="If yes, where: Home/roadside / Other facility")
 
-    #primary_admission_diagnosis: str= None#number/strD ################################
-    prolonged_labour: bool= Field(description="Diabetes")
-    pulse_oximetry: int= Field(description="O₂ Sat")
-    pulse_rate: int= Field(description="Pulse")
-    rapture_of_membrane: str= Field(description="ROM")
+    # ------------------------------------------------------------------
+    # SECTION B: Mother's details
 
-    record_type: str= "NAR" ################################33333333333
-    respiratory_rate: int= Field(description="Resp Rate")
-    rhesus: str= Field(description="Rhesus")
-    #secondary_admission_diagnosis: str= None#number/strD
-    sex: str= Field(description="Sex")
+    mum_age_in_years: int = Field(description="Age (years)")
+    parity_live: int = Field(description="Parity live births")
+    parity_abortions: int = Field(description="Parity abortions/losses")
+    date_estimated_delivery_date: date = Field(description="EDD")
+    anc_visits: int = Field(description="ANC no. of visits")
+    mum_has_anc_ultrasound: bool = Field(description="ANC U/S done: Y/N")
+    blood_group: str = Field(description="Blood group: A / B / AB / O / Unknown")
+    rhesus: str = Field(description="Rhesus: Pos / Neg / Unknown")
+    given_anti_D_medication: str = Field(description="Anti D given: Y / N")
 
-    systolic_blood_pressure: int= Field(description="Systolic Blood Pressure")
-    temparature: float= Field(description="Temp")
-    time_birth: time= Field(description="Time of birth (24 hr clock)")
-    time_seen: time= Field(description="Time baby seen (24 hr clock)")
-    was_resuscitated: bool= Field(description="BVM resus at birth: True = Y, False = N, None = Unknown")
-    weight: int= Field(description="Weight now (grams)")
+    mum_had_vdrl: bool = Field(
+        description="VDRL: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_pmtct_status: bool = Field(
+        description="PMTCT status: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_on_arvs: bool = Field(
+        description="Mother on ARVs: Y=True / N=False / Unknown=None"
+    )
+    mum_had_hepatitis_b: bool = Field(
+        description="Hep B: Pos=True / Neg=False / Unknown=None"
+    )
+    mum_given_HBIG_treatment: bool = Field(
+        description="Hep B IG given: Y=True / N=False / Unknown=None"
+    )
+    mum_had_hypertension_in_pregnancy: bool = Field(
+        description="HTN in pregnancy: Y=True / N=False / Unknown=None"
+    )
+    mum_had_antepartum_haemorrhage: bool = Field(
+        description="APH: Y=True / N=False / Unknown=None"
+    )
+    mum_had_diabetes: bool = Field(
+        description="Diabetes: Y=True / N=False / Unknown=None"
+    )
+    prolonged_labour: bool = Field(
+        description="Prolonged 2nd stage: Y=True / N=False / Unknown=None"
+    )
 
-    # ----- PAGE 2 -----
+    # ------------------------------------------------------------------
+    # SECTION E: Anthropometry & Vital signs
 
-    # General examination
-    skin: str= Field(description="Skin")
-    jaundice: str= Field(description="Jaundice")
-    appearance: str= Field(description="Appearance")
-    cry: str= Field(description="Cry")
+    head_circumference: int = Field(description="Head circumference (cm)")
+    length: int = Field(description="Length (cm)")
+    temparature: float = Field(description="Temp (°C)")
+    respiratory_rate: int = Field(description="Resp Rate (breaths/min)")
+    systolic_blood_pressure: int = Field(description="Systolic BP (mmHg)")
+    diastolic_blood_pressure: int = Field(description="Diastolic BP (mmHg)")
+    pulse_rate: int = Field(description="Pulse (/min)")
+    pulse_oximetry: int = Field(description="O₂ Sat (%)")
+    birth_weight: int = Field(description="Birth Weight (grams)")
+    weight: int = Field(description="Weight now (grams)")
 
-    # A & B
-    has_crackles: bool= Field(description="Crackles")
-    has_grunting: bool= Field(description="Grunting")
-    has_good_air_entry: bool= Field(description="Good bilateral air entry")
-    has_central_cyanosis: bool= Field(description="Central cyanosis")
-    chest_indrawing: bool= Field(description="Lower chest indrawing")
-    xiphoid_retraction: str= Field(description="Xiphoid retraction: none/mild/severe")
-    intercostal_retraction: str= Field(description="Intercostal retraction: none/mild/severe")
+    # Symptoms (checkboxes)
+    has_fever: bool = Field(description="Fever: Y/N")
+    passed_meconium: bool = Field(description="Passed meconium/stool: Y/N")
+    has_difficulty_breathing: bool = Field(description="Difficulty breathing: Y/N")
+    passed_urine: bool = Field(description="Passed urine in last 12 hours: Y/N")
+    has_difficulty_feeding: bool = Field(description="Inability to feed: Y/N")
+    has_convulsions: bool = Field(description="Convulsions / Twitching: Y/N")
+    has_apnoea: bool = Field(description="Apnoea: Y/N")
+    is_floppy: bool = Field(description="Reduced / Absent movement: Y/N")
+    has_vomiting: bool = Field(description="Bilious Vomiting: Y/N")
+    has_diarhoea: bool = Field(description="Bloody stool: Y/N")
 
-    # C
-    capillary_refill_in_seconds: float= Field(description="Capillary refill (seconds)")
-    pallor: str= Field(description="Pallor/Anaemia")
-    has_murmur: bool= Field(description="Murmur")
+    # ------------------------------------------------------------------
+    # SECTION F1: General examination
 
-    # D
-    has_bulging_fontanelle: bool= Field(description="Bulging fontanelle")
-    is_irritable: bool= Field(description="Irritable")
-    tone: str= Field(description="Tone")
+    skin: str = Field(
+        description=(
+            "Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled"
+        )
+    )
+    jaundice: str = Field(description="Jaundice: None / + / +++")
+    appearance: str = Field(description="Appearance: Well / Sick / Dysmorphic")
+    cry: str = Field(description="Cry: Normal / Weak-Absent / Hoarse")
 
-    # Abdomen
-    is_distended: bool= Field(description="Abdominal distension")
-    umbilicus: str= Field(description="Umbilicus")
+    has_crackles: bool = Field(description="Crackles: Y/N")
+    has_grunting: bool = Field(description="Grunting: Y/N")
+    has_good_air_entry: bool = Field(description="Good bilateral air entry: Y/N")
+    has_central_cyanosis: bool = Field(description="Central cyanosis: Y/N")
+    chest_indrawing: bool = Field(description="Lower chest indrawing: Y/N")
+    xiphoid_retraction: str = Field(
+        description="Xiphoid retraction: None / Mild / Severe"
+    )
+    intercostal_retraction: str = Field(
+        description="Intercostal retraction: None / Mild / Severe"
+    )
+    capillary_refill_in_seconds: float = Field(description="Capillary refill (seconds)")
+    pallor: str = Field(description="Pallor/Anaemia: None / + / +++")
+    has_murmur: bool = Field(description="Murmur: Y/N")
 
-    # F2
-    has_birth_defects: bool= Field(description="Birth defects")
+    has_bulging_fontanelle: bool = Field(description="Bulging fontanelle: Y/N")
+    is_irritable: bool = Field(description="Irritable: Y/N")
+    tone: str = Field(description="Tone: Normal / Increased / Reduced")
 
-    # Investigations
-    rbs_measured: bool= Field(description="RBS measured")
-    given_bilirubin: bool= Field(description="Bilirubin measured")
+    is_distended: bool = Field(description="Abdominal distension: Y/N")
+    umbilicus: str = Field(
+        description="Umbilicus: Clean / Local pus / Pus+Red skin / Others"
+    )
 
-    # Diagnoses
-    primary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '1'")
-    secondary_admission_diagnosis: Optional[str] = Field(None, description="Primary diagnosis where the ticked box is tick box '2'")
+    # ------------------------------------------------------------------
+    # SECTION F2: Further examination
 
-    # Interventions (given)
-    given_vitamin_k: bool= Field(description="Vitamin K given")
-    given_bcg: bool= Field(description="BCG given")
-    given_chlorhexidine: bool= Field(description="Chlorhexidine given")
-    given_prophylaxis_pmtct: bool= Field(description="PMTCT prophylaxis given")
+    has_birth_defects: bool = Field(description="Birth defects: Y/N")
 
-    # Interventions (prescribed)
-    prescribed_transfusion: bool= Field(description="Transfusion prescribed")
-    prescribed_phototherapy: bool= Field(description="Phototherapy prescribed")
-    prescribed_cpap: bool= Field(description="CPAP prescribed")
-    prescribed_iv_fluids: bool= Field(description="IV fluids prescribed")
-    prescribed_antibiotics: bool= Field(description="Antibiotics prescribed")
-    prescribed_feeds: bool= Field(description="Feeds prescribed")
-    prescribed_opv: bool= Field(description="OPV prescribed")
-    prescribed_surfactant: bool= Field(description="Surfactant prescribed")
-    prescribed_caffeine_citrate: bool= Field(description="Caffeine citrate prescribed")
-    prescribed_oxygen: bool= Field(description="Oxygen prescribed")
-    prescribed_kmc: bool= Field(description="KMC prescribed")
-    prescribed_incubator: bool= Field(description="Incubator/keep warm")
+    # ------------------------------------------------------------------
+    # SECTION H: Investigations
+
+    rbs_measured: bool = Field(description="RBS measured: Y/N")
+    given_bilirubin: bool = Field(description="Bilirubin measured: Y/N")
+
+    # ------------------------------------------------------------------
+    # SECTION I: Diagnoses
+
+    # Diagnoses are Optional in NARRecord because the GT may not always
+    # include a coded diagnosis value for every record.
+    primary_admission_diagnosis: Optional[str] = Field(
+        None, description="Primary diagnosis (tick box '1')"
+    )
+    secondary_admission_diagnosis: Optional[str] = Field(
+        None, description="Secondary diagnosis (tick box '2')"
+    )
+
+    # ------------------------------------------------------------------
+    # SECTION J: Interventions
+
+    given_vitamin_k: bool = Field(description="Vitamin K (& TEO) given: Y/N")
+    given_bcg: bool = Field(description="BCG given: Y/N")
+    given_chlorhexidine: bool = Field(description="Chlorhexidine given: Y/N")
+    given_prophylaxis_pmtct: bool = Field(description="PMTCT prophylaxis given: Y/N")
+
+    prescribed_transfusion: bool = Field(description="Transfusion prescribed: Y/N")
+    prescribed_phototherapy: bool = Field(description="Phototherapy prescribed: Y/N")
+    prescribed_cpap: bool = Field(description="CPAP prescribed: Y/N")
+    prescribed_iv_fluids: bool = Field(description="IV fluids prescribed: Y/N")
+    prescribed_antibiotics: bool = Field(description="Antibiotics prescribed: Y/N")
+    prescribed_feeds: bool = Field(description="Feeds/Nutrition prescribed: Y/N")
+    prescribed_opv: bool = Field(description="OPV prescribed: Y/N")
+    prescribed_surfactant: bool = Field(description="Surfactant prescribed: Y/N")
+    prescribed_caffeine_citrate: bool = Field(
+        description="Caffeine citrate prescribed: Y/N"
+    )
+    prescribed_oxygen: bool = Field(description="Oxygen prescribed: Y/N")
+    prescribed_kmc: bool = Field(description="KMC prescribed: Y/N")
+    prescribed_incubator: bool = Field(description="Incubator/keep warm prescribed: Y/N")
+
+    # ------------------------------------------------------------------
+    # Internal / derived
+
+    record_type: str = Field(default="NAR", description="Record type identifier")
 
 
+# ---------------------------------------------------------------------------
+# Batch validation wrapper (not used by the active pipeline)
+# ---------------------------------------------------------------------------
 
 class NARSchema(BaseModel):
+    """Container for validating a list of NARRecord objects in batch."""
+
     records: List[NARRecord]

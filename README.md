@@ -19,13 +19,11 @@ BRIDGEProject/
 ├── d_evaluation/            # Accuracy and evaluation reports
 ├── database_utils/          # SurrealDB access helpers
 ├── schemas/                 # Pydantic schemas
-├── scripts/                 # Ad-hoc utilities (markdown processing, comparisons)
-├── tests/                   # Tests and experiments
-├── utils/                   # Shared helpers
-├── main.py                                          # Orchestrates extraction → structuring → evaluation
-├── run_complete_pipeline.py                         # Batch extraction pipeline runner
-├── run_complete_pipeline_with_c_stucturing_logic.py # Batch structuring pipeline runner
-└── docker-compose.yml                               # Optional local services
+├── tests/                   # Unit and integration tests
+├── main.py                  # Orchestrates extraction → structuring evaluation
+├── docker-compose.yml       # Optional local services
+└── requirements.txt         # Python dependencies
+
 ```
 
 ## Requirements
@@ -43,7 +41,7 @@ BRIDGEProject/
 Create a `.env` file at the repo root (or export variables in your shell):
 
 - `IP_SERVER` — Ollama host URL (e.g., `http://localhost:01234`)
-- `IP_PAUL/IP_SERVER01`, `IP_TUTI/IP_SERVER02` — optional alternate Ollama hosts
+- `IP_SERVER01`, `IP_SERVER02` — optional alternate Ollama hosts
 - `SURREAL_USER`, `SURREAL_PASS`, `SURREAL_PORT` — SurrealDB credentials
 
 ## Quick start
@@ -53,25 +51,13 @@ The pipeline is typically run in three stages: extraction → structuring → ev
 ### 1) Run full pipeline
 
 ```bash
- python main.py
+python main.py
 ```
 
-### 2) Run extraction only
+### 2) Run evaluation
 
 ```bash
- python run_complete_pipeline.py
-```
-
-### 3) Run structuring with existing logic
-
-```bash
- python run_complete_pipeline_with_c_stucturing_logic.py
-```
-
-### 4) Run evaluation
-
-```bash
- python d_evaluation/run_evaluation.py
+python d_evaluation/run_evaluation_pipeline.py
 ```
 
 ## Inputs and outputs
@@ -88,13 +74,27 @@ The pipeline is typically run in three stages: extraction → structuring → ev
 
 ## Tests
 
-Current tests are located in `tests/`. To run them:
+Tests are organized into two categories:
 
+**Unit Tests** (fast, no external dependencies):
+- `test_database_utils.py` — SurrealDB helper layer tests
+- `test_pipeline_helpers.py` — Helper function tests (markdown, schema, encoding)
+
+**Integration Tests** (require Ollama and/or SurrealDB):
+- `test_integration_extraction_structuring.py` — Extraction and structuring pipeline tests
+- `test_integration_markdown_to_json.py` — Markdown-to-JSON conversion tests
+
+Run unit tests:
 ```bash
- pytest
+pytest tests/test_*.py
 ```
 
-> Some tests require a running SurrealDB instance and may be integration-style.
+Run integration tests (set `RUN_INTEGRATION_TESTS=1` in `.env`):
+```bash
+pytest tests/test_integration_*.py
+```
+
+For more information, see [tests/README.md](tests/README.md).
 
 
 ## Troubleshooting

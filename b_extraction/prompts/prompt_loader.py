@@ -21,7 +21,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Default prompt locations
 
-PROMPT_DIR = Path(__file__).parent / "prompts"
+PROMPT_DIR = Path(__file__).parent
 PROMPT_CONFIG = PROMPT_DIR / "prompt_config.json"
 
 # ---------------------------------------------------------------------------

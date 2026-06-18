@@ -32,3 +32,39 @@ Run specific test file:
 
 Run specific test function:
     pytest tests/test_pipeline_helpers.py::test_markdown_to_dict_handles_json_and_key_values
+
+Batch Test Harness (test_batch_pipeline.py)
+-------------------------------------------
+
+Small-batch orchestration: run extraction → structuring → evaluation on N records, then commit results to Git.
+
+**Purpose**: Quick validation before 5k-record production run; thesis preliminary data.
+
+**Usage**:
+
+    # Default: 20 records with Qwen
+    python tests/test_batch_pipeline.py
+
+    # Custom batch size and model
+    python tests/test_batch_pipeline.py --batch-size 10 --model gemma
+
+    # Qwen, 50 records
+    python tests/test_batch_pipeline.py --batch-size 50 --model qwen
+
+**Outputs**:
+- CSV reports in `tests/test_results/` (e.g., `field_accuracy_qwen.csv`).
+- Git auto-commits evaluation results with message: `"Test batch: N records, extraction+structuring+evaluation"`.
+
+**Resource estimate**:
+- ~1–2 hours for 20 records (extraction is the bottleneck).
+- ~2–4 GB RAM, ~500 MB–1 GB disk (temporary + CSVs).
+
+**Requirements**:
+- `.env` with `IP_SERVER` (Ollama host) and optional SurrealDB credentials.
+- Ground truth (`NAR_metadata.json`) required for evaluation stage.
+- Git initialized in repo root.
+
+**Behavior**:
+- Each stage (extraction, structuring, evaluation, commit) is blocking.
+- If a stage fails, the pipeline exits with error code 1.
+- On success, evaluation CSVs are automatically staged and committed to Git.

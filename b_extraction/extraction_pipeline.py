@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import time
+import concurrent.futures
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -77,6 +78,7 @@ def _run_prompt(
     model_name: str,
     prompt_text: str,
     image_base64: str,
+    timeout_seconds: int = 420,  # 7 minutes per image
 ) -> dict[str, Any]:
     """Send one prompt + image to the VLM and return content + clock time.
 
@@ -91,23 +93,27 @@ def _run_prompt(
     -------
     dict with keys ``content`` (str) and ``runtime_seconds`` (float).
     """
+    
+    def _call():
+        return client.chat(
+            model=model_name,
+            messages=[{"role": "user", "content": prompt_text, "images": [image_base64]}],
+            options={"seed": 42},
+        )
+        
     start = time.perf_counter()
-    response = client.chat(
-        model=model_name,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt_text,
-                "images": [image_base64],
-            }
-        ],
-        options={"seed": 42},
-    )
-    runtime = time.perf_counter() - start
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_call)
+        try:
+            response = future.result(timeout=timeout_seconds)
+        except concurrent.futures.TimeoutError:
+            raise TimeoutError(
+                f"Model did not respond within {timeout_seconds}s — skipping image."
+            )
 
     return {
         "content": response["message"]["content"],
-        "runtime_seconds": runtime,
+        "runtime_seconds": time.perf_counter() - start,
     }
 
 

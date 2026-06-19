@@ -234,7 +234,13 @@ def run_structuring_pipeline(
 
     structured_ids: list[str] = []
 
-    for record_id in tqdm(base_ids, desc="Structuring"):
+
+    pbar = tqdm(base_ids, desc="Structuring")
+    for record_id in pbar:
+
+        pbar.set_description(f"Extracting {record_id}")
+
+    #for record_id in tqdm(base_ids, desc="Structuring"):
         record_start = time.perf_counter()
         logger.info("Structuring %s", record_id)
 

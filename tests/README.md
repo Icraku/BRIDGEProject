@@ -45,6 +45,15 @@ Small-batch orchestration: run extraction → structuring → evaluation on N re
     # Default: 20 records with Qwen
     python tests/test_batch_pipeline.py
 
+    # Custom batch size and model with event logs
+    python tests/test_batch_pipeline.py --batch-size 5 --model qwen 2>&1 | tee test_run.log &
+
+    # Run in background, immune to terminal closure while logging to file
+    nohup python main.py > bridge_run.log 2>&1 &
+    
+    # Monitor it from anywhere
+    tail -f bridge_run.log
+    
     # Custom batch size and model
     python tests/test_batch_pipeline.py --batch-size 10 --model gemma
 

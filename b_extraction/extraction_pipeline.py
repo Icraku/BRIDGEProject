@@ -283,7 +283,13 @@ def run_extraction_pipeline(
     report_lines: list[str] = []
     processed_ids: list[str] = []
 
-    for image_path in tqdm(images, desc="Extracting"):
+    pbar = tqdm(images, desc="Extracting")
+
+    for image_path in pbar:
+        filename = os.path.basename(image_path)
+
+        pbar.set_description(f"Extracting {filename}")
+
         result = _process_image(
             image_path=image_path,
             client=client,

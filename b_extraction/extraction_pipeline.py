@@ -100,7 +100,6 @@ def _run_prompt(
             messages=[{"role": "user", "content": prompt_text, "images": [image_base64]}],
             options={"seed": 42},
         )
-        
     start = time.perf_counter()
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(_call)
@@ -176,7 +175,8 @@ def _process_image(
         try:
             result = _run_prompt(client, model_name, prompt_text, image_base64)
         except TimeoutError as e:
-            logger.warning("  %s — %s", record_id, e)
+            logger.warning("  TIMEOUT %s / %s — %s. Skipping record.",
+                           record_id, prompt_name, e)
             return None  # triggers the `if result is None: continue` in the main loop
 
         md_output: str = result["content"]

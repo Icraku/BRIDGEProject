@@ -77,3 +77,29 @@ Small-batch orchestration: run extraction → structuring → evaluation on N re
 - Each stage (extraction, structuring, evaluation, commit) is blocking.
 - If a stage fails, the pipeline exits with error code 1.
 - On success, evaluation CSVs are automatically staged and committed to Git.
+
+Traceback (most recent call last):
+  File "<input>", line 108, in _run_prompt
+  File "/home/ikutswa/miniconda3/envs/ocr/lib/python3.13/concurrent/futures/_base.py", line 458, in result
+    raise TimeoutError()
+TimeoutError
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "<input>", line 110, in _run_prompt
+TimeoutError: Model did not respond within 420s — skipping image.
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "<input>", line 3, in <module>
+  File "<input>", line 293, in run_extraction_pipeline
+  File "<input>", line 177, in _process_image
+  File "<input>", line 105, in _run_prompt
+  File "/home/ikutswa/miniconda3/envs/ocr/lib/python3.13/concurrent/futures/_base.py", line 647, in __exit__
+    self.shutdown(wait=True)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/ikutswa/miniconda3/envs/ocr/lib/python3.13/concurrent/futures/thread.py", line 238, in shutdown
+    t.join()
+    ~~~~~~^^
+  File "/home/ikutswa/miniconda3/envs/ocr/lib/python3.13/threading.py", line 1092, in join
+    self._handle.join(timeout)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyboardInterrupt

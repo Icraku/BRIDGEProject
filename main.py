@@ -25,7 +25,7 @@ from d_evaluation.run_evaluation_pipeline import run_evaluation
 # Config
 
 IP_SERVER = os.getenv("IP_SERVER")
-IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
+IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/converted_images"
 GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 MODEL_NAME = "qwen3.5:35b"
 MODEL_NAME2 = "gemma4:31b"

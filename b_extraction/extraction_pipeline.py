@@ -172,8 +172,13 @@ def _process_image(
     # --- Prompt loop --------------------------------------------------------
     for prompt_name, prompt_text in prompts.items():
         logger.info("  Running prompt: %s", prompt_name)
+        
+        try:
+            result = _run_prompt(client, model_name, prompt_text, image_base64)
+        except TimeoutError as e:
+            logger.warning("  %s — %s", record_id, e)
+            return None  # triggers the `if result is None: continue` in the main loop
 
-        result = _run_prompt(client, model_name, prompt_text, image_base64)
         md_output: str = result["content"]
         runtime: float = result["runtime_seconds"]
 

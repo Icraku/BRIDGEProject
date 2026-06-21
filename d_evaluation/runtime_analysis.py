@@ -90,7 +90,7 @@ def run_runtime_analysis(
 
     Example:
         run_runtime_analysis([
-            {"model_label": "qwen",     "table_name": "structured_Q"},
+            {"model_label": "qwen",     "table_name": "structured_qwen"},
             {"model_label": "gemma",    "table_name": "structured_gemma"},
             {"model_label": "medgemma", "table_name": "structured_medgemma"},
         ])

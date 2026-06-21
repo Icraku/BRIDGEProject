@@ -19,7 +19,7 @@ logging.basicConfig(
 
 from b_extraction.extraction_pipeline import run_extraction_pipeline
 from c_structuring.structuring_pipeline import run_structuring_pipeline
-from d_evaluation.run_evaluation_pipeline import run_evaluation, run_full_metrics_suite
+from d_evaluation.evaluation_pipeline import run_evaluation, run_full_metrics_suite
 
 # ------------------------
 # Config
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     processed_ids = run_extraction_pipeline(
         image_dir=IMAGE_DIR,
-        model_name=MODEL_NAME,
-        table_name=EXTRACTION_TABLE,
+        model_name=MODEL_NAME2,
+        table_name=EXTRACTION_TABLE2,
         ground_truth=gt,
         resume=True,
     )
@@ -69,12 +69,48 @@ if __name__ == "__main__":
     print("\n STARTING STRUCTURING PIPELINE...\n")
 
     structured_ids = run_structuring_pipeline(
+        model_name=MODEL_NAME2,
+        host_url=IP_SERVER,
+        table_in=EXTRACTION_TABLE2,
+        table_out=STRUCTURED_TABLE2,
+        resume=True,
+    )
+
+    # QWEN
+    structured_ids_Q= run_structuring_pipeline(
         model_name=MODEL_NAME,
         host_url=IP_SERVER,
         table_in=EXTRACTION_TABLE,
         table_out=STRUCTURED_TABLE,
+        table_required="structured_qwen_required",
+        table_supplementary="structured_qwen_supplementary",
+        table_mapped="mapped_qwen",
         resume=True,
     )
+
+    # GEMMA
+    run_structuring_pipeline(
+        model_name=MODEL_NAME2,
+        host_url=IP_SERVER,
+        table_in=EXTRACTION_TABLE2,
+        table_out=STRUCTURED_TABLE2,
+        table_required="structured_gemma_required",
+        table_supplementary="structured_gemma_supplementary",
+        table_mapped="mapped_gemma",
+        resume=True,
+    )
+
+    # MEDGEMMA (uncomment when ready)
+    # run_structuring_pipeline(
+    #     model_name="medgemma:27b",
+    #     host_url=IP_SERVER,
+    #     table_in="extractions_medgemma",
+    #     table_out="structured_medgemma",
+    #     table_required="structured_medgemma_required",
+    #     table_supplementary="structured_medgemma_supplementary",
+    #     table_mapped="mapped_medgemma",
+    #     resume=True,
+    # )
 
     print(f"\n Structuring complete: {len(structured_ids)} records\n")
 
@@ -82,8 +118,8 @@ if __name__ == "__main__":
     print("\n STARTING EVALUATION PIPELINE...\n")
     run_evaluation(
         gt_path=GT_PATH,
-        structured_table=STRUCTURED_TABLE,
-        model_label="qwen",
+        structured_table=STRUCTURED_TABLE2,
+        model_label="gemma",
     )
 
     print("\n Evaluation complete\n")
@@ -93,8 +129,8 @@ if __name__ == "__main__":
         gt_path=GT_PATH,
         model_configs=[
             {
-                "model_label": "qwen",
-                "eval_table":  "structured_required",
+                "model_label": "gemma",
+                "eval_table":  "structured_qwen_required",
                 "full_table":  "structured_qwen",
             },
         ]

@@ -239,7 +239,7 @@ def detect_hallucination(field: str, raw_value: object) -> tuple[bool, str]:
 # Public API
 
 def run_hallucination_detection(
-    structured_table: str = "structured_Q",
+    structured_table: str = "structured_qwen",
     model_label: str = "qwen",
 ) -> dict:
     """Scan all structured outputs for hallucinated values.

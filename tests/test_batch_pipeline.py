@@ -232,7 +232,7 @@ def run_evaluation_batch(
     logger.info(f"STAGE 3: EVALUATION (model={model_key})")
     logger.info("=" * 70)
 
-    from d_evaluation.run_evaluation_pipeline import run_evaluation
+    from d_evaluation.evaluation_pipeline import run_evaluation
 
     # Get table names
     tables = get_table_names(model_key)

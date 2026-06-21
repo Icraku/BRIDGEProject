@@ -310,7 +310,7 @@ def run_stratified_analysis(
     accuracy_csv: Path to ``field_accuracy_{model}.csv``.  Defaults to
         ``field_accuracy_{model_label}.csv`` in the working directory.
     structured_table: SurrealDB table containing structured outputs (for admission dates).
-        Defaults to ``"structured_required"`` for Qwen, or
+        Defaults to ``"structured_qwen_required"`` for Qwen, or
         ``"structured_{model_label}"`` for others.
     output_dir: Directory to write output CSVs.  Defaults to working directory.
 
@@ -324,7 +324,7 @@ def run_stratified_analysis(
         accuracy_csv = f"field_accuracy_{model_label}.csv"
     if structured_table is None:
         structured_table = (
-            "structured_required" if model_label == "qwen"
+            "structured_qwen_required" if model_label == "qwen"
             else f"structured_{model_label}"
         )
 

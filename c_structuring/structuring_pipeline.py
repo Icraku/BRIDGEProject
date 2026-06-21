@@ -14,8 +14,8 @@ Pipeline
 4. Post-process boolean fields via ``nullify_unticked_bools``.
 5. Split the 120-field output into three subsets and persist to DB:
    - ``table_out``              — all 120 fields + inclusion map + timings
-   - ``"structured_required"``  — 98 NARRecord fields (used for GT evaluation)
-   - ``"structured_supplementary"`` — 22 extra fields
+   - ``"structured_qwen_required"``  — 98 NARRecord fields (used for GT evaluation)
+   - ``"structured_{model}_supplementary"`` — 22 extra fields
    - ``"mapped"``               — schema-mapped subset (legacy downstream use)
 
 Public API
@@ -200,7 +200,10 @@ def run_structuring_pipeline(
     model_name: str,
     host_url: str,
     table_in: str = "extractions",
-    table_out: str = "structured_Q",
+    table_out: str = f"structured_qwen",
+    table_required: str = "structured_qwen_required",
+    table_supplementary: str = "structured_qwen_supplementary",
+    table_mapped: str = "mapped",
     resume: bool = True,
 ) -> list[str]:
     """Convert extracted markdown records to structured JSON and persist to DB.
@@ -208,12 +211,38 @@ def run_structuring_pipeline(
     Reads all records from *table_in*, structures each one with the LLM,
     and writes results to four SurrealDB tables.
 
+    Recommended table names per model
+    ----------------------------------
+    Qwen:
+        table_in            = "extractions_qwen"
+        table_out           = "structured_qwen"
+        table_required      = "structured_qwen_required"
+        table_supplementary = "structured_qwen_supplementary"
+        table_mapped        = "mapped_qwen"
+
+    Gemma:
+        table_in            = "extractions_gemma"
+        table_out           = "structured_gemma"
+        table_required      = "structured_gemma_required"
+        table_supplementary = "structured_gemma_supplementary"
+        table_mapped        = "mapped_gemma"
+
+    MedGemma:
+        table_in            = "extractions_medgemma"
+        table_out           = "structured_medgemma"
+        table_required      = "structured_medgemma_required"
+        table_supplementary = "structured_medgemma_supplementary"
+        table_mapped        = "mapped_medgemma"
+
     Parameters
     ----------
     model_name: Ollama model tag for the structuring LLM.
     host_url: Ollama server URL (e.g. ``"http://192.168.1.10:11434"``).
     table_in: SurrealDB table containing raw extraction records.
     table_out: SurrealDB table for full 120-field structured output.
+    table_required: SurrealDB table for the 98-field NARRecord required subset. Used by the evaluation pipeline as ``eval_table``.
+    table_supplementary: SurrealDB table for the 22 supplementary fields not in NARRecord.
+    table_mapped: SurrealDB table for schema-mapped output (legacy downstream format).
     resume: If ``True``, skip records that already exist in *table_out*.
 
     Returns
@@ -302,22 +331,22 @@ def run_structuring_pipeline(
                     "llm_runtime_seconds": llm_runtime,
                     "total_record_runtime_seconds": total_runtime,
                 },
-                table_out,
+                table_out, # e.g. structured_qwen / structured_gemma
                 record_id,
             )
             safe_save(
                 {"structured_text": clean_required},
-                "structured_required",
+                table_required, # e.g. structured_qwen_required / structured_gemma_required
                 record_id,
             )
             safe_save(
                 {"structured_text": clean_supplementary},
-                "structured_supplementary",
+                table_supplementary, # e.g. structured_qwen_supplementary / structured_gemma_supplementary
                 record_id,
             )
             safe_save(
                 {"mapped_fields": clean_mapped},
-                "mapped",
+                table_mapped, # e.g. mapped_qwen / mapped_gemma
                 record_id,
             )
         except Exception:

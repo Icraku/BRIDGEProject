@@ -180,7 +180,7 @@ def _check_record_compliance(record_id: str, structured: dict) -> dict:
 # Public API
 
 def run_schema_compliance(
-    structured_table: str = "structured_Q",
+    structured_table: str = "structured_qwen",
     model_label: str = "qwen",
 ) -> dict:
     """Check schema compliance for all records in *structured_table*.

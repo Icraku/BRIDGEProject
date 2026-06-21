@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import time
+import httpx
 import concurrent.futures
 from collections import Counter
 from pathlib import Path
@@ -78,7 +79,7 @@ def _run_prompt(
     model_name: str,
     prompt_text: str,
     image_base64: str,
-    timeout_seconds: int = 420,  # 7 minutes per image
+    timeout_seconds: int = 660,  # 7 minutes per image
 ) -> dict[str, Any]:
     """Send one prompt + image to the VLM and return content + clock time.
 
@@ -271,7 +272,11 @@ def run_extraction_pipeline(
 
     prompt_config = load_prompt_config()
     images = load_images(image_dir)
-    client = Client(host=server_ip)
+    timeout_seconds: int = 660 # 7 MINUTES
+    client = Client(
+        host=server_ip,
+        timeout=httpx.Timeout(timeout_seconds, connect=10.0),
+    )
 
     logger.info(
         "Starting extraction: model=%s, images=%d, table=%s",

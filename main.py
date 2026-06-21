@@ -19,7 +19,7 @@ logging.basicConfig(
 
 from b_extraction.extraction_pipeline import run_extraction_pipeline
 from c_structuring.structuring_pipeline import run_structuring_pipeline
-from d_evaluation.run_evaluation_pipeline import run_evaluation
+from d_evaluation.run_evaluation_pipeline import run_evaluation, run_full_metrics_suite
 
 # ------------------------
 # Config
@@ -87,3 +87,15 @@ if __name__ == "__main__":
     )
 
     print("\n Evaluation complete\n")
+
+    # Stage 4 — full evaluation suite (produces ALL metric CSVs)
+    run_full_metrics_suite(
+        gt_path=GT_PATH,
+        model_configs=[
+            {
+                "model_label": "qwen",
+                "eval_table":  "structured_required",
+                "full_table":  "structured_qwen",
+            },
+        ]
+    )

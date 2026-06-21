@@ -1,0 +1,2 @@
+model,macro_f1,macro_precision,macro_recall,avg_exact_acc,schema_compliant_pct,mean_required_coverage,hallucination_rate_pct,overall_cer,overall_wer
+qwen,0.7102,0.7926,0.681,0.6389,50.0,72.4,0.55,1.1448,0.9659

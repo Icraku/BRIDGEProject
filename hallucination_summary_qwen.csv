@@ -1,0 +1,13 @@
+field,field_type,nar_inclusion,n_hallucinations,n_records_affected,example_values,reasons
+skin,str,included,3,3,Dry-peeling-wrinkled | Dry/peeling/Wrinkled,out_of_allowlist: 'dry-peeling-wrinkled' | out_of_allowlist: 'dry/peeling/wrinkled'
+given_anti_D_medication,str,included,2,2,Unknown | Unkn,out_of_allowlist: 'unknown' | out_of_allowlist: 'unkn'
+parity_total,int,not included,2,2,40 | 31,"out_of_range: 40.0 not in [0, 15] | out_of_range: 31.0 not in [0, 15]"
+action_plan_date,date,not included,1,1,29-01-301,bad_date_format: '29-01-301'
+birth_date,date,included,1,1,20-01-301,bad_date_format: '20-01-301'
+appearance,str,included,1,1,Well / Dysmorphic,out_of_allowlist: 'well / dysmorphic'
+admission_date,date,included,1,1,20-01-301,bad_date_format: '20-01-301'
+capillary_refill_in_seconds,float,included,1,1,12.0,"out_of_range: 12.0 not in [0, 10]"
+diastolic_blood_pressure,int,included,1,1,89,"out_of_range: 89.0 not in [10, 80]"
+date_estimated_delivery_date,date,included,1,1,29-01-301,bad_date_format: '29-01-301'
+temparature,float,included,1,1,32.2,"out_of_range: 32.2 not in [34.0, 42.0]"
+umbilicus,str,included,1,1,Clear,out_of_allowlist: 'clear'

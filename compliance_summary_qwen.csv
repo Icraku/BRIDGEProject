@@ -1,0 +1,121 @@
+field,field_type,nar_inclusion,presence_pct
+birth_defect_types,str,not included,3.6
+diastolic_blood_pressure,int,included,7.1
+multiple_delivery_num,int,included,7.1
+total_serum_bilirubin,float,not included,7.1
+systolic_blood_pressure,int,included,7.1
+anc_us_trimester,str,not included,10.7
+head_circumference,int,included,14.3
+length,int,included,14.3
+us_findings,text,not included,14.3
+other_diagnoses,text,not included,14.3
+born_where,str,included,14.3
+had_cs,str,included,21.4
+weight,int,included,35.7
+mum_given_HBIG_treatment,bool,included,39.3
+clinician_signature,redacted,not included,42.9
+given_anti_D_medication,str,included,42.9
+anc_visits,int,included,42.9
+mum_had_hepatitis_b,bool,included,42.9
+parity_total,int,not included,46.4
+baby_age_in_days,int,included,46.4
+further_examination,text,not included,46.4
+clinician_name,redacted,not included,50.0
+rapture_of_membrane,str,included,50.0
+mum_had_diabetes,bool,included,53.6
+time_birth,time,included,53.6
+secondary_admission_diagnosis,text,included,53.6
+gestation_type,str,included,53.6
+respiratory_rate,int,included,57.1
+mum_has_anc_ultrasound,bool,included,57.1
+prolonged_labour,bool,included,57.1
+neuro_examination,text,not included,60.7
+maternal_illness_notes,text,not included,60.7
+mum_had_antepartum_haemorrhage,bool,included,60.7
+action_plan_time,time,not included,64.3
+pulse_rate,int,included,64.3
+mum_had_hypertension_in_pregnancy,bool,included,64.3
+mum_had_vdrl,bool,included,64.3
+time_seen,time,included,64.3
+mum_pmtct_status,bool,included,64.3
+investigations_other,text,not included,67.9
+mum_on_arvs,bool,included,67.9
+pulse_oximetry,int,included,67.9
+date_estimated_delivery_date,date,included,71.4
+action_plan_date,date,not included,71.4
+rbs_value,float,not included,71.4
+apgar_10m,int,included,75.0
+passed_meconium,bool,included,75.0
+passed_urine,bool,included,75.0
+capillary_refill_in_seconds,float,included,75.0
+given_prophylaxis_pmtct,bool,included,75.0
+prescribed_caffeine_citrate,bool,included,78.6
+prescribed_iv_fluids,bool,included,78.6
+prescribed_opv,bool,included,78.6
+prescribed_antibiotics,bool,included,78.6
+prescribed_kmc,bool,included,78.6
+blood_group,str,included,78.6
+infant_presenting_problems,text,not included,78.6
+given_bilirubin,bool,included,78.6
+given_chlorhexidine,bool,included,78.6
+given_bcg,bool,included,78.6
+prescribed_phototherapy,bool,included,78.6
+prescribed_cpap,bool,included,78.6
+prescribed_feeds,bool,included,78.6
+prescribed_incubator,bool,included,78.6
+was_resuscitated,bool,included,78.6
+rhesus,str,included,78.6
+prescribed_surfactant,bool,included,78.6
+prescribed_transfusion,bool,included,78.6
+prescribed_oxygen,bool,included,78.6
+primary_admission_diagnosis,text,included,78.6
+cry,str,included,82.1
+chest_indrawing,bool,included,82.1
+anc_clinic_name,redacted,not included,82.1
+born_before_arrival,bool,included,82.1
+sex,str,included,82.1
+parity_abortions,int,included,82.1
+mum_ip_no,redacted,not included,82.1
+tone,str,included,82.1
+mum_name,redacted,not included,82.1
+temparature,float,included,82.1
+gestation_in_weeks,int,included,82.1
+has_difficulty_feeding,bool,included,82.1
+ip_no,redacted,not included,82.1
+infant_name,redacted,not included,82.1
+has_apnoea,bool,included,85.7
+has_diarhoea,bool,included,85.7
+has_difficulty_breathing,bool,included,85.7
+has_convulsions,bool,included,85.7
+birth_date,date,included,85.7
+apgar_5m,int,included,85.7
+apgar_1m,int,included,85.7
+birth_weight,int,included,85.7
+given_vitamin_k,bool,included,85.7
+delivery_type,str,included,85.7
+intercostal_retraction,str,included,85.7
+mum_age_in_years,int,included,85.7
+xiphoid_retraction,str,included,85.7
+parity_live,int,included,85.7
+problem_list,text,not included,85.7
+has_vomiting,bool,included,85.7
+is_multiple_delivery,bool,included,85.7
+umbilicus,str,included,89.3
+rbs_measured,bool,included,89.3
+pallor,str,included,89.3
+has_fever,bool,included,89.3
+is_floppy,bool,included,89.3
+appearance,str,included,92.9
+admission_date,date,included,92.9
+has_birth_defects,bool,included,92.9
+has_central_cyanosis,bool,included,92.9
+has_grunting,bool,included,92.9
+has_murmur,bool,included,92.9
+is_irritable,bool,included,92.9
+jaundice,str,included,92.9
+is_distended,bool,included,92.9
+has_bulging_fontanelle,bool,included,92.9
+has_crackles,bool,included,92.9
+has_good_air_entry,bool,included,92.9
+skin,str,included,96.4
+record_type,str,included,100.0

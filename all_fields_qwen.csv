@@ -1,0 +1,220 @@
+field,field_type,nar_inclusion,scorable,has_gt,avg_accuracy,n_records
+given_bilirubin,bool,included,True,True,1.0,4
+prescribed_incubator,bool,included,True,True,1.0,10
+prescribed_oxygen,bool,included,True,True,1.0,19
+rbs_measured,bool,included,True,True,1.0,26
+prescribed_feeds,bool,included,True,True,0.9090909090909091,11
+given_vitamin_k,bool,included,True,True,0.8888888888888888,27
+mum_has_anc_ultrasound,bool,included,True,True,0.875,24
+prescribed_iv_fluids,bool,included,True,True,0.8421052631578947,19
+has_murmur,bool,included,True,True,0.8048780487804879,41
+was_resuscitated,bool,included,True,True,0.8,30
+is_multiple_delivery,bool,included,True,True,0.7948717948717948,39
+has_bulging_fontanelle,bool,included,True,True,0.7857142857142857,42
+has_good_air_entry,bool,included,True,True,0.7857142857142857,42
+born_before_arrival,bool,included,True,True,0.775,40
+given_bcg,bool,included,True,True,0.7692307692307693,13
+has_crackles,bool,included,True,True,0.7619047619047619,42
+has_grunting,bool,included,True,True,0.7619047619047619,42
+is_distended,bool,included,True,True,0.7619047619047619,42
+is_irritable,bool,included,True,True,0.7619047619047619,42
+given_chlorhexidine,bool,included,True,True,0.75,12
+mum_had_antepartum_haemorrhage,bool,included,True,True,0.75,36
+has_central_cyanosis,bool,included,True,True,0.7380952380952381,42
+mum_had_hypertension_in_pregnancy,bool,included,True,True,0.7368421052631579,38
+mum_on_arvs,bool,included,True,True,0.725,40
+prescribed_antibiotics,bool,included,True,True,0.7142857142857143,21
+prolonged_labour,bool,included,True,True,0.7096774193548387,31
+mum_had_vdrl,bool,included,True,True,0.6923076923076923,39
+prescribed_cpap,bool,included,True,True,0.6923076923076923,13
+mum_had_diabetes,bool,included,True,True,0.6666666666666666,36
+prescribed_opv,bool,included,True,True,0.6363636363636364,11
+prescribed_phototherapy,bool,included,True,True,0.6363636363636364,11
+passed_urine,bool,included,True,True,0.6071428571428571,28
+prescribed_transfusion,bool,included,True,True,0.6,10
+given_prophylaxis_pmtct,bool,included,True,True,0.5714285714285714,7
+has_difficulty_breathing,bool,included,True,True,0.5609756097560976,41
+has_difficulty_feeding,bool,included,True,True,0.525,40
+passed_meconium,bool,included,True,True,0.5185185185185185,27
+prescribed_caffeine_citrate,bool,included,True,True,0.5,12
+prescribed_surfactant,bool,included,True,True,0.5,8
+is_floppy,bool,included,True,True,0.4878048780487805,41
+mum_pmtct_status,bool,included,True,True,0.46875,32
+has_convulsions,bool,included,True,True,0.4634146341463415,41
+chest_indrawing,bool,included,True,True,0.4523809523809524,42
+mum_given_HBIG_treatment,bool,included,True,True,0.4482758620689655,29
+mum_had_hepatitis_b,bool,included,True,True,0.42857142857142855,35
+has_apnoea,bool,included,True,True,0.4,40
+prescribed_kmc,bool,included,True,True,0.4,10
+has_vomiting,bool,included,True,True,0.36585365853658536,41
+has_birth_defects,bool,included,True,True,0.25,28
+has_fever,bool,included,True,True,0.0975609756097561,41
+has_diarhoea,bool,included,True,True,0.0,41
+born_before_arrival,bool,included,True,False,,3
+chest_indrawing,bool,included,True,False,,1
+given_bcg,bool,included,True,False,,30
+given_bilirubin,bool,included,True,False,,39
+given_chlorhexidine,bool,included,True,False,,31
+given_prophylaxis_pmtct,bool,included,True,False,,36
+given_vitamin_k,bool,included,True,False,,16
+has_apnoea,bool,included,True,False,,3
+has_birth_defects,bool,included,True,False,,15
+has_bulging_fontanelle,bool,included,True,False,,1
+has_central_cyanosis,bool,included,True,False,,1
+has_convulsions,bool,included,True,False,,2
+has_crackles,bool,included,True,False,,1
+has_diarhoea,bool,included,True,False,,2
+has_difficulty_breathing,bool,included,True,False,,2
+has_difficulty_feeding,bool,included,True,False,,3
+has_fever,bool,included,True,False,,2
+has_good_air_entry,bool,included,True,False,,1
+has_grunting,bool,included,True,False,,1
+has_murmur,bool,included,True,False,,2
+has_vomiting,bool,included,True,False,,2
+is_distended,bool,included,True,False,,1
+is_floppy,bool,included,True,False,,2
+is_irritable,bool,included,True,False,,1
+is_multiple_delivery,bool,included,True,False,,4
+mum_given_HBIG_treatment,bool,included,True,False,,14
+mum_had_antepartum_haemorrhage,bool,included,True,False,,7
+mum_had_diabetes,bool,included,True,False,,7
+mum_had_hepatitis_b,bool,included,True,False,,8
+mum_had_hypertension_in_pregnancy,bool,included,True,False,,5
+mum_had_vdrl,bool,included,True,False,,4
+mum_has_anc_ultrasound,bool,included,True,False,,19
+mum_on_arvs,bool,included,True,False,,3
+mum_pmtct_status,bool,included,True,False,,11
+passed_meconium,bool,included,True,False,,16
+passed_urine,bool,included,True,False,,15
+prescribed_antibiotics,bool,included,True,False,,22
+prescribed_caffeine_citrate,bool,included,True,False,,31
+prescribed_cpap,bool,included,True,False,,30
+prescribed_feeds,bool,included,True,False,,32
+prescribed_incubator,bool,included,True,False,,33
+prescribed_iv_fluids,bool,included,True,False,,24
+prescribed_kmc,bool,included,True,False,,33
+prescribed_opv,bool,included,True,False,,32
+prescribed_oxygen,bool,included,True,False,,24
+prescribed_phototherapy,bool,included,True,False,,32
+prescribed_surfactant,bool,included,True,False,,35
+prescribed_transfusion,bool,included,True,False,,33
+prolonged_labour,bool,included,True,False,,12
+rbs_measured,bool,included,True,False,,17
+was_resuscitated,bool,included,True,False,,13
+birth_date,date,included,True,True,0.7906976744186046,43
+date_estimated_delivery_date,date,included,True,True,0.7352941176470589,34
+admission_date,date,included,True,False,,43
+date_estimated_delivery_date,date,included,True,False,,9
+temparature,float,included,True,True,0.8,35
+capillary_refill_in_seconds,float,included,True,True,0.0,34
+capillary_refill_in_seconds,float,included,True,False,,9
+temparature,float,included,True,False,,8
+head_circumference,int,included,True,True,1.0,4
+length,int,included,True,True,1.0,4
+parity_abortions,int,included,True,True,0.918918918918919,37
+apgar_5m,int,included,True,True,0.8974358974358975,39
+parity_live,int,included,True,True,0.8947368421052632,38
+apgar_1m,int,included,True,True,0.8717948717948718,39
+gestation_in_weeks,int,included,True,True,0.85,40
+mum_age_in_years,int,included,True,True,0.825,40
+apgar_10m,int,included,True,True,0.8055555555555556,36
+birth_weight,int,included,True,True,0.8,40
+respiratory_rate,int,included,True,True,0.8,25
+pulse_oximetry,int,included,True,True,0.78125,32
+pulse_rate,int,included,True,True,0.7333333333333333,30
+anc_visits,int,included,True,True,0.7037037037037037,27
+weight,int,included,True,True,0.6842105263157895,19
+multiple_delivery_num,int,included,True,True,0.6666666666666666,6
+diastolic_blood_pressure,int,included,True,True,0.5,2
+baby_age_in_days,int,included,True,True,0.30434782608695654,23
+systolic_blood_pressure,int,included,True,True,0.0,2
+anc_visits,int,included,True,False,,16
+apgar_10m,int,included,True,False,,7
+apgar_1m,int,included,True,False,,4
+apgar_5m,int,included,True,False,,4
+baby_age_in_days,int,included,True,False,,20
+birth_weight,int,included,True,False,,3
+diastolic_blood_pressure,int,included,True,False,,41
+gestation_in_weeks,int,included,True,False,,3
+head_circumference,int,included,True,False,,39
+length,int,included,True,False,,39
+multiple_delivery_num,int,included,True,False,,37
+mum_age_in_years,int,included,True,False,,3
+parity_abortions,int,included,True,False,,6
+parity_live,int,included,True,False,,5
+pulse_oximetry,int,included,True,False,,11
+pulse_rate,int,included,True,False,,13
+respiratory_rate,int,included,True,False,,18
+systolic_blood_pressure,int,included,True,False,,41
+weight,int,included,True,False,,24
+record_type,str,included,True,True,1.0,43
+appearance,str,included,True,True,0.875,40
+tone,str,included,True,True,0.8536585365853658,41
+umbilicus,str,included,True,True,0.8536585365853658,41
+pallor,str,included,True,True,0.825,40
+had_cs,str,included,True,True,0.8125,16
+skin,str,included,True,True,0.8048780487804879,41
+blood_group,str,included,True,True,0.8,40
+intercostal_retraction,str,included,True,True,0.775,40
+jaundice,str,included,True,True,0.775,40
+xiphoid_retraction,str,included,True,True,0.7560975609756098,41
+delivery_type,str,included,True,True,0.7073170731707317,41
+cry,str,included,True,True,0.5945945945945946,37
+gestation_type,str,included,True,True,0.5769230769230769,26
+rapture_of_membrane,str,included,True,True,0.08333333333333333,24
+rhesus,str,included,True,True,0.02564102564102564,39
+born_where,str,included,True,True,0.0,4
+given_anti_D_medication,str,included,True,True,0.0,16
+sex,str,included,True,True,0.0,42
+appearance,str,included,True,False,,3
+blood_group,str,included,True,False,,3
+born_where,str,included,True,False,,39
+cry,str,included,True,False,,6
+delivery_type,str,included,True,False,,2
+gestation_type,str,included,True,False,,17
+given_anti_D_medication,str,included,True,False,,27
+had_cs,str,included,True,False,,27
+intercostal_retraction,str,included,True,False,,3
+jaundice,str,included,True,False,,3
+pallor,str,included,True,False,,3
+rapture_of_membrane,str,included,True,False,,19
+rhesus,str,included,True,False,,4
+sex,str,included,True,False,,1
+skin,str,included,True,False,,2
+tone,str,included,True,False,,2
+umbilicus,str,included,True,False,,2
+xiphoid_retraction,str,included,True,False,,2
+primary_admission_diagnosis,text,included,False,False,,12
+primary_admission_diagnosis,text,included,False,True,,31
+secondary_admission_diagnosis,text,included,False,False,,30
+secondary_admission_diagnosis,text,included,False,True,,13
+time_birth,time,included,True,True,0.6206896551724138,29
+time_seen,time,included,True,True,0.5714285714285714,28
+time_birth,time,included,True,False,,14
+time_seen,time,included,True,False,,15
+hospital,coded_int,not included,True,True,0.0,43
+action_plan_date,date,not included,True,False,,43
+rbs_value,float,not included,True,False,,43
+total_serum_bilirubin,float,not included,True,False,,43
+parity_total,int,not included,True,False,,43
+anc_clinic_name,redacted,not included,False,False,,43
+clinician_name,redacted,not included,False,False,,43
+clinician_signature,redacted,not included,False,False,,43
+infant_name,redacted,not included,False,False,,43
+ip_no,redacted,not included,False,False,,43
+mum_ip_no,redacted,not included,False,False,,43
+mum_name,redacted,not included,False,False,,43
+anc_us_trimester,str,not included,True,False,,43
+birth_defect_types,str,not included,True,False,,43
+further_examination,text,not included,False,False,,43
+infant_presenting_problems,text,not included,False,False,,43
+investigations_other,text,not included,False,False,,43
+maternal_illness_notes,text,not included,False,False,,43
+neuro_examination,text,not included,False,False,,43
+other_diagnoses,text,not included,False,False,,43
+problem_list,text,not included,False,False,,43
+us_findings,text,not included,False,False,,43
+action_plan_time,time,not included,True,False,,43
+date,unknown,not included,True,True,0.0,43
+parity,unknown,not included,True,True,0.0,3
+blood_pressure,unknown,not included,True,False,,3

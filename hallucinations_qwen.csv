@@ -1,0 +1,17 @@
+record_id,field,field_type,nar_inclusion,raw_value,reason
+NAR_40000044,parity_total,int,not included,40,"out_of_range: 40.0 not in [0, 15]"
+NAR_41000001,capillary_refill_in_seconds,float,included,12.0,"out_of_range: 12.0 not in [0, 10]"
+NAR_41000002,action_plan_date,date,not included,29-01-301,bad_date_format: '29-01-301'
+NAR_41000002,admission_date,date,included,20-01-301,bad_date_format: '20-01-301'
+NAR_41000002,birth_date,date,included,20-01-301,bad_date_format: '20-01-301'
+NAR_41000002,date_estimated_delivery_date,date,included,29-01-301,bad_date_format: '29-01-301'
+NAR_41000003,parity_total,int,not included,31,"out_of_range: 31.0 not in [0, 15]"
+NAR_52000077,umbilicus,str,included,Clear,out_of_allowlist: 'clear'
+NAR_52000079,appearance,str,included,Well / Dysmorphic,out_of_allowlist: 'well / dysmorphic'
+NAR_53000111,diastolic_blood_pressure,int,included,89,"out_of_range: 89.0 not in [10, 80]"
+NAR_63000071,temparature,float,included,32.2,"out_of_range: 32.2 not in [34.0, 42.0]"
+NAR_63000073,given_anti_D_medication,str,included,Unknown,out_of_allowlist: 'unknown'
+NAR_72000023,given_anti_D_medication,str,included,Unkn,out_of_allowlist: 'unkn'
+NAR_76000056,skin,str,included,Dry-peeling-wrinkled,out_of_allowlist: 'dry-peeling-wrinkled'
+NAR_76000057,skin,str,included,Dry/peeling/Wrinkled,out_of_allowlist: 'dry/peeling/wrinkled'
+NAR_76000058,skin,str,included,Dry-peeling-wrinkled,out_of_allowlist: 'dry-peeling-wrinkled'

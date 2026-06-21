@@ -1,0 +1,9 @@
+field_type,n_records,n_fields,n_observations,mean_accuracy,std_accuracy,model
+int,43,19,483,0.795,0.404,qwen
+date,43,2,77,0.766,0.426,qwen
+str,43,19,652,0.646,0.479,qwen
+bool,43,51,1479,0.629,0.483,qwen
+time,35,2,57,0.596,0.495,qwen
+float,41,2,69,0.406,0.495,qwen
+coded_int,43,1,43,0.0,0.0,qwen
+unknown,43,2,46,0.0,0.0,qwen

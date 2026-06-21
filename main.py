@@ -52,31 +52,23 @@ if Path(GT_PATH).exists():
 
 if __name__ == "__main__":
 
+    #QWEN-----------------------------------------------------------------------------------
     # Stage 1 — extract
     print("\n STARTING EXTRACTION...\n")
 
-    processed_ids = run_extraction_pipeline(
+    processed_ids_Q = run_extraction_pipeline(
         image_dir=IMAGE_DIR,
-        model_name=MODEL_NAME2,
-        table_name=EXTRACTION_TABLE2,
+        model_name=MODEL_NAME,
+        table_name=EXTRACTION_TABLE,
         ground_truth=gt,
         resume=True,
     )
 
-    print(f"\n Extraction complete: {len(processed_ids)} records\n")
+    print(f"\n Extraction complete: {len(processed_ids_Q)} records\n")
 
     # Stage 2 — structure
     print("\n STARTING STRUCTURING PIPELINE...\n")
 
-    structured_ids = run_structuring_pipeline(
-        model_name=MODEL_NAME2,
-        host_url=IP_SERVER,
-        table_in=EXTRACTION_TABLE2,
-        table_out=STRUCTURED_TABLE2,
-        resume=True,
-    )
-
-    # QWEN
     structured_ids_Q= run_structuring_pipeline(
         model_name=MODEL_NAME,
         host_url=IP_SERVER,
@@ -88,8 +80,48 @@ if __name__ == "__main__":
         resume=True,
     )
 
-    # GEMMA
-    run_structuring_pipeline(
+    print(f"\n Structuring complete: {len(structured_ids_Q)} records\n")
+
+    # Stage 3 — evaluate
+    print("\n STARTING EVALUATION PIPELINE...\n")
+    run_evaluation(
+        gt_path=GT_PATH,
+        structured_table=STRUCTURED_TABLE,
+        model_label="qwen",
+    )
+
+    print("\n Evaluation complete\n")
+
+    # Stage 4 — full evaluation suite (produces ALL metric CSVs)
+    run_full_metrics_suite(
+        gt_path=GT_PATH,
+        model_configs=[
+            {
+                "model_label": "qwen",
+                "eval_table":  "structured_qwen_required",
+                "full_table":  "structured_qwen",
+            },
+        ]
+    )
+
+    # GEMMA-----------------------------------------------------------------------------------
+    # Stage 1 — extract
+    print("\n STARTING EXTRACTION...\n")
+
+    processed_ids_G = run_extraction_pipeline(
+        image_dir=IMAGE_DIR,
+        model_name=MODEL_NAME2,
+        table_name=EXTRACTION_TABLE2,
+        ground_truth=gt,
+        resume=True,
+    )
+
+    print(f"\n Extraction complete: {len(processed_ids_G)} records\n")
+
+    # Stage 2 — structure
+    print("\n STARTING STRUCTURING PIPELINE...\n")
+
+    structured_ids_G = run_structuring_pipeline(
         model_name=MODEL_NAME2,
         host_url=IP_SERVER,
         table_in=EXTRACTION_TABLE2,
@@ -100,19 +132,7 @@ if __name__ == "__main__":
         resume=True,
     )
 
-    # MEDGEMMA (uncomment when ready)
-    # run_structuring_pipeline(
-    #     model_name="medgemma:27b",
-    #     host_url=IP_SERVER,
-    #     table_in="extractions_medgemma",
-    #     table_out="structured_medgemma",
-    #     table_required="structured_medgemma_required",
-    #     table_supplementary="structured_medgemma_supplementary",
-    #     table_mapped="mapped_medgemma",
-    #     resume=True,
-    # )
-
-    print(f"\n Structuring complete: {len(structured_ids)} records\n")
+    print(f"\n Structuring complete: {len(structured_ids_G)} records\n")
 
     # Stage 3 — evaluate
     print("\n STARTING EVALUATION PIPELINE...\n")
@@ -130,8 +150,20 @@ if __name__ == "__main__":
         model_configs=[
             {
                 "model_label": "gemma",
-                "eval_table":  "structured_qwen_required",
-                "full_table":  "structured_qwen",
+                "eval_table": "structured_gemma_required",
+                "full_table": "structured_gemma",
             },
         ]
     )
+
+    # MEDGEMMA (uncomment when ready)
+    # run_structuring_pipeline(
+    #     model_name="medgemma:27b",
+    #     host_url=IP_SERVER,
+    #     table_in="extractions_medgemma",
+    #     table_out="structured_medgemma",
+    #     table_required="structured_medgemma_required",
+    #     table_supplementary="structured_medgemma_supplementary",
+    #     table_mapped="mapped_medgemma",
+    #     resume=True,
+    # )

@@ -19,5 +19,5 @@
 !/markdown_exports/
 .env!/qwen.py
 .env
-*.csv
+.csv
 !/scripts/

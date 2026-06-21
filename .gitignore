@@ -21,3 +21,4 @@
 .env
 .csv
 !/scripts/
+!/tests/batch2.py

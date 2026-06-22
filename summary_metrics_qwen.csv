@@ -1,12 +1,12 @@
 summary_scope,field_type,n_fields,macro_precision,macro_recall,macro_f1,micro_f1,avg_exact_acc,avg_fuzzy_acc,nar_inclusion,scope
-by_field_type,date,2.0,0.8526,0.8784,0.8653,0.8653,0.763,0.763,,
-by_field_type,int,19.0,0.8256,0.8325,0.8194,0.8889,0.7388,0.7388,,
-by_field_type,bool,51.0,0.9267,0.6749,0.765,0.8302,0.6528,0.6504,,
-by_field_type,time,2.0,0.6534,0.871,0.7466,0.7466,0.596,0.596,,
-by_field_type,str,19.0,0.569,0.6379,0.5739,0.8286,0.6191,0.5852,,
-by_field_type,float,2.0,0.4516,0.4375,0.4444,0.4444,0.4,0.4,,
+by_field_type,date,2.0,0.9002,0.847,0.872,0.872,0.7744,0.7744,,
+by_field_type,int,19.0,0.8241,0.7807,0.7888,0.8824,0.7042,0.7042,,
+by_field_type,bool,51.0,0.9279,0.6521,0.7483,0.8,0.6348,0.6341,,
+by_field_type,time,2.0,0.6236,0.8019,0.701,0.701,0.5397,0.5397,,
+by_field_type,str,19.0,0.5674,0.6364,0.5753,0.7692,0.6107,0.5911,,
+by_field_type,float,2.0,0.4565,0.42,0.4375,0.4375,0.3889,0.3889,,
 by_field_type,coded_int,1.0,0.0,0.0,0.0,0.0,0.0,0.0,,
 by_field_type,unknown,2.0,0.0,0.0,0.0,0.0,0.0,0.0,,
-by_nar_inclusion,,95.0,0.8177,0.7025,0.7326,0.8462,0.659,0.651,included,
+by_nar_inclusion,,95.0,0.8181,0.677,0.7169,0.8261,0.6396,0.6353,included,
 by_nar_inclusion,,3.0,0.0,0.0,0.0,0.0,0.0,0.0,not included,
-overall,,98.0,0.7926,0.681,0.7102,0.837,0.6389,0.6311,,overall
+overall,,98.0,0.7931,0.6563,0.6949,0.8128,0.62,0.6159,,overall

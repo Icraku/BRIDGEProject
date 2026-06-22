@@ -1,2 +1,2 @@
 model,n_records,llm_s_mean,llm_s_median,llm_s_std,llm_s_min,llm_s_max,llm_s_p25,llm_s_p75,total_s_mean,total_s_median,total_s_std,total_s_min,total_s_max,total_s_p25,total_s_p75
-qwen,28,15700.65,1307.45,31621.15,247.12,84383.09,1159.54,1605.7,15700.82,1307.63,31621.16,247.28,84383.27,1159.67,1605.83
+gemma,27,146.77,142.35,26.03,113.89,196.83,128.23,164.88,146.92,142.49,26.03,114.02,196.97,128.38,165.01

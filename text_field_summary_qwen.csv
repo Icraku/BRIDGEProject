@@ -1,3 +1,3 @@
 field,nar_inclusion,n_records,mean_cer,median_cer,mean_wer,median_wer,avg_gt_chars,avg_gt_words
-secondary_admission_diagnosis,included,13,0.883,0.875,0.9231,1.0,13.615384615384615,1.2307692307692308
-primary_admission_diagnosis,included,31,1.2546,0.9048,0.9839,1.0,11.225806451612904,1.5161290322580645
+secondary_admission_diagnosis,included,11,0.9754,0.9167,1.0,1.0,14.363636363636363,1.2727272727272727
+primary_admission_diagnosis,included,20,1.0824,0.8899,1.0,1.0,9.55,1.4

@@ -69,29 +69,31 @@ _TRISTATE_FIELDS: list[str] = [
 ]
 
 _BOOL_VALID: set[str] = {
-    "true", "false", "none", "null", "", "1", "0", "yes", "YES", "no", "NO", "y", "n", "Y", "N"
+    "true", "false", "none", "null", "", "1", "0", "yes", "no", "y", "n",
 }
 
 _TRISTATE_VALID: set[str] = {
-    "true", "false", "pos", "POS", "positive", "POSITIVE", "neg", "NEG", "negative", "NEGATIVE",
-    "unkn", "UNKN", "unknown", "UNKNOWN", "none", "null", "",
+        "true", "false", "pos", "neg", "positive", "negative", "unkn", "unknown", "none", "null", "",
 }
 
 ALLOWLISTS: dict[str, set[str]] = {
     **{f: _BOOL_VALID    for f in _BOOL_FIELDS},
     **{f: _TRISTATE_VALID for f in _TRISTATE_FIELDS},
-    "sex":           {"m", "M", "f", "F", "i", "male", "MALE", "female", "FEMALE", "indeterminate", ""},
-    "blood_group":   {"a", "b", "ab", "o", "unknown", "unkn", ""},
+    "sex":           {"m", "f", "i", "male", "female", "indeterminate", ""},
+    "blood_group":   {"a", "b", "ab", "o", "unknown", "unkn", "unk", ""},
     "delivery_type": {
         "svd", "cs", "c/s", "breach", "breech", "forceps", "vacuum",
         "normal", "svd cs", "cs svd", "",
     },
-    "had_cs":              {"emergency", "elective", "emcs", "elcs", ""},
-    "gestation_type":      {"us", "u/s", "lmp", "ultrasound", "us lmp", "lmp us", ""},
+    "had_cs":              {
+        "emergency", "elective", "emcs", "elcs",
+        "emergency cs", "elective cs", "emergency c/s", "elective c/s", "",
+    },
+    "gestation_type":      {"us", "u/s", "lmp", "ultrasound", "us lmp", "lmp us", "u/s lmp", "lmp u/s", "unknown", "unkn", "unk", ""},
     "rapture_of_membrane": {
         "<18", "lt18", ">=18", "gte18", ">=18h", "<18h", "unknown", "unkn", "",
     },
-    "given_anti_D_medication": {"y", "n", "yes", "no", ""},
+    "given_anti_D_medication": {"y", "n", "yes", "no", "unknown", "unkn", "unk", "n/a", "",},
     "jaundice": {
         "none", "no", "+", "mild", "1+", "++", "moderate",
         "2+", "+++", "severe", "3+", "",
@@ -101,7 +103,8 @@ ALLOWLISTS: dict[str, set[str]] = {
     "intercostal_retraction": {"none", "mild", "severe", ""},
     "appearance": {"well", "sick", "ill", "unwell", "dysmorphic", ""},
     "cry": {
-        "normal", "weak", "weak/absent", "weak / absent",
+        "normal", "normal/strong", "strong",
+        "weak", "weak/absent", "weak / absent",
         "weak-absent", "absent", "hoarse", "",
     },
     "tone": {
@@ -109,13 +112,29 @@ ALLOWLISTS: dict[str, set[str]] = {
         "hypertonic", "hypotonic", "floppy", "",
     },
     "skin": {
+        # Standard values
         "normal", "bruising", "bruised", "rash", "pustules", "mottling",
-        "mottled", "dry", "peeling", "wrinkled", "dry/peeling",
-        "dry peeling", "dry-peeling", "",
+        "mottled", "dry", "peeling", "wrinkled",
+        # Compound dry/peeling variants — all separator styles are valid
+        "dry/peeling", "dry peeling", "dry-peeling",
+        "dry/peeling/wrinkled", "dry peeling wrinkled", "dry-peeling-wrinkled",
+        "dry/peeling-wrinkled", "dry-peeling/wrinkled",
+        "",
     },
     "umbilicus": {
-        "clean", "local pus", "localpus", "pus", "pus + red skin",
-        "pus and red skin", "pus+red skin", "others", "other", "",
+        # Standard values
+        "clean", "clear",           # clear is a common synonym for clean
+        "local pus", "localpus", "pus",
+        "pus + red skin", "pus and red skin", "pus+red skin",
+        "pus + redness", "pus with redness",
+        "others", "other", "",
+    },
+    "rhesus": {
+        # Standard tri-state
+        "positive", "negative", "unknown", "unkn", "unk",
+        "pos", "neg",
+        # Short forms seen on forms
+        "+", "-", "rh+", "rh-", "",
     },
 }
 
@@ -169,10 +188,8 @@ def detect_hallucination(field: str, raw_value: object) -> tuple[bool, str]:
 
     Parameters
     ----------
-    field:
-        Schema field name.
-    raw_value:
-        The value produced by the LLM for this field.
+    field: Schema field name.
+    raw_value: The value produced by the LLM for this field.
 
     Returns
     -------
@@ -248,10 +265,8 @@ def run_hallucination_detection(
 
     Parameters
     ----------
-    structured_table:
-        SurrealDB table containing full 120-field structured outputs.
-    model_label:
-        Used for output CSV filenames.
+    structured_table: SurrealDB table containing full 120-field structured outputs.
+    model_label: Used for output CSV filenames.
 
     Returns
     -------
@@ -322,26 +337,6 @@ def run_hallucination_detection(
         total_checked, len(row_df), hall_rate,
         row_df["record_id"].nunique(), len(predictions),
     )
-
-    """# By field type
-    by_type = (
-        row_df.groupby("field_type")["record_id"]
-        .count().reset_index()
-        .rename(columns={"record_id": "n_hallucinations"})
-        .sort_values("n_hallucinations", ascending=False)
-    )
-    print(f"\n  Hallucinations by field type:")
-    print(by_type.to_string(index=False))
-
-    # By inclusion
-    by_inc = (
-        row_df.groupby("nar_inclusion")["record_id"]
-        .count().reset_index()
-        .rename(columns={"record_id": "n_hallucinations"})
-    )
-    print(f"\n  Hallucinations by NAR inclusion:")
-    print(by_inc.to_string(index=False))
-"""
 
     f1 = f"hallucinations_{model_label}.csv"
     f2 = f"hallucination_summary_{model_label}.csv"

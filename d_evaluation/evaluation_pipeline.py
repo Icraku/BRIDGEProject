@@ -304,7 +304,13 @@ def run_full_metrics_suite(
 
     if summary_rows:
         summary_df = pd.DataFrame(summary_rows)
-        summary_df.to_csv("cross_model_summary.csv", index=False)
+        summary_path = Path("cross_model_summary.csv")
+        if summary_path.exists():
+            existing = pd.read_csv(summary_path)
+            # update if exists, insert if not
+            existing = existing[~existing["model"].isin(summary_df["model"])]
+            summary_df = pd.concat([existing, summary_df], ignore_index=True)
+        summary_df.to_csv(summary_path, index=False)
         logger.info("Cross-model summary saved: cross_model_summary.csv")
 
     return results

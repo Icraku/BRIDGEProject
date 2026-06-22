@@ -27,6 +27,7 @@ Outputs
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from database_utils.db_utils import fetch_records
@@ -40,6 +41,15 @@ def load_runtimes(table_name: str) -> pd.DataFrame:
     """
     Load llm_runtime_seconds and total_record_runtime_seconds
     from a structured output table.
+
+    Parameters
+    ----------
+    table_name: SurrealDB table written by ``run_structuring_pipeline``.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per record with columns ``record_id``, ``llm_runtime_s``, ``total_runtime_s``.
     """
     records = fetch_records(table_name)
     rows = []
@@ -81,30 +91,36 @@ def _stats(series: pd.Series, label: str) -> dict:
 def run_runtime_analysis(
     model_configs: list[dict],
 ) -> pd.DataFrame:
-    """
-    Args:
-        model_configs: list of dicts, each with keys:
+    """Compute per-record and cross-model runtime statistics.
+    Each run updates only the rows for the models included in
+    *model_configs* and leaves all other rows intact.
+
+    Parameters
+    ----------
+    model_configs: list of dicts, each with keys:
             model_label   — e.g. "qwen", "gemma", "medgemma"
             table_name    — DB table holding structured outputs
             stage         — "extraction" | "structuring" (default: "structuring")
 
-    Example:
-        run_runtime_analysis([
-            {"model_label": "qwen",     "table_name": "structured_qwen"},
-            {"model_label": "gemma",    "table_name": "structured_gemma"},
-            {"model_label": "medgemma", "table_name": "structured_medgemma"},
-        ])
+    Returns
+    -------
+    pd.DataFrame
+        Combined per-record timing DataFrame for all models in this call.
+        Saves runtime_summary_{model}.csv per model, and runtime_by_model.csv for the cross-model comparison.
 
-    Returns a combined DataFrame with per-record timings for all models.
-    Saves runtime_summary_{model}.csv per model, and runtime_by_model.csv
-    for the cross-model comparison.
+    Example:
+    run_runtime_analysis([
+        {"model_label": "qwen",     "table_name": "structured_qwen"},
+        {"model_label": "gemma",    "table_name": "structured_gemma"},
+        {"model_label": "medgemma", "table_name": "structured_medgemma"},
+    ])
     """
     logger.info("\n" + "=" * 60)
     logger.info(f"  RUNTIME ANALYSIS — {[c['model_label'] for c in model_configs]}")
     logger.info("=" * 60)
 
-    all_stats  = []
-    all_frames = []
+    all_stats:  list[dict]         = []
+    all_frames: list[pd.DataFrame] = []
 
     for cfg in model_configs:
         label = cfg["model_label"]
@@ -112,7 +128,7 @@ def run_runtime_analysis(
 
         df = load_runtimes(table)
         if df.empty:
-            logger.warning(f"[{label}] No records found in '{table}', skipping.")
+            logger.warning("  [%s] No records in '%s' — skipping.", label, table)
             continue
 
         df["model"] = label
@@ -125,42 +141,56 @@ def run_runtime_analysis(
         all_stats.append(row)
         all_frames.append(df)
 
-        # per-record CSV
+        # Per-model per-record CSV
         outf = f"runtime_summary_{label}.csv"
         df.to_csv(outf, index=False)
 
-        logger.info(f"\n[{label}] n={n}  table={table}")
         logger.info(
-            f"    LLM inference : mean={llm_stats['llm_s_mean']}s  "
-            f"median={llm_stats['llm_s_median']}s  "
-            f"max={llm_stats['llm_s_max']}s"
+            "  [%s] n=%d  table=%s  LLM mean=%.1fs median=%.1fs max=%.1fs",
+            label, n, table,
+            llm_stats["llm_s_mean"],
+            llm_stats["llm_s_median"],
+            llm_stats["llm_s_max"],
         )
         logger.info(
-            f"    Total pipeline: mean={total_stats['total_s_mean']}s  "
-            f"median={total_stats['total_s_median']}s  "
-            f"max={total_stats['total_s_max']}s"
+            "  [%s] Total mean=%.1fs median=%.1fs max=%.1fs  Saved: %s",
+            label,
+            total_stats["total_s_mean"],
+            total_stats["total_s_median"],
+            total_stats["total_s_max"],
+            outf,
         )
-        logger.info(f"    Saved: {outf}")
 
     if not all_stats:
-        logger.warning("No runtime data found.")
+        logger.warning("No runtime data found for any model.")
         return pd.DataFrame()
 
-    # Cross-model comparison
-    comparison = pd.DataFrame(all_stats)
-    comparison.to_csv("runtime_by_model.csv", index=False)
+    # Cross-model comparison ---update if exists, insert if not---
+    new_rows = pd.DataFrame(all_stats)
+    comparison_path = Path("runtime_by_model.csv")
 
-    logger.info("\nCross-model comparison:")
-    cols = [
-        "model", "n_records",
-        "llm_s_mean", "llm_s_median", "llm_s_std",
-        "total_s_mean", "total_s_median", "total_s_std"
-    ]
+    if comparison_path.exists():
+        existing = pd.read_csv(comparison_path)
+        # Replace rows for models being re-run; keep all others
+        existing = existing[~existing["model"].isin(new_rows["model"])]
+        new_rows = pd.concat([existing, new_rows], ignore_index=True)
+
+        new_rows.to_csv(comparison_path, index=False)
+
+        display_cols = [
+            "model", "n_records",
+            "llm_s_mean", "llm_s_median", "llm_s_std",
+            "total_s_mean", "total_s_median", "total_s_std",
+        ]
     logger.info(
-        "\n" + comparison[[c for c in cols if c in comparison.columns]]
-        .to_string(index=False)
+        "Cross-model runtime:\n%s",
+        new_rows[[c for c in display_cols if c in new_rows.columns]]
+        .to_string(index=False),
     )
     logger.info("Saved: runtime_by_model.csv")
 
-    combined = pd.concat(all_frames, ignore_index=True) if all_frames else pd.DataFrame()
+    combined = (
+        pd.concat(all_frames, ignore_index=True)
+        if all_frames else pd.DataFrame()
+    )
     return combined

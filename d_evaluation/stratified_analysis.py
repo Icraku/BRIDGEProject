@@ -260,7 +260,7 @@ def table_by_scan_period(
 
 
 # ---------------------------------------------------------------------------
-# Bonus: facility × field_type cross-tab
+# Table 4: facility × field_type cross-tab
 
 def table_facility_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
     """Cross-tabulation of mean accuracy: facility (rows) × field type (columns).
@@ -289,8 +289,85 @@ def table_facility_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataF
         .unstack(fill_value=None)
         .reset_index()
     )
-    logger.info("Bonus table (facility × field_type): %d facilities", len(pivot))
+    pivot["model"] = model_label
+    logger.info("Table 4 (facility × field_type) for %s: %d facilities", model_label, len(pivot))
     return pivot
+
+
+# ---------------------------------------------------------------------------
+# Table 5: accuracy by scan period (month / quarter) per facility
+
+def table_by_scan_period_per_facility(
+    df: pd.DataFrame,
+    admission_dates: dict[str, str | None],
+    model_label: str,
+) -> pd.DataFrame:
+    """Compute mean accuracy per admission month and quarter for each facility.
+
+    Records with no parseable ``admission_date`` are grouped under
+    ``"Unknown period"`` so they are not silently dropped.
+
+    Parameters
+    ----------
+    df: Full accuracy DataFrame.
+    admission_dates: ``{record_id: date_string}`` from ``_load_admission_dates``.
+    model_label: Used for the ``model`` column.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per month, with a ``quarter`` column for rollup.
+        Sorted chronologically.
+    """
+    scored = df[df["scorable"] & df["has_gt"]].copy()
+    scored["correct?"] = pd.to_numeric(scored["correct?"], errors="coerce")
+
+    # Attach admission date and facility to every row
+    scored["admission_date_raw"] = scored["record_id"].map(admission_dates)
+    scored["facility"] = scored["record_id"].apply(_decode_facility_from_record_id)
+
+    # Parse dates — try the dd-mm-yyyy format used by clean_for_db, then ISO
+    def _parse(val: str | None) -> pd.Timestamp | None:
+        if not val:
+            return None
+        for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                return pd.to_datetime(val, format=fmt)
+            except (ValueError, TypeError):
+                continue
+        return None
+
+    scored["admission_dt"] = scored["admission_date_raw"].apply(_parse)
+
+    # Derive month and quarter labels
+    scored["year_month"] = scored["admission_dt"].apply(
+        lambda d: d.strftime("%Y-%m") if pd.notna(d) else "Unknown period"
+    )
+    scored["quarter"] = scored["admission_dt"].apply(
+        lambda d: f"{d.year}-Q{d.quarter}" if pd.notna(d) else "Unknown period"
+    )
+
+    summary = (
+        scored.groupby(["facility", "year_month", "quarter"])
+        .agg(
+            n_records     =("record_id", "nunique"),
+            n_observations=("correct?",  "count"),
+            mean_accuracy =("correct?",  "mean"),
+            std_accuracy  =("correct?",  "std"),
+        )
+        .reset_index()
+    )
+    summary["mean_accuracy"] = summary["mean_accuracy"].round(3)
+    summary["std_accuracy"]  = summary["std_accuracy"].round(3)
+    summary["model"]         = model_label
+
+    # Sort chronologically (Unknown period goes to end)
+    known   = summary[summary["year_month"] != "Unknown period"].sort_values(["facility", "year_month"])
+    unknown = summary[summary["year_month"] == "Unknown period"]
+    summary = pd.concat([known, unknown], ignore_index=True)
+
+    logger.info("Table 3 (scan period): %d months", len(summary))
+    return summary
 
 
 # ---------------------------------------------------------------------------
@@ -360,6 +437,7 @@ def run_stratified_analysis(
     t2 = table_by_facility(df, model_label)
     t3 = table_by_scan_period(df, admission_dates, model_label)
     t4 = table_facility_by_field_type(df, model_label)
+    t5 = table_by_scan_period_per_facility(df, admission_dates, model_label)
 
     # ── Save individual CSVs ─────────────────────────────────────────────
     paths = {
@@ -367,11 +445,13 @@ def run_stratified_analysis(
         "facility":             out / f"table2_by_facility_{model_label}.csv",
         "scan_period":          out / f"table3_by_scan_period_{model_label}.csv",
         "facility_x_field_type": out / f"table4_facility_x_field_type_{model_label}.csv",
+        "scan_period_per_facility": out / f"table5_by_scan_period_{model_label}.csv",
     }
     t1.to_csv(paths["field_type"],            index=False)
     t2.to_csv(paths["facility"],              index=False)
     t3.to_csv(paths["scan_period"],           index=False)
     t4.to_csv(paths["facility_x_field_type"], index=False)
+    t5.to_csv(paths["scan_period_per_facility"], index=False)
 
     # ── Combined table (for a single appendix) ───────────────────────────
     def _tag(frame: pd.DataFrame, label: str) -> pd.DataFrame:
@@ -384,6 +464,7 @@ def run_stratified_analysis(
             _tag(t1, "By field type"),
             _tag(t2, "By facility"),
             _tag(t3, "By scan period"),
+            _tag(t5, "By scan period per facility"),
         ],
         ignore_index=True,
     )
@@ -407,6 +488,10 @@ def run_stratified_analysis(
     print(t3[["year_month", "quarter", "n_records", "mean_accuracy"]]
           .to_string(index=False))
 
+    print("\n  TABLE 5: Accuracy by scan period per facility")
+    print(t3[["facility", "year_month", "quarter", "n_records", "mean_accuracy"]]
+          .to_string(index=False))
+
     print(f"\n  Saved:")
     for label, path in paths.items():
         print(f"    {path}")
@@ -417,6 +502,7 @@ def run_stratified_analysis(
         "facility":              t2,
         "scan_period":           t3,
         "facility_x_field_type": t4,
+        "scan_period_per_facility": t5,
     }
 
 

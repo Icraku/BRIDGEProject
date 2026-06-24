@@ -37,6 +37,7 @@ from tqdm import tqdm
 
 from c_structuring.bool_nullifier import BOOL_FIELD_LABELS, nullify_unticked_bools
 from c_structuring.nar_schema_mapper import map_to_schema
+from c_structuring.text_cleaning import strip_markdown_fences
 from database_utils.db_utils import fetch_record, fetch_records, safe_save
 from database_utils.queries import get_processed_ids
 from schemas.neonatal_admission_form.nar_full_schema import (
@@ -47,7 +48,6 @@ from schemas.neonatal_admission_form.nar_full_schema import (
 # Required downstream schema (structured subset)
 from schemas.neonatal_admission_form.nar_schema_included import NARRecord
 from schemas.internal_transfer_form.itf_schema import ITFRecord
-from c_structuring.text_cleaning import strip_markdown_fences
 
 logger = logging.getLogger(__name__)
 
@@ -158,10 +158,16 @@ def _structure_record(
         ``full_content``, ``required_content``, ``supplementary_content``,
         ``inclusion_map``, ``runtime_seconds``.
     """
+    import json as _json
+    schema_str = _json.dumps(NARFullRecord.model_json_schema(), ensure_ascii=False)
+
     system_prompt = (
-        "Extract information from the provided Markdown. "
-        "The response MUST be a JSON. "
-        f"The format should be {NARFullRecord.model_fields}"
+        "Extract information from the provided Markdown into a JSON object. "
+        "Use ONLY the field names and valid values defined in this schema. "
+        "For fields with an enum constraint, output ONLY one of the listed values. "
+        "For boolean fields output true or false. "
+        "For fields that are blank or not filled in the form, output null. "
+        f"Schema: {schema_str}"
     ).replace("{", "{{").replace("}", "}}")
 
     # f"If the field has not been filled, return N/A, Example born_where: N/A "

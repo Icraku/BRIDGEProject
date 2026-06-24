@@ -25,16 +25,16 @@ from d_evaluation.evaluation_pipeline import run_evaluation, run_full_metrics_su
 # Config
 
 IP_SERVER = os.getenv("IP_SERVER")
-IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/converted_images"
+IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/converted_images/test" #"/home/ikutswa/data/BRIDGE/patient_documents/converted_images/"
 GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 MODEL_NAME = "qwen3.5:35b"
 MODEL_NAME2 = "gemma4:31b"
-EXTRACTION_TABLE = "extractions_qwen"
-EXTRACTION_TABLE2 = "extractions_gemma"
-STRUCTURED_TABLE = "structured_qwen"
-STRUCTURED_TABLE2 = "structured_gemma"
-MAPPED_TABLE = "mapped"
-
+EXTRACTION_TABLE = "test_extraction_qwen" # extractions_qwen
+EXTRACTION_TABLE2 = "test_extraction_gemma" # extractions_gemma
+STRUCTURED_TABLE = "test_structured_qwen" # structured_qwen
+STRUCTURED_TABLE2 = "test_structured_gemma" # structured_gemma
+MAPPED_TABLE = "test_mapped_qwen" # mapped_qwen
+MAPPED_TABLE2 = "test_mapped_gemma" # mapped_gemma
 
 # ------------------------
 # Load and flatten GT

@@ -47,6 +47,7 @@ class NARFullRecord(BaseModel):
     ``Optional[int]``               Whole numbers
     ``Optional[float]``             Decimal numbers
     ``Optional[FieldEnum]``.        Categorical fields with constrained valid values from see nar_enums.py
+    ``Optional[str]``   Free-text fields (not accuracy-scored vs GT)
     ``Optional[Literal["text"]]``   Free-text fields (not accuracy-scored vs GT)
     ``Optional[Literal["redacted"]]`` Black-barred identifiers on real forms
     ``Optional[date]``              Calendar dates
@@ -170,7 +171,7 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION C: Maternal illness free text
 
-    maternal_illness_notes: Optional[Literal["text"]] = Field(
+    maternal_illness_notes: Optional[str] = Field(
         None,
         description=(
             "Section C: any maternal illness / fever / TB / antibiotics (free text)"
@@ -180,7 +181,7 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION D: Infant presenting problems free text
 
-    infant_presenting_problems: Optional[Literal["text"]] = Field(
+    infant_presenting_problems: Optional[str] = Field(
         None,
         description="Section D: infant presenting problems narrative (free text)",
     )
@@ -285,13 +286,13 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION F2: Further examination
 
-    neuro_examination: Optional[Literal["text"]] = Field(
+    neuro_examination: Optional[str] = Field(
         None,
         description=(
             "F2 neuro: abnormal posture / movement and reflexes (free text)"
         ),
     )
-    further_examination: Optional[Literal["text"]] = Field(
+    further_examination: Optional[str] = Field(
         None,
         description=(
             "F2 further exam of Resp / CVS / GIT / GU / Skin / Birth Trauma (free text)"
@@ -311,7 +312,7 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION G: Summary of presentation
 
-    problem_list: Optional[Literal["text"]] = Field(
+    problem_list: Optional[str] = Field(
         None,
         description="Section G: problem list free text (most important first)",
     )
@@ -325,20 +326,20 @@ class NARFullRecord(BaseModel):
     total_serum_bilirubin: Optional[float] = Field(
         None, description="Total serum bilirubin value (µmol/L)"
     )
-    investigations_other: Optional[Literal["text"]] = Field(
+    investigations_other: Optional[str] = Field(
         None, description="Other investigations ordered (free text)"
     )
 
     # ------------------------------------------------------------------
     # SECTION I: Diagnoses
 
-    primary_admission_diagnosis: Optional[Literal["text"]] = Field(
+    primary_admission_diagnosis: Optional[str] = Field(
         None, description="Primary diagnosis (tick box '1')"
     )
-    secondary_admission_diagnosis: Optional[Literal["text"]] = Field(
+    secondary_admission_diagnosis: Optional[str] = Field(
         None, description="Secondary diagnosis (tick box '2')"
     )
-    other_diagnoses: Optional[Literal["text"]] = Field(
+    other_diagnoses: Optional[str] = Field(
         None, description="Other diagnoses (free text, listed below tick boxes)"
     )
 

@@ -1,0 +1,9 @@
+field,field_type,nar_inclusion,n_hallucinations,n_records_affected,example_values,reasons
+appearance,str,included,1,1,Normal,out_of_allowlist: 'normal'
+cry,str,included,1,1,Well,out_of_allowlist: 'well'
+gestation_type,str,included,1,1,Unkn,out_of_allowlist: 'unkn'
+given_anti_D_medication,str,included,1,1,Unkn,out_of_allowlist: 'unkn'
+mum_age_in_years,int,included,1,1,2,"out_of_range: 2.0 not in [12, 60]"
+rbs_value,float,not included,1,1,60.0,"out_of_range: 60.0 not in [0.5, 30.0]"
+skin,str,included,1,1,Dry-peeling-wrinkled,out_of_allowlist: 'dry-peeling-wrinkled'
+umbilicus,str,included,1,1,Clear,out_of_allowlist: 'clear'

@@ -1,0 +1,12 @@
+summary_scope,field_type,n_fields,macro_precision,macro_recall,macro_f1,micro_f1,avg_exact_acc,avg_fuzzy_acc,nar_inclusion,scope
+by_field_type,date,2.0,0.8704,0.9118,0.8906,0.8906,0.8148,0.8148,,
+by_field_type,time,2.0,0.625,0.875,0.7288,0.7288,0.5806,0.5806,,
+by_field_type,int,19.0,0.7196,0.6223,0.6137,0.6667,0.5018,0.5018,,
+by_field_type,bool,51.0,0.6788,0.5328,0.5673,0.6316,0.4202,0.4195,,
+by_field_type,float,2.0,0.4,0.4762,0.4348,0.4348,0.3846,0.3846,,
+by_field_type,str,19.0,0.3825,0.3082,0.323,0.2857,0.3938,0.3272,,
+by_field_type,coded_int,1.0,0.0,0.0,0.0,0.0,0.0,0.0,,
+by_field_type,unknown,2.0,0.0,0.0,0.0,0.0,0.0,0.0,,
+by_nar_inclusion,,95.0,0.6247,0.5198,0.5351,0.6316,0.4422,0.4285,included,
+by_nar_inclusion,,3.0,0.0,0.0,0.0,0.0,0.0,0.0,not included,
+overall,,98.0,0.6056,0.5039,0.5188,0.6235,0.4287,0.4154,,overall

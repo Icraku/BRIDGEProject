@@ -1,0 +1,9 @@
+record_id,field,field_type,nar_inclusion,raw_value,reason
+NAR_52000077,umbilicus,str,included,Clear,out_of_allowlist: 'clear'
+NAR_52000078,mum_age_in_years,int,included,2,"out_of_range: 2.0 not in [12, 60]"
+NAR_53000110,gestation_type,str,included,Unkn,out_of_allowlist: 'unkn'
+NAR_63000072,skin,str,included,Dry-peeling-wrinkled,out_of_allowlist: 'dry-peeling-wrinkled'
+NAR_72000033,given_anti_D_medication,str,included,Unkn,out_of_allowlist: 'unkn'
+NAR_72000034,cry,str,included,Well,out_of_allowlist: 'well'
+NAR_76000056,rbs_value,float,not included,60.0,"out_of_range: 60.0 not in [0.5, 30.0]"
+NAR_76000057,appearance,str,included,Normal,out_of_allowlist: 'normal'

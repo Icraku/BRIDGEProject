@@ -1,0 +1,31 @@
+record_id,field,nar_inclusion,ground_truth_val,predicted_val,cer,wer,gt_len_chars,gt_len_words
+NAR_76000056,secondary_admission_diagnosis,included,jaundice_adx,text,0.9167,1.0,12,1
+NAR_72000023,primary_admission_diagnosis,included,sepsis,,1.0,1.0,6,1
+NAR_72000030,primary_admission_diagnosis,included,sepsis,text,0.8333,1.0,6,1
+NAR_72000034,secondary_admission_diagnosis,included,meconium_aspiration,,1.0,1.0,19,1
+NAR_40000042,primary_admission_diagnosis,included,rds,text,1.3333,1.0,3,1
+NAR_40000043,primary_admission_diagnosis,included,prematurity; rds,text,0.875,1.0,16,2
+NAR_40000044,primary_admission_diagnosis,included,asphyxia,text,0.875,1.0,8,1
+NAR_40000045,primary_admission_diagnosis,included,rds,text,1.3333,1.0,3,1
+NAR_40000045,secondary_admission_diagnosis,included,prematurity; lbw,text,0.875,1.0,16,2
+NAR_52000078,primary_admission_diagnosis,included,rds,,1.0,1.0,3,1
+NAR_52000079,primary_admission_diagnosis,included,prematurity; rds,text,0.875,1.0,16,2
+NAR_52000080,primary_admission_diagnosis,included,rds,,1.0,1.0,3,1
+NAR_76000057,secondary_admission_diagnosis,included,multiple_gestation,,1.0,1.0,18,1
+NAR_76000059,primary_admission_diagnosis,included,rds,text,1.3333,1.0,3,1
+NAR_76000059,secondary_admission_diagnosis,included,multiple_gestation,,1.0,1.0,18,1
+NAR_63000071,primary_admission_diagnosis,included,sepsis,,1.0,1.0,6,1
+NAR_63000072,primary_admission_diagnosis,included,prematurity,text,0.8182,1.0,11,1
+NAR_63000072,secondary_admission_diagnosis,included,lbw; multiple_gestation,text,0.8696,1.0,23,2
+NAR_63000073,primary_admission_diagnosis,included,prematurity,,1.0,1.0,11,1
+NAR_63000073,secondary_admission_diagnosis,included,lbw; multiple_gestation,,1.0,1.0,23,2
+NAR_63000074,primary_admission_diagnosis,included,asphyxia,text,0.875,1.0,8,1
+NAR_53000111,primary_admission_diagnosis,included,prematurity; lbw; rds,text,0.9048,1.0,21,3
+NAR_53000110,primary_admission_diagnosis,included,lbw,text,1.3333,1.0,3,1
+NAR_53000110,secondary_admission_diagnosis,included,prematurity,text,0.8182,1.0,11,1
+NAR_41000003,primary_admission_diagnosis,included,lbw; asphyxia; sepsis,,1.0,1.0,21,3
+NAR_41000001,primary_admission_diagnosis,included,asphyxia,text,0.875,1.0,8,1
+NAR_41000001,secondary_admission_diagnosis,included,rds,,1.0,1.0,3,1
+NAR_41000002,primary_admission_diagnosis,included,lbw; meconium_aspiration; rds,text,0.931,1.0,29,3
+NAR_41000004,primary_admission_diagnosis,included,sepsis,text,0.8333,1.0,6,1
+NAR_41000004,secondary_admission_diagnosis,included,rds,text,1.3333,1.0,3,1

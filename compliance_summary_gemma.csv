@@ -1,0 +1,121 @@
+field,field_type,nar_inclusion,presence_pct
+birth_defect_types,str,not included,0.0
+anc_clinic_name,redacted,not included,3.7
+total_serum_bilirubin,float,not included,3.7
+mum_name,redacted,not included,3.7
+infant_name,redacted,not included,7.4
+ip_no,redacted,not included,7.4
+diastolic_blood_pressure,int,included,7.4
+born_where,str,included,7.4
+mum_ip_no,redacted,not included,7.4
+systolic_blood_pressure,int,included,7.4
+multiple_delivery_num,int,included,7.4
+had_cs,str,included,7.4
+anc_visits,int,included,11.1
+anc_us_trimester,str,not included,11.1
+length,int,included,14.8
+head_circumference,int,included,14.8
+given_anti_D_medication,str,included,14.8
+us_findings,text,not included,14.8
+rapture_of_membrane,str,included,18.5
+mum_given_HBIG_treatment,bool,included,18.5
+clinician_signature,redacted,not included,18.5
+clinician_name,redacted,not included,18.5
+apgar_10m,int,included,22.2
+mum_had_antepartum_haemorrhage,bool,included,25.9
+other_diagnoses,text,not included,25.9
+mum_on_arvs,bool,included,25.9
+parity_total,int,not included,29.6
+apgar_1m,int,included,33.3
+prolonged_labour,bool,included,33.3
+mum_had_vdrl,bool,included,33.3
+mum_had_diabetes,bool,included,33.3
+mum_had_hypertension_in_pregnancy,bool,included,33.3
+mum_had_hepatitis_b,bool,included,37.0
+capillary_refill_in_seconds,float,included,37.0
+skin,str,included,37.0
+apgar_5m,int,included,40.7
+blood_group,str,included,44.4
+weight,int,included,44.4
+xiphoid_retraction,str,included,44.4
+further_examination,text,not included,44.4
+mum_pmtct_status,bool,included,44.4
+intercostal_retraction,str,included,48.1
+given_prophylaxis_pmtct,bool,included,48.1
+prescribed_surfactant,bool,included,48.1
+cry,str,included,48.1
+prescribed_caffeine_citrate,bool,included,51.9
+prescribed_opv,bool,included,51.9
+prescribed_iv_fluids,bool,included,51.9
+neuro_examination,text,not included,51.9
+parity_abortions,int,included,51.9
+prescribed_cpap,bool,included,51.9
+prescribed_incubator,bool,included,51.9
+prescribed_feeds,bool,included,51.9
+prescribed_kmc,bool,included,51.9
+prescribed_phototherapy,bool,included,51.9
+prescribed_transfusion,bool,included,51.9
+given_chlorhexidine,bool,included,51.9
+given_bcg,bool,included,51.9
+gestation_in_weeks,int,included,51.9
+baby_age_in_days,int,included,51.9
+parity_live,int,included,55.6
+prescribed_antibiotics,bool,included,55.6
+secondary_admission_diagnosis,text,included,55.6
+appearance,str,included,59.3
+rbs_value,float,not included,59.3
+prescribed_oxygen,bool,included,59.3
+given_vitamin_k,bool,included,59.3
+respiratory_rate,int,included,59.3
+tone,str,included,59.3
+time_seen,time,included,59.3
+mum_has_anc_ultrasound,bool,included,63.0
+action_plan_time,time,not included,63.0
+rhesus,str,included,63.0
+time_birth,time,included,63.0
+passed_meconium,bool,included,63.0
+action_plan_date,date,not included,66.7
+passed_urine,bool,included,66.7
+primary_admission_diagnosis,text,included,66.7
+is_distended,bool,included,66.7
+date_estimated_delivery_date,date,included,70.4
+is_irritable,bool,included,70.4
+maternal_illness_notes,text,not included,74.1
+investigations_other,text,not included,74.1
+has_murmur,bool,included,74.1
+has_difficulty_breathing,bool,included,74.1
+is_floppy,bool,included,74.1
+umbilicus,str,included,74.1
+pulse_rate,int,included,74.1
+pallor,str,included,77.8
+chest_indrawing,bool,included,77.8
+delivery_type,str,included,77.8
+is_multiple_delivery,bool,included,77.8
+has_vomiting,bool,included,77.8
+has_diarhoea,bool,included,77.8
+has_bulging_fontanelle,bool,included,77.8
+has_apnoea,bool,included,77.8
+pulse_oximetry,int,included,77.8
+born_before_arrival,bool,included,81.5
+infant_presenting_problems,text,not included,81.5
+mum_age_in_years,int,included,81.5
+has_convulsions,bool,included,81.5
+has_difficulty_feeding,bool,included,81.5
+jaundice,str,included,85.2
+problem_list,text,not included,88.9
+has_crackles,bool,included,88.9
+has_central_cyanosis,bool,included,88.9
+gestation_type,str,included,88.9
+has_fever,bool,included,88.9
+has_grunting,bool,included,88.9
+given_bilirubin,bool,included,92.6
+birth_weight,int,included,92.6
+has_good_air_entry,bool,included,92.6
+rbs_measured,bool,included,92.6
+was_resuscitated,bool,included,92.6
+has_birth_defects,bool,included,92.6
+temparature,float,included,92.6
+birth_date,date,included,100.0
+admission_date,date,included,100.0
+sex,str,included,100.0
+record_type,str,included,100.0

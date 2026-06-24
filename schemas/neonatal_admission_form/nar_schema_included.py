@@ -30,6 +30,11 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from schemas.neonatal_admission_form.categorical_Enums import (
+    AntiDEnum, AppearanceEnum, BloodGroupEnum, BornWhereEnum, CSTypeEnum, CryEnum,
+    DeliveryTypeEnum, GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
+    RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum,
+)
 
 class NARRecord(BaseModel):
     """Required NAR fields matched against ground truth.
@@ -50,32 +55,32 @@ class NARRecord(BaseModel):
 
     admission_date: date = Field(description="Date of Admission")
     time_seen: time = Field(description="Time baby seen (24 hr clock)")
-    sex: str = Field(description="Sex: F / M / I")
+    sex: SexEnum = Field(description="Sex: F / M / I")
 
     birth_date: date = Field(description="DOB")
     time_birth: time = Field(description="Time of birth (24 hr clock)")
     gestation_in_weeks: int = Field(description="Gestation (in weeks)")
     baby_age_in_days: int = Field(description="Age (in days)")
-    gestation_type: str = Field(description="Gestation age from: U/S or LMP")
+    gestation_type: GestationTypeEnum = Field(description="Gestation age from: U/S or LMP")
 
     apgar_1m: int = Field(description="APGAR score at 1 minute")
     apgar_5m: int = Field(description="APGAR score at 5 minutes")
     apgar_10m: int = Field(description="APGAR score at 10 minutes")
 
-    delivery_type: str = Field(
-        description="Delivery: SVD / CS / Breach / Forceps / Vacuum"
+    delivery_type: DeliveryTypeEnum = Field(
+        description="Mode of Delivery: SVD / CS / Breach / Forceps / Vacuum"
     )
-    had_cs: str = Field(description="If CS, type: Emergency / Elective")
+    had_cs: CSTypeEnum = Field(description="If CS, type: Emergency / Elective")
     was_resuscitated: bool = Field(
         description="BVM resus at birth: True=Y / False=N / None=Unknown"
     )
-    rapture_of_membrane: str = Field(description="ROM: <18h / >=18h / Unknown")
+    rapture_of_membrane: ROMEnum = Field(description="ROM: <18h / >=18h / Unknown")
 
     is_multiple_delivery: bool = Field(description="Multiple delivery: Y/N")
     multiple_delivery_num: int = Field(description="If YES, number of babies")
 
     born_before_arrival: bool = Field(description="Born outside facility: Y/N")
-    born_where: str = Field(description="If yes, where: Home/roadside / Other facility")
+    born_where: BornWhereEnum = Field(description="If yes, where: Home/roadside / Other facility")
 
     # ------------------------------------------------------------------
     # SECTION B: Mother's details
@@ -86,9 +91,9 @@ class NARRecord(BaseModel):
     date_estimated_delivery_date: date = Field(description="EDD")
     anc_visits: int = Field(description="ANC no. of visits")
     mum_has_anc_ultrasound: bool = Field(description="ANC U/S done: Y/N")
-    blood_group: str = Field(description="Blood group: A / B / AB / O / Unknown")
-    rhesus: str = Field(description="Rhesus: Pos / Neg / Unknown")
-    given_anti_D_medication: str = Field(description="Anti D given: Y / N")
+    blood_group: BloodGroupEnum = Field(description="Blood group: A / B / AB / O / Unknown")
+    rhesus: RhesusEnum = Field(description="Rhesus: Positive / Negative / Unknown")
+    given_anti_D_medication: AntiDEnum = Field(description="Anti D given: Y / N / Unknown")
 
     mum_had_vdrl: bool = Field(
         description="VDRL: Pos=True / Neg=False / Unknown=None"
@@ -147,36 +152,30 @@ class NARRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION F1: General examination
 
-    skin: str = Field(
-        description=(
-            "Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled"
-        )
+    skin: SkinEnum = Field(
+        description="Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled"
     )
-    jaundice: str = Field(description="Jaundice: None / + / +++")
-    appearance: str = Field(description="Appearance: Well / Sick / Dysmorphic")
-    cry: str = Field(description="Cry: Normal / Weak-Absent / Hoarse")
+    jaundice: JaundiceEnum = Field(description="Jaundice severity: None / Mild(+) / Severe(+++)")
+    appearance: AppearanceEnum = Field(description="Appearance: Well / Sick / Dysmorphic")
+    cry: CryEnum = Field(description="Cry quality: Normal / Weak-Absent / Hoarse")
 
     has_crackles: bool = Field(description="Crackles: Y/N")
     has_grunting: bool = Field(description="Grunting: Y/N")
     has_good_air_entry: bool = Field(description="Good bilateral air entry: Y/N")
     has_central_cyanosis: bool = Field(description="Central cyanosis: Y/N")
-    chest_indrawing: bool = Field(description="Lower chest indrawing: Y/N")
-    xiphoid_retraction: str = Field(
-        description="Xiphoid retraction: None / Mild / Severe"
-    )
-    intercostal_retraction: str = Field(
-        description="Intercostal retraction: None / Mild / Severe"
-    )
+    chest_indrawing: RetractionSeverityEnum = Field(description="Lower chest indrawing: None / Mild / Severe")
+    xiphoid_retraction: RetractionSeverityEnum = Field(description="Xiphoid retraction: None / Mild / Severe")
+    intercostal_retraction: RetractionSeverityEnum = Field(description="Intercostal retraction: None / Mild / Severe")
     capillary_refill_in_seconds: float = Field(description="Capillary refill (seconds)")
-    pallor: str = Field(description="Pallor/Anaemia: None / + / +++")
+    pallor: PallorEnum = Field(description="Pallor/Anaemia: None / Mild(+) / Severe(+++)")
     has_murmur: bool = Field(description="Murmur: Y/N")
 
     has_bulging_fontanelle: bool = Field(description="Bulging fontanelle: Y/N")
     is_irritable: bool = Field(description="Irritable: Y/N")
-    tone: str = Field(description="Tone: Normal / Increased / Reduced")
+    tone: ToneEnum = Field(description="Tone: Normal / Increased / Reduced")
 
     is_distended: bool = Field(description="Abdominal distension: Y/N")
-    umbilicus: str = Field(
+    umbilicus: UmbilicusEnum = Field(
         description="Umbilicus: Clean / Local pus / Pus+Red skin / Others"
     )
 

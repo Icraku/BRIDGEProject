@@ -20,6 +20,7 @@ date        Calendar dates
 time        Clock times
 redacted    Black-barred fields on real forms (``Literal["redacted"]``)
 coded_int   Integer codes mapping to named values (e.g. hospital codes)
+categorical Closed-vocabulary string fields enforced by Python Enum classes from nar_enums.py
 """
 
 from __future__ import annotations
@@ -32,23 +33,23 @@ FIELD_TYPES: dict[str, str] = {
     "ip_no":                    "redacted",
     "admission_date":           "date",
     "time_seen":                "time",
-    "sex":                      "str",
+    "sex":                            "categorical",
     "birth_date":               "date",
     "time_birth":               "time",
     "gestation_in_weeks":       "int",
     "baby_age_in_days":         "int",
-    "gestation_type":           "str",
+    "gestation_type":                 "categorical",
     "apgar_1m":                 "int",
     "apgar_5m":                 "int",
     "apgar_10m":                "int",
-    "delivery_type":            "str",
-    "had_cs":                   "str",
+    "delivery_type":                  "categorical",
+    "had_cs":                         "categorical",
     "was_resuscitated":         "bool",
-    "rapture_of_membrane":      "str",
+    "rapture_of_membrane":            "categorical",
     "is_multiple_delivery":     "bool",
     "multiple_delivery_num":    "int",
     "born_before_arrival":      "bool",
-    "born_where":               "str",
+    "born_where":                     "categorical",
 
     # ------------------------------------------------------------------
     # SECTION B: Mother's details
@@ -62,11 +63,11 @@ FIELD_TYPES: dict[str, str] = {
     "anc_clinic_name":                      "redacted",
     "anc_visits":                           "int",
     "mum_has_anc_ultrasound":               "bool",
-    "anc_us_trimester":                     "str",
+    "anc_us_trimester":                           "categorical",
     "us_findings":                          "text",
-    "blood_group":                          "str",
-    "rhesus":                               "str",
-    "given_anti_D_medication":              "str",
+    "blood_group":                                "categorical",
+    "rhesus":                                     "categorical",
+    "given_anti_D_medication":                    "categorical",
     "mum_had_vdrl":                         "bool",
     "mum_pmtct_status":                     "bool",
     "mum_on_arvs":                          "bool",
@@ -107,32 +108,32 @@ FIELD_TYPES: dict[str, str] = {
 
     # ------------------------------------------------------------------
     # SECTION F1: General examination
-    "skin":                         "str",
-    "jaundice":                     "str",
-    "appearance":                   "str",
-    "cry":                          "str",
+    "skin":                               "categorical",
+    "jaundice":                           "categorical",
+    "appearance":                         "categorical",
+    "cry":                                "categorical",
     "has_crackles":                 "bool",
     "has_grunting":                 "bool",
     "has_good_air_entry":           "bool",
     "has_central_cyanosis":         "bool",
-    "chest_indrawing":              "bool",
-    "xiphoid_retraction":           "str",
-    "intercostal_retraction":       "str",
+    "chest_indrawing":                    "categorical",
+    "xiphoid_retraction":                 "categorical",
+    "intercostal_retraction":             "categorical",
     "capillary_refill_in_seconds":  "float",
-    "pallor":                       "str",
+    "pallor":                             "categorical",
     "has_murmur":                   "bool",
     "has_bulging_fontanelle":       "bool",
     "is_irritable":                 "bool",
-    "tone":                         "str",
+    "tone":                               "categorical",
     "is_distended":                 "bool",
-    "umbilicus":                    "str",
+    "umbilicus":                          "categorical",
 
     # ------------------------------------------------------------------
     # SECTION F2: Further examination
     "neuro_examination":            "text",
     "further_examination":          "text",
     "has_birth_defects":            "bool",
-    "birth_defect_types":           "str",
+    "birth_defect_types":                 "categorical",
 
     # ------------------------------------------------------------------
     # SECTION G: Problem list

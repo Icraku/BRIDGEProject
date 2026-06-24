@@ -322,8 +322,9 @@ def table_by_scan_period_per_facility(
     scored = df[df["scorable"] & df["has_gt"]].copy()
     scored["correct?"] = pd.to_numeric(scored["correct?"], errors="coerce")
 
-    # Attach admission date and facility to every row
+    # Attach admission date and facility using the uniform ID
     scored["admission_date_raw"] = scored["record_id"].map(admission_dates)
+
     scored["facility"] = scored["record_id"].apply(_decode_facility_from_record_id)
 
     # Parse dates — try the dd-mm-yyyy format used by clean_for_db, then ISO
@@ -445,7 +446,7 @@ def run_stratified_analysis(
         "facility":             out / f"table2_by_facility_{model_label}.csv",
         "scan_period":          out / f"table3_by_scan_period_{model_label}.csv",
         "facility_x_field_type": out / f"table4_facility_x_field_type_{model_label}.csv",
-        "scan_period_per_facility": out / f"table5_by_scan_period_{model_label}.csv",
+        "scan_period_per_facility": out / f"table5_by_scan_period_per_facility_{model_label}.csv",
     }
     t1.to_csv(paths["field_type"],            index=False)
     t2.to_csv(paths["facility"],              index=False)
@@ -489,7 +490,7 @@ def run_stratified_analysis(
           .to_string(index=False))
 
     print("\n  TABLE 5: Accuracy by scan period per facility")
-    print(t3[["facility", "year_month", "quarter", "n_records", "mean_accuracy"]]
+    print(t5[["facility", "year_month", "quarter", "n_records", "mean_accuracy"]]
           .to_string(index=False))
 
     print(f"\n  Saved:")

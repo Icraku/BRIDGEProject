@@ -23,13 +23,20 @@ evaluation module to tag fields as ``"included"`` or ``"not included"``.
 from __future__ import annotations
 
 from datetime import date, time
+from enum import Enum
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
+
+from schemas.neonatal_admission_form.categorical_Enums import (
+    ANCTrimesterEnum, AntiDEnum, AppearanceEnum, BloodGroupEnum,
+    BornWhereEnum, CSTypeEnum, CryEnum, DeliveryTypeEnum,
+    GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
+    RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum, BirthDefectsEnum,
+)
 
 # NARRecord is imported here (not at the bottom) so the dependency is
 # explicit and linters can resolve it correctly.
 from schemas.neonatal_admission_form.nar_schema_included import NARRecord as _NARRecord
-
 
 class NARFullRecord(BaseModel):
     """Complete extraction schema for the two-page NAR form.
@@ -39,7 +46,7 @@ class NARFullRecord(BaseModel):
     ``Optional[bool]``              Y/N checkboxes  (``None`` = blank / unknown)
     ``Optional[int]``               Whole numbers
     ``Optional[float]``             Decimal numbers
-    ``Optional[str]``               Coded strings and short categorical values
+    ``Optional[FieldEnum]``.        Categorical fields with constrained valid values from see nar_enums.py
     ``Optional[Literal["text"]]``   Free-text fields (not accuracy-scored vs GT)
     ``Optional[Literal["redacted"]]`` Black-barred identifiers on real forms
     ``Optional[date]``              Calendar dates
@@ -57,29 +64,29 @@ class NARFullRecord(BaseModel):
         None, description="IP number (redacted on real form)"
     )
 
-    admission_date: Optional[date] = Field(None, description="Date of Admission")
+    admission_date: Optional[date] = Field(..., description="Date of Admission")
     time_seen: Optional[time] = Field(None, description="Time baby seen (24 hr clock)")
-    sex: Optional[str] = Field(None, description="Sex: F / M / I")
+    sex: Optional[SexEnum] = Field(None, description="Sex of the infant: F / M / I")
 
     birth_date: Optional[date] = Field(None, description="DOB")
     time_birth: Optional[time] = Field(None, description="Time of birth (24 hr clock)")
     gestation_in_weeks: Optional[int] = Field(None, description="Gestation (in weeks)")
     baby_age_in_days: Optional[int] = Field(None, description="Age (in days)")
 
-    gestation_type: Optional[str] = Field(
+    gestation_type: Optional[GestationTypeEnum] = Field(
         None, description="Gestation age from: U/S or LMP"
     )
     apgar_1m: Optional[int] = Field(None, description="APGAR score at 1 minute")
     apgar_5m: Optional[int] = Field(None, description="APGAR score at 5 minutes")
     apgar_10m: Optional[int] = Field(None, description="APGAR score at 10 minutes")
 
-    delivery_type: Optional[str] = Field(
-        None, description="Delivery: SVD / CS / Breach / Forceps / Vacuum"
+    delivery_type: Optional[DeliveryTypeEnum] = Field(
+        None, description="Mode of delivery: SVD / CS / Breach / Forceps / Vacuum"
     )
-    had_cs: Optional[str] = Field(None, description="If CS, type: Emergency / Elective")
+    had_cs: Optional[CSTypeEnum] = Field(None, description="If CS, type: Emergency / Elective")
     was_resuscitated: Optional[bool] = Field(None, description="BVM resus at birth: Y/N")
-    rapture_of_membrane: Optional[str] = Field(
-        None, description="ROM: <18h / >=18h / Unknown"
+    rapture_of_membrane: Optional[ROMEnum] = Field(
+        None, description="ROM: <18h (less than 18 hours) / >=18h (greater than 18 hours) / Unknown"
     )
 
     is_multiple_delivery: Optional[bool] = Field(None, description="Multiple delivery: Y/N")
@@ -90,8 +97,8 @@ class NARFullRecord(BaseModel):
     born_before_arrival: Optional[bool] = Field(
         None, description="Born outside facility: Y/N"
     )
-    born_where: Optional[str] = Field(
-        None, description="If yes, where: Home/roadside / Other facility"
+    born_where: Optional[BornWhereEnum] = Field(
+        None, description="If born outside facility: 1) Home or roadside / 2) Other facility"
     )
 
     # ------------------------------------------------------------------
@@ -119,18 +126,18 @@ class NARFullRecord(BaseModel):
     anc_visits: Optional[int] = Field(None, description="ANC no. of visits")
 
     mum_has_anc_ultrasound: Optional[bool] = Field(None, description="ANC U/S done: Y/N")
-    anc_us_trimester: Optional[str] = Field(
-        None, description="ANC U/S trimester (1st / 2nd / 3rd)"
+    anc_us_trimester: Optional[ANCTrimesterEnum] = Field(
+        None, description="ANC U/S trimester: 1st / 2nd / 3rd"
     )
     us_findings: Optional[Literal["text"]] = Field(
         None, description="U/S findings free text"
     )
 
-    blood_group: Optional[str] = Field(
-        None, description="Blood group: A / B / AB / O / Unknown"
+    blood_group: Optional[BloodGroupEnum] = Field(
+        None, description="Blood group type: A / B / AB / O / Unknown"
     )
-    rhesus: Optional[str] = Field(None, description="Rhesus: Pos / Neg / Unknown")
-    given_anti_D_medication: Optional[str] = Field(None, description="Anti D given: Y / N")
+    rhesus: Optional[RhesusEnum] = Field(None, description="Rhesus: Positive / Negative / Unknown")
+    given_anti_D_medication: Optional[AntiDEnum] = Field(None, description="Anti D given: Y / N / Unknown")
 
     mum_had_vdrl: Optional[bool] = Field(
         None, description="VDRL: Pos=True / Neg=False / Unknown=None"
@@ -219,18 +226,16 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION F1: General examination
 
-    skin: Optional[str] = Field(
+    skin: Optional[SkinEnum] = Field(
         None,
-        description=(
-            "Skin: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled"
-        ),
+        description="Skin appearance: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled",
     )
-    jaundice: Optional[str] = Field(None, description="Jaundice: None / + / +++")
-    appearance: Optional[str] = Field(
-        None, description="Appearance: Well / Sick / Dysmorphic"
+    jaundice: Optional[JaundiceEnum] = Field(None, description="Jaundice severity: None / Mild(+) / Severe(+++)")
+    appearance: Optional[AppearanceEnum] = Field(
+        None, description="General appearance: Well / Sick / Dysmorphic"
     )
-    cry: Optional[str] = Field(
-        None, description="Cry: Normal / Weak-Absent / Hoarse"
+    cry: Optional[CryEnum] = Field(
+        None, description="Cry quality: Normal / Weak-Absent / Hoarse"
     )
 
     # A & B (Respiratory)
@@ -242,13 +247,13 @@ class NARFullRecord(BaseModel):
     has_central_cyanosis: Optional[bool] = Field(
         None, description="Central cyanosis: Y/N"
     )
-    chest_indrawing: Optional[bool] = Field(
-        None, description="Lower chest indrawing: Y/N"
+    chest_indrawing: Optional[RetractionSeverityEnum] = Field(
+        None, description="Lower chest indrawing: None / Mild / Severe"
     )
-    xiphoid_retraction: Optional[str] = Field(
+    xiphoid_retraction: Optional[RetractionSeverityEnum] = Field(
         None, description="Xiphoid retraction: None / Mild / Severe"
     )
-    intercostal_retraction: Optional[str] = Field(
+    intercostal_retraction: Optional[RetractionSeverityEnum] = Field(
         None, description="Intercostal retraction: None / Mild / Severe"
     )
 
@@ -256,7 +261,7 @@ class NARFullRecord(BaseModel):
     capillary_refill_in_seconds: Optional[float] = Field(
         None, description="Capillary refill (seconds)"
     )
-    pallor: Optional[str] = Field(None, description="Pallor/Anaemia: None / + / +++")
+    pallor: Optional[PallorEnum] = Field(None, description="Pallor/Anaemia severity: None / Mild(+) / Severe(++)")
     has_murmur: Optional[bool] = Field(None, description="Murmur: Y/N")
 
     # D (Neurological)
@@ -264,7 +269,7 @@ class NARFullRecord(BaseModel):
         None, description="Bulging fontanelle: Y/N"
     )
     is_irritable: Optional[bool] = Field(None, description="Irritable: Y/N")
-    tone: Optional[str] = Field(
+    tone: Optional[ToneEnum] = Field(
         None, description="Tone: Normal / Increased / Reduced"
     )
 
@@ -272,7 +277,7 @@ class NARFullRecord(BaseModel):
     is_distended: Optional[bool] = Field(
         None, description="Abdominal distension: Y/N"
     )
-    umbilicus: Optional[str] = Field(
+    umbilicus: Optional[UmbilicusEnum] = Field(
         None,
         description="Umbilicus: Clean / Local pus / Pus+Red skin / Others",
     )
@@ -294,7 +299,7 @@ class NARFullRecord(BaseModel):
     )
 
     has_birth_defects: Optional[bool] = Field(None, description="Birth defects: Y/N")
-    birth_defect_types: Optional[str] = Field(
+    birth_defect_types: Optional[BirthDefectsEnum] = Field(
         None,
         description=(
             "Birth defect types if yes (comma-separated from: Major GI abnormality, "

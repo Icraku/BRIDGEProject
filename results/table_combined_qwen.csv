@@ -23,3 +23,20 @@ By scan period,,2,,139,0.727,0.447,qwen,,2025-04,2025-Q2
 By scan period,,1,,87,0.575,0.497,qwen,,2025-05,2025-Q2
 By scan period,,1,,61,0.721,0.452,qwen,,2025-09,2025-Q3
 By scan period,,3,,185,0.432,0.497,qwen,,Unknown period,Unknown period
+By scan period per facility,,1,,69,0.594,0.495,qwen,Facility 2  (NAR_52000),2024-11,2024-Q4
+By scan period per facility,,1,,72,0.667,0.475,qwen,Facility 2  (NAR_52000),2024-12,2024-Q4
+By scan period per facility,,1,,54,0.648,0.482,qwen,Facility 2  (NAR_52000),2025-01,2025-Q1
+By scan period per facility,,1,,66,0.652,0.48,qwen,Facility 2  (NAR_52000),2025-04,2025-Q2
+By scan period per facility,,1,,69,0.783,0.415,qwen,Facility 3  (NAR_53000),2024-11,2024-Q4
+By scan period per facility,,3,,196,0.745,0.437,qwen,Facility 3  (NAR_53000),2024-12,2024-Q4
+By scan period per facility,,1,,53,0.358,0.484,qwen,Facility 4  (NAR_7200),2024-10,2024-Q4
+By scan period per facility,,3,,180,0.472,0.501,qwen,Facility 4  (NAR_7200),2024-11,2024-Q4
+By scan period per facility,,2,,133,0.752,0.434,qwen,Facility 5  (NAR_41000),2025-01,2025-Q1
+By scan period per facility,,1,,61,0.721,0.452,qwen,Facility 5  (NAR_41000),2025-09,2025-Q3
+By scan period per facility,,2,,140,0.779,0.417,qwen,Facility 6  (NAR_40000),2025-01,2025-Q1
+By scan period per facility,,1,,73,0.795,0.407,qwen,Facility 6  (NAR_40000),2025-04,2025-Q2
+By scan period per facility,,1,,87,0.575,0.497,qwen,Facility 6  (NAR_40000),2025-05,2025-Q2
+By scan period per facility,,4,,334,0.698,0.46,qwen,Facility 7  (NAR_63000),2025-01,2025-Q1
+By scan period per facility,,2,,144,0.368,0.484,qwen,Facility 8  (NAR_76000),2025-02,2025-Q1
+By scan period per facility,,1,,65,0.785,0.414,qwen,Facility 5  (NAR_41000),Unknown period,Unknown period
+By scan period per facility,,2,,120,0.242,0.43,qwen,Facility 8  (NAR_76000),Unknown period,Unknown period

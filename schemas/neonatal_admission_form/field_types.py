@@ -15,7 +15,7 @@ bool        Y/N checkboxes (``None`` = unknown / not ticked)
 int         Whole numbers
 float       Decimal numbers
 str         Coded strings and short categorical values
-text        Free-text fields (``Literal["text"]`` in schema)
+text        Free-text fields extracted as actual text, not accuracy-scored
 date        Calendar dates
 time        Clock times
 redacted    Black-barred fields on real forms (``Literal["redacted"]``)

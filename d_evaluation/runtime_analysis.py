@@ -175,13 +175,13 @@ def run_runtime_analysis(
         existing = existing[~existing["model"].isin(new_rows["model"])]
         new_rows = pd.concat([existing, new_rows], ignore_index=True)
 
-        new_rows.to_csv(comparison_path, index=False)
+    new_rows.to_csv(comparison_path, index=False)
 
-        display_cols = [
+    display_cols = [
             "model", "n_records",
             "llm_s_mean", "llm_s_median", "llm_s_std",
             "total_s_mean", "total_s_median", "total_s_std",
-        ]
+    ]
     logger.info(
         "Cross-model runtime:\n%s",
         new_rows[[c for c in display_cols if c in new_rows.columns]]

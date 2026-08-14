@@ -19,6 +19,17 @@ incomplete extractions visible early.  The LLM extraction step uses
 ``NARFullRecord`` (all Optional) and only the final schema-mapped output
 is validated against ``NARRecord``.
 
+Note on the nine Pos/Neg/Unknown and Yes/No/Unknown fields (VDRL, PMTCT,
+ARVs, Hep B, HBIG, HTN, APH, Diabetes, Prolonged labour): these were
+previously typed ``bool`` with a description implying ``Unknown=None``.
+Since these fields are non-Optional plain ``bool`` (no ``Optional`` wrapper),
+that ``None`` state was never actually representable — any genuinely
+"Unknown" value here would already have raised a ``ValidationError`` on a
+non-Optional ``bool`` field. They now use ``PositiveNegativeUnknownEnum`` /
+``YesNoUnknownEnum`` (matching ``NARFullRecord``), which have an explicit
+``UNKNOWN`` member, so "Unknown" is representable without needing ``None``
+or ``Optional``.
+
 ``NARSchema`` at the bottom is provided for batch-validation use and is not
 used by the active pipeline.
 """
@@ -34,6 +45,7 @@ from schemas.neonatal_admission_form.categorical_Enums import (
     AntiDEnum, AppearanceEnum, BloodGroupEnum, BornWhereEnum, CSTypeEnum, CryEnum,
     DeliveryTypeEnum, GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
     RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum,
+    YesNoUnknownEnum, PositiveNegativeUnknownEnum,
 )
 
 class NARRecord(BaseModel):
@@ -41,13 +53,16 @@ class NARRecord(BaseModel):
 
     Type conventions
     ----------------
-    bool    Y/N checkboxes (``None`` = blank / unknown, stored as ``"null"``
-            in SurrealDB via ``clean_for_db`` to prevent coercion to ``false``)
-    str     Coded strings and short categorical values
-    int     Whole numbers
-    float   Decimal numbers
-    date    Calendar dates (``dd-mm-yyyy`` on the form)
-    time    Clock times (24-hour)
+    bool        Y/N checkboxes with only two valid states (``None`` = blank /
+                unknown, stored as ``"null"`` in SurrealDB via
+                ``clean_for_db`` to prevent coercion to ``false``)
+    categorical Closed-vocabulary fields enforced by Enum classes, including
+                three-state Pos/Neg/Unknown and Yes/No/Unknown fields
+    str         Coded strings and short categorical values
+    int         Whole numbers
+    float       Decimal numbers
+    date        Calendar dates (``dd-mm-yyyy`` on the form)
+    time        Clock times (24-hour)
     """
 
     # ------------------------------------------------------------------
@@ -93,34 +108,34 @@ class NARRecord(BaseModel):
     mum_has_anc_ultrasound: bool = Field(description="ANC U/S done: Y/N")
     blood_group: BloodGroupEnum = Field(description="Blood group: A / B / AB / O / Unknown")
     rhesus: RhesusEnum = Field(description="Rhesus: Positive / Negative / Unknown")
-    given_anti_D_medication: AntiDEnum = Field(description="Anti D given: Y / N / Unknown")
+    given_anti_D_medication: AntiDEnum = Field(description="Anti D given: Y / N")
 
-    mum_had_vdrl: bool = Field(
-        description="VDRL: Pos=True / Neg=False / Unknown=None"
+    mum_had_vdrl: PositiveNegativeUnknownEnum = Field(
+        description="VDRL: Positive / Negative / Unknown"
     )
-    mum_pmtct_status: bool = Field(
-        description="PMTCT status: Pos=True / Neg=False / Unknown=None"
+    mum_pmtct_status: PositiveNegativeUnknownEnum = Field(
+        description="PMTCT status: Positive / Negative / Unknown"
     )
-    mum_on_arvs: bool = Field(
-        description="Mother on ARVs: Y=True / N=False / Unknown=None"
+    mum_on_arvs: YesNoUnknownEnum = Field(
+        description="Mother on ARVs: Yes / No / Unknown"
     )
-    mum_had_hepatitis_b: bool = Field(
-        description="Hep B: Pos=True / Neg=False / Unknown=None"
+    mum_had_hepatitis_b: PositiveNegativeUnknownEnum = Field(
+        description="Hep B: Positive / Negative / Unknown"
     )
-    mum_given_HBIG_treatment: bool = Field(
-        description="Hep B IG given: Y=True / N=False / Unknown=None"
+    mum_given_HBIG_treatment: YesNoUnknownEnum = Field(
+        description="Hep B IG given: Yes / No / Unknown"
     )
-    mum_had_hypertension_in_pregnancy: bool = Field(
-        description="HTN in pregnancy: Y=True / N=False / Unknown=None"
+    mum_had_hypertension_in_pregnancy: YesNoUnknownEnum = Field(
+        description="HTN in pregnancy: Yes / No / Unknown"
     )
-    mum_had_antepartum_haemorrhage: bool = Field(
-        description="APH: Y=True / N=False / Unknown=None"
+    mum_had_antepartum_haemorrhage: YesNoUnknownEnum = Field(
+        description="APH: Yes / No / Unknown"
     )
-    mum_had_diabetes: bool = Field(
-        description="Diabetes: Y=True / N=False / Unknown=None"
+    mum_had_diabetes: YesNoUnknownEnum = Field(
+        description="Diabetes: Yes / No / Unknown"
     )
-    prolonged_labour: bool = Field(
-        description="Prolonged 2nd stage: Y=True / N=False / Unknown=None"
+    prolonged_labour: YesNoUnknownEnum = Field(
+        description="Prolonged 2nd stage: Yes / No / Unknown"
     )
 
     # ------------------------------------------------------------------

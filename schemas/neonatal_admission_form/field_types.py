@@ -116,7 +116,7 @@ FIELD_TYPES: dict[str, str] = {
     "has_grunting":                 "bool",
     "has_good_air_entry":           "bool",
     "has_central_cyanosis":         "bool",
-    "chest_indrawing":                    "categorical",
+    "chest_indrawing":              "bool",
     "xiphoid_retraction":                 "categorical",
     "intercostal_retraction":             "categorical",
     "capillary_refill_in_seconds":  "float",

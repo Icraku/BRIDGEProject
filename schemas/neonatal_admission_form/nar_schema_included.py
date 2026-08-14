@@ -42,7 +42,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from schemas.neonatal_admission_form.categorical_Enums import (
-    AntiDEnum, AppearanceEnum, BloodGroupEnum, BornWhereEnum, CSTypeEnum, CryEnum,
+    AppearanceEnum, BloodGroupEnum, BornWhereEnum, CSTypeEnum, CryEnum, #AntiDEnum,
     DeliveryTypeEnum, GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
     RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum,
     YesNoUnknownEnum, PositiveNegativeUnknownEnum,
@@ -108,7 +108,7 @@ class NARRecord(BaseModel):
     mum_has_anc_ultrasound: bool = Field(..., description="ANC U/S done: Y/N")
     blood_group: BloodGroupEnum = Field(..., description="Blood group: A / B / AB / O / Unknown")
     rhesus: RhesusEnum = Field(..., description="Rhesus: Positive / Negative / Unknown")
-    given_anti_D_medication: AntiDEnum = Field(..., description="Anti D given: Y / N")
+    given_anti_D_medication: bool = Field(..., description="Anti D given: Y / N")
 
     mum_had_vdrl: PositiveNegativeUnknownEnum = Field(...,
         description="VDRL: Positive / Negative / Unknown"
@@ -178,7 +178,7 @@ class NARRecord(BaseModel):
     has_grunting: bool = Field(..., description="Grunting: Y/N")
     has_good_air_entry: bool = Field(..., description="Good bilateral air entry: Y/N")
     has_central_cyanosis: bool = Field(..., description="Central cyanosis: Y/N")
-    chest_indrawing: RetractionSeverityEnum = Field(..., description="Lower chest indrawing: None / Mild / Severe")
+    chest_indrawing: bool = Field(..., description="Lower chest indrawing: Y/N")
     xiphoid_retraction: RetractionSeverityEnum = Field(..., description="Xiphoid retraction: None / Mild / Severe")
     intercostal_retraction: RetractionSeverityEnum = Field(..., description="Intercostal retraction: None / Mild / Severe")
     capillary_refill_in_seconds: float = Field(..., description="Capillary refill (seconds)")
@@ -211,10 +211,10 @@ class NARRecord(BaseModel):
     # Diagnoses are Optional in NARRecord because the GT may not always
     # include a coded diagnosis value for every record.
     primary_admission_diagnosis: Optional[str] = Field(...,
-        None, description="Primary diagnosis (tick box '1')"
+        description="Primary diagnosis (tick box '1')"
     )
     secondary_admission_diagnosis: Optional[str] = Field(...,
-        None, description="Secondary diagnosis (tick box '2')"
+        description="Secondary diagnosis (tick box '2')"
     )
 
     # ------------------------------------------------------------------

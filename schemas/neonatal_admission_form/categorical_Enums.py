@@ -244,22 +244,22 @@ _SYNONYMS["RhesusEnum"] = {
 }
 
 
-class AntiDEnum(str, Enum):
-    """Whether Anti-D was given: Y or N.
+#class AntiDEnum(str, Enum):
+#    """Whether Anti-D was given: Y or N.
 
-    The form has two checkboxes only. Blank field -> None (Optional).
-    """
-    Y = "Y"
-    N = "N"
+#    The form has two checkboxes only. Blank field -> None (Optional).
+#    """
+#    Y = "Y"
+#    N = "N"
 
-    @classmethod
-    def _missing_(cls, value: object) -> "AntiDEnum | None":
-        return _resolve(cls, value)
+#    @classmethod
+#    def _missing_(cls, value: object) -> "AntiDEnum | None":
+#        return _resolve(cls, value)
 
-_SYNONYMS["AntiDEnum"] = {
-    "y": "Y", "yes": "Y", "given": "Y", "administered": "Y",
-    "n": "N", "no": "N", "not given": "N", "not administered": "N",
-}
+#_SYNONYMS["AntiDEnum"] = {
+#    "y": "Y", "yes": "Y", "given": "Y", "administered": "Y",
+#    "n": "N", "no": "N", "not given": "N", "not administered": "N",
+#}
 
 
 class YesNoUnknownEnum(str, Enum):
@@ -526,7 +526,6 @@ CATEGORICAL_FIELD_MAP: dict[str, type] = {
     "cry":                              CryEnum,
     "xiphoid_retraction":               RetractionSeverityEnum,
     "intercostal_retraction":           RetractionSeverityEnum,
-    "chest_indrawing":                  RetractionSeverityEnum,
     "pallor":                           PallorEnum,
     "tone":                             ToneEnum,
     "umbilicus":                        UmbilicusEnum,

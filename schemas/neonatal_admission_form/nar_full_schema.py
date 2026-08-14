@@ -28,7 +28,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 from schemas.neonatal_admission_form.categorical_Enums import (
-    ANCTrimesterEnum, AntiDEnum, AppearanceEnum, BloodGroupEnum,
+    ANCTrimesterEnum, AppearanceEnum, BloodGroupEnum, #AntiDEnum,
     BornWhereEnum, CSTypeEnum, CryEnum, DeliveryTypeEnum,
     GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
     RhesusEnum, ROMEnum, SexEnum, YesNoUnknownEnum, PositiveNegativeUnknownEnum,
@@ -140,7 +140,7 @@ class NARFullRecord(BaseModel):
         ..., description="Blood group type: A / B / AB / O / Unknown"
     )
     rhesus: Optional[RhesusEnum] = Field(..., description="Rhesus: Positive / Negative / Unknown")
-    given_anti_D_medication: Optional[AntiDEnum] = Field(..., description="Anti D given: Y / N")
+    given_anti_D_medication: Optional[bool] = Field(..., description="Anti D given: Y / N")
 
     mum_had_vdrl: Optional[PositiveNegativeUnknownEnum] = Field(
         ..., description="VDRL: Pos=True / Neg=False / Unknown=None"
@@ -250,7 +250,7 @@ class NARFullRecord(BaseModel):
     has_central_cyanosis: Optional[bool] = Field(
         ..., description="Central cyanosis: Y/N"
     )
-    chest_indrawing: Optional[RetractionSeverityEnum] = Field(
+    chest_indrawing: Optional[bool] = Field(
         ..., description="Lower chest indrawing: Y/N"
     )
     xiphoid_retraction: Optional[RetractionSeverityEnum] = Field(

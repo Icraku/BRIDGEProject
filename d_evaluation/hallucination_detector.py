@@ -44,7 +44,7 @@ from schemas.neonatal_admission_form.nar_full_schema import FULL_SCHEMA_FIELDS, 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Allowlists — extend after reviewing false positives
+# Allowlists
 
 _BOOL_FIELDS: list[str] = [
     "was_resuscitated", "is_multiple_delivery", "born_before_arrival",
@@ -138,7 +138,7 @@ ALLOWLISTS: dict[str, set[str]] = {
     },
 }
 
-# Physiologically plausible numeric ranges {field: (min, max)}
+# Plausible numeric ranges {field: (min, max)}
 RANGES: dict[str, tuple[float, float]] = {
     "gestation_in_weeks":          (22,   44),
     "baby_age_in_days":            (0,    28),

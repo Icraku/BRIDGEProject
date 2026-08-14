@@ -25,17 +25,20 @@ from d_evaluation.evaluation_pipeline import run_evaluation, run_full_metrics_su
 # Config
 
 IP_SERVER = os.getenv("IP_SERVER")
-IMAGE_DIR = "/home/ikutswa/data/BRIDGE/patient_documents/Test_conversion/converted_images"
-IMAGE_DIR_TEST = "/home/ikutswa/data/BRIDGE/patient_documents/converted_images/test" #"/home/ikutswa/data/BRIDGE/patient_documents/converted_images/"
+IMAGE_DIR = "/home/ikutswa/BridgeProject2/BRIDGEProject/images"
 GT_PATH = "/home/ikutswa/BridgeProject2/BRIDGEProject/NAR_metadata.json"
 MODEL_NAME = "qwen3.5:35b"
 MODEL_NAME2 = "gemma4:31b"
+MODEL_NAME3 = "medgemma27-full:latest"
 EXTRACTION_TABLE = "extractions_qwen" # extractions_qwen
 EXTRACTION_TABLE2 = "extractions_gemma" # extractions_gemma
+#EXTRACTION_TABLE3 = "extractions_medgemma" # extractions_medgemma
 STRUCTURED_TABLE = "structured_qwen" # structured_qwen
 STRUCTURED_TABLE2 = "structured_gemma" # structured_gemma
+#STRUCTURED_TABLE3 = "structured_medgemma" # structured_medgemma
 MAPPED_TABLE = "mapped_qwen" # mapped_qwen
 MAPPED_TABLE2 = "mapped_gemma" # mapped_gemma
+#MAPPED_TABLE3 = "mapped_medgemma" # mapped_medgemma
 
 # ------------------------
 # Load and flatten GT
@@ -53,6 +56,7 @@ if Path(GT_PATH).exists():
 
 if __name__ == "__main__":
 
+    #############################################################################################
     #QWEN-----------------------------------------------------------------------------------
     # Stage 1 — extract
     print("\n STARTING EXTRACTION...\n")
@@ -67,6 +71,7 @@ if __name__ == "__main__":
 
     print(f"\n Extraction complete: {len(processed_ids_Q)} records\n")
 
+"""
     # Stage 2 — structure
     print("\n STARTING STRUCTURING PIPELINE...\n")
 
@@ -105,7 +110,8 @@ if __name__ == "__main__":
         ]
     )
 
-    # GEMMA-----------------------------------------------------------------------------------
+    #############################################################################################
+    # GEMMA-------------------------------------------------------------------------------------
     # Stage 1 — extract
     print("\n STARTING EXTRACTION...\n")
 
@@ -157,14 +163,56 @@ if __name__ == "__main__":
         ]
     )
 
-    # MEDGEMMA (uncomment when ready)
-    # run_structuring_pipeline(
-    #     model_name="medgemma:27b",
-    #     host_url=IP_SERVER,
-    #     table_in="extractions_medgemma",
-    #     table_out="structured_medgemma",
-    #     table_required="structured_medgemma_required",
-    #     table_supplementary="structured_medgemma_supplementary",
-    #     table_mapped="mapped_medgemma",
-    #     resume=True,
-    # )
+    #############################################################################################
+    # MEDGEMMA-----------------------------------------------------------------------------------
+    # Stage 1 — extract
+    print("\n STARTING EXTRACTION...\n")
+
+    processed_ids_G = run_extraction_pipeline(
+        image_dir=IMAGE_DIR,
+        model_name=MODEL_NAME3,
+        table_name=EXTRACTION_TABLE3,
+        ground_truth=gt,
+        resume=True,
+    )
+
+    print(f"\n Extraction complete: {len(processed_ids_G)} records\n")
+
+    # Stage 2 — structure
+    print("\n STARTING STRUCTURING PIPELINE...\n")
+
+    structured_ids_G = run_structuring_pipeline(
+        model_name=MODEL_NAME3,
+        host_url=IP_SERVER,
+        table_in=EXTRACTION_TABLE,
+        table_out=STRUCTURED_TABLE3,
+        table_required="structured_medgemma_required",
+        table_supplementary="structured_medgemma_supplementary",
+        table_mapped="mapped_medgemma",
+        resume=True,
+    )
+
+    print(f"\n Structuring complete: {len(structured_ids_G)} records\n")
+
+    # Stage 3 — evaluate
+    print("\n STARTING EVALUATION PIPELINE...\n")
+    run_evaluation(
+        gt_path=GT_PATH,
+        structured_table=STRUCTURED_TABLE3,
+        model_label="medgemma",
+    )
+
+    print("\n Evaluation complete\n")
+
+    # Stage 4 — full evaluation suite (produces ALL metric CSVs)
+    run_full_metrics_suite(
+        gt_path=GT_PATH,
+        model_configs=[
+            {
+                "model_label": "medgemma",
+                "eval_table": "structured_medgemma_required",
+                "full_table": "structured_medgemma",
+            },
+        ]
+    )
+    """

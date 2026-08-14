@@ -80,39 +80,100 @@ def _decode_facility_from_record_id(record_id: str) -> str:
 
 # ---------------------------------------------------------------------------
 # Load admission dates from the structured DB table
+# ---------------------------------------------------------------------------
+
 
 def _load_admission_dates(structured_table: str) -> dict[str, str | None]:
-    """Fetch ``admission_date`` for every record from the structured DB table.
+    """Fetch the best available date for each record from the structured DB table.
+
+    Uses a fallback chain to handle missing or implausible admission dates:
+      1. admission_date   — preferred (date the form was filled in)
+      2. action_plan_date — filled in by the clinician at the same time
+      3. birth_date       — almost always on the same day as admission for neonates
+
+    Each date is validated for plausibility (2020-01-01 to today).
+    Dates outside this range are treated as misreads and skipped.
 
     Returns
     -------
     dict[str, str | None]
-        ``{record_id: admission_date_string}``  (date may be ``None`` if missing)
+        ``{record_id: best_date_string}``
     """
+    from datetime import datetime
+
+    MIN_DATE = datetime(2020, 1, 1)
+    MAX_DATE = datetime.today()
+
+    DATE_FORMATS = ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d")
+
+    def _parse_and_validate(raw: str | None) -> str | None:
+        """Parse a date string and return it if plausible, else None."""
+        if not raw or str(raw).lower() in ("none", "null", "n/a", ""):
+            return None
+        raw = str(raw).strip()
+        for fmt in DATE_FORMATS:
+            try:
+                dt = datetime.strptime(raw, fmt)
+                if MIN_DATE <= dt <= MAX_DATE:
+                    # Return in consistent yyyy-mm format for grouping
+                    return dt.strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                continue
+        return None  # implausible or unparseable
+
     records = fetch_records(structured_table)
     dates: dict[str, str | None] = {}
+    fallback_counts = {"admission_date": 0, "action_plan_date": 0,
+                       "birth_date": 0, "none": 0}
+
     for r in records:
         raw_id = r.get("id")
         if not raw_id:
             continue
-        record_id = str(raw_id).split(":")[-1]
+        record_id  = str(raw_id).split(":")[-1]
         structured = r.get("structured_text") or {}
-        dates[record_id] = structured.get("admission_date")
+
+        # Try each date field in priority order
+        best_date = None
+        used_field = "none"
+
+        for field in ("admission_date", "action_plan_date", "birth_date"):
+            candidate = _parse_and_validate(structured.get(field))
+            if candidate:
+                best_date  = candidate
+                used_field = field
+                break
+
+        dates[record_id] = best_date
+        fallback_counts[used_field] += 1
+
+    logger.info(
+        "Date source breakdown: admission_date=%d, action_plan_date=%d, "
+        "birth_date=%d, none=%d",
+        fallback_counts["admission_date"],
+        fallback_counts["action_plan_date"],
+        fallback_counts["birth_date"],
+        fallback_counts["none"],
+    )
     return dates
 
 
 # ---------------------------------------------------------------------------
 # Table 1: accuracy by field type
+# ---------------------------------------------------------------------------
+
 
 def table_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
-    """Compute mean accuracy, record count and field count per field type.
+    """Compute mean accuracy, record count, and field count per field type.
 
     Only scored rows (``has_gt=True`` and ``scorable=True``) are included.
 
     Parameters
     ----------
-    df: Full accuracy DataFrame from ``field_accuracy_{model}.csv``.
-    model_label: Used for the ``model`` column in the output.
+    df:
+        Full accuracy DataFrame from ``field_accuracy_{model}.csv``.
+    model_label:
+        Used for the ``model`` column in the output.
 
     Returns
     -------
@@ -144,6 +205,8 @@ def table_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
 
 # ---------------------------------------------------------------------------
 # Table 2: accuracy by facility
+# ---------------------------------------------------------------------------
+
 
 def table_by_facility(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
     """Compute mean accuracy per hospital facility.
@@ -152,8 +215,10 @@ def table_by_facility(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
 
     Parameters
     ----------
-    df: Full accuracy DataFrame.
-    model_label: Used for the ``model`` column.
+    df:
+        Full accuracy DataFrame.
+    model_label:
+        Used for the ``model`` column.
 
     Returns
     -------
@@ -186,6 +251,8 @@ def table_by_facility(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
 
 # ---------------------------------------------------------------------------
 # Table 3: accuracy by scan period (month / quarter)
+# ---------------------------------------------------------------------------
+
 
 def table_by_scan_period(
     df: pd.DataFrame,
@@ -199,9 +266,12 @@ def table_by_scan_period(
 
     Parameters
     ----------
-    df: Full accuracy DataFrame.
-    admission_dates: ``{record_id: date_string}`` from ``_load_admission_dates``.
-    model_label: Used for the ``model`` column.
+    df:
+        Full accuracy DataFrame.
+    admission_dates:
+        ``{record_id: date_string}`` from ``_load_admission_dates``.
+    model_label:
+        Used for the ``model`` column.
 
     Returns
     -------
@@ -215,16 +285,14 @@ def table_by_scan_period(
     # Attach admission date to every row
     scored["admission_date_raw"] = scored["record_id"].map(admission_dates)
 
-    # Parse dates — try the dd-mm-yyyy format used by clean_for_db, then ISO
+    # Dates are pre-validated yyyy-mm-dd strings from _load_admission_dates
     def _parse(val: str | None) -> pd.Timestamp | None:
         if not val:
             return None
-        for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y"):
-            try:
-                return pd.to_datetime(val, format=fmt)
-            except (ValueError, TypeError):
-                continue
-        return None
+        try:
+            return pd.to_datetime(val, format="%Y-%m-%d")
+        except (ValueError, TypeError):
+            return None
 
     scored["admission_dt"] = scored["admission_date_raw"].apply(_parse)
 
@@ -260,74 +328,44 @@ def table_by_scan_period(
 
 
 # ---------------------------------------------------------------------------
-# Table 4: facility × field_type cross-tab
-
-def table_facility_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
-    """Cross-tabulation of mean accuracy: facility (rows) × field type (columns).
-
-    Useful for spotting whether a particular facility struggles specifically
-    with, say, date fields or boolean fields.
-
-    Parameters
-    ----------
-    df: Full accuracy DataFrame.
-    model_label: Used for logging only.
-
-    Returns
-    -------
-    pd.DataFrame
-        Pivot table — facilities as index, field types as columns.
-    """
-    scored = df[df["scorable"] & df["has_gt"]].copy()
-    scored["correct?"] = pd.to_numeric(scored["correct?"], errors="coerce")
-    scored["facility"] = scored["record_id"].apply(_decode_facility_from_record_id)
-
-    pivot = (
-        scored.groupby(["facility", "field_type"])["correct?"]
-        .mean()
-        .round(3)
-        .unstack(fill_value=None)
-        .reset_index()
-    )
-    pivot["model"] = model_label
-    logger.info("Table 4 (facility × field_type) for %s: %d facilities", model_label, len(pivot))
-    return pivot
-
-
+# Bonus: facility × field_type cross-tab
 # ---------------------------------------------------------------------------
-# Table 5: accuracy by scan period (month / quarter) per facility
+
 
 def table_by_scan_period_per_facility(
     df: pd.DataFrame,
     admission_dates: dict[str, str | None],
     model_label: str,
 ) -> pd.DataFrame:
-    """Compute mean accuracy per admission month and quarter for each facility.
+    """Compute mean accuracy per facility per admission month.
 
-    Records with no parseable ``admission_date`` are grouped under
+    This directly addresses the supervisor's question: does accuracy differ
+    between scans from the same facility taken in different months?
+
+    Rows with no parseable ``admission_date`` are grouped under
     ``"Unknown period"`` so they are not silently dropped.
 
     Parameters
     ----------
-    df: Full accuracy DataFrame.
-    admission_dates: ``{record_id: date_string}`` from ``_load_admission_dates``.
-    model_label: Used for the ``model`` column.
+    df:
+        Full accuracy DataFrame.
+    admission_dates:
+        ``{record_id: date_string}`` from ``_load_admission_dates``.
+    model_label:
+        Used for the ``model`` column.
 
     Returns
     -------
     pd.DataFrame
-        One row per month, with a ``quarter`` column for rollup.
-        Sorted chronologically.
+        One row per (facility, month) combination, sorted by facility then
+        chronologically by month.
     """
     scored = df[df["scorable"] & df["has_gt"]].copy()
     scored["correct?"] = pd.to_numeric(scored["correct?"], errors="coerce")
 
-    # Attach admission date and facility using the uniform ID
+    scored["facility"]          = scored["record_id"].apply(_decode_facility_from_record_id)
     scored["admission_date_raw"] = scored["record_id"].map(admission_dates)
 
-    scored["facility"] = scored["record_id"].apply(_decode_facility_from_record_id)
-
-    # Parse dates — try the dd-mm-yyyy format used by clean_for_db, then ISO
     def _parse(val: str | None) -> pd.Timestamp | None:
         if not val:
             return None
@@ -339,9 +377,7 @@ def table_by_scan_period_per_facility(
         return None
 
     scored["admission_dt"] = scored["admission_date_raw"].apply(_parse)
-
-    # Derive month and quarter labels
-    scored["year_month"] = scored["admission_dt"].apply(
+    scored["year_month"]   = scored["admission_dt"].apply(
         lambda d: d.strftime("%Y-%m") if pd.notna(d) else "Unknown period"
     )
     scored["quarter"] = scored["admission_dt"].apply(
@@ -362,17 +398,57 @@ def table_by_scan_period_per_facility(
     summary["std_accuracy"]  = summary["std_accuracy"].round(3)
     summary["model"]         = model_label
 
-    # Sort chronologically (Unknown period goes to end)
-    known   = summary[summary["year_month"] != "Unknown period"].sort_values(["facility", "year_month"])
-    unknown = summary[summary["year_month"] == "Unknown period"]
+    # Sort: facility alphabetically, then chronologically within each facility
+    known   = summary[summary["year_month"] != "Unknown period"].sort_values(
+        ["facility", "year_month"]
+    )
+    unknown = summary[summary["year_month"] == "Unknown period"].sort_values("facility")
     summary = pd.concat([known, unknown], ignore_index=True)
 
-    logger.info("Table 3 (scan period): %d months", len(summary))
+    logger.info(
+        "Table 5 (scan period per facility): %d facility-month combinations",
+        len(summary),
+    )
     return summary
+
+
+def table_facility_by_field_type(df: pd.DataFrame, model_label: str) -> pd.DataFrame:
+    """Cross-tabulation of mean accuracy: facility (rows) × field type (columns).
+
+    Useful for spotting whether a particular facility struggles specifically
+    with, say, date fields or boolean fields.
+
+    Parameters
+    ----------
+    df:
+        Full accuracy DataFrame.
+    model_label:
+        Used for logging only.
+
+    Returns
+    -------
+    pd.DataFrame
+        Pivot table — facilities as index, field types as columns.
+    """
+    scored = df[df["scorable"] & df["has_gt"]].copy()
+    scored["correct?"] = pd.to_numeric(scored["correct?"], errors="coerce")
+    scored["facility"] = scored["record_id"].apply(_decode_facility_from_record_id)
+
+    pivot = (
+        scored.groupby(["facility", "field_type"])["correct?"]
+        .mean()
+        .round(3)
+        .unstack(fill_value=None)
+        .reset_index()
+    )
+    logger.info("Bonus table (facility × field_type): %d facilities", len(pivot))
+    return pivot
 
 
 # ---------------------------------------------------------------------------
 # Public entry point
+# ---------------------------------------------------------------------------
+
 
 def run_stratified_analysis(
     model_label: str = "qwen",
@@ -384,13 +460,17 @@ def run_stratified_analysis(
 
     Parameters
     ----------
-    model_label: Model whose outputs to analyse (``"qwen"``, ``"gemma"``, etc.).
-    accuracy_csv: Path to ``field_accuracy_{model}.csv``.  Defaults to
+    model_label:
+        Model whose outputs to analyse (``"qwen"``, ``"gemma"``, etc.).
+    accuracy_csv:
+        Path to ``field_accuracy_{model}.csv``.  Defaults to
         ``field_accuracy_{model_label}.csv`` in the working directory.
-    structured_table: SurrealDB table containing structured outputs (for admission dates).
-        Defaults to ``"structured_qwen_required"`` for Qwen, or
+    structured_table:
+        SurrealDB table containing structured outputs (for admission dates).
+        Defaults to ``"structured_required"`` for Qwen, or
         ``"structured_{model_label}"`` for others.
-    output_dir: Directory to write output CSVs.  Defaults to working directory.
+    output_dir:
+        Directory to write output CSVs.  Defaults to working directory.
 
     Returns
     -------
@@ -402,7 +482,7 @@ def run_stratified_analysis(
         accuracy_csv = f"field_accuracy_{model_label}.csv"
     if structured_table is None:
         structured_table = (
-            "structured_qwen_required" if model_label == "qwen"
+            "structured_required" if model_label == "qwen"
             else f"structured_{model_label}"
         )
 
@@ -442,16 +522,16 @@ def run_stratified_analysis(
 
     # ── Save individual CSVs ─────────────────────────────────────────────
     paths = {
-        "field_type":           out / f"table1_by_field_type_{model_label}.csv",
-        "facility":             out / f"table2_by_facility_{model_label}.csv",
-        "scan_period":          out / f"table3_by_scan_period_{model_label}.csv",
-        "facility_x_field_type": out / f"table4_facility_x_field_type_{model_label}.csv",
-        "scan_period_per_facility": out / f"table5_by_scan_period_per_facility_{model_label}.csv",
+        "field_type":              out / f"table1_by_field_type_{model_label}.csv",
+        "facility":                out / f"table2_by_facility_{model_label}.csv",
+        "scan_period":             out / f"table3_by_scan_period_{model_label}.csv",
+        "facility_x_field_type":   out / f"table4_facility_x_field_type_{model_label}.csv",
+        "scan_period_per_facility": out / f"table5_scan_period_per_facility_{model_label}.csv",
     }
-    t1.to_csv(paths["field_type"],            index=False)
-    t2.to_csv(paths["facility"],              index=False)
-    t3.to_csv(paths["scan_period"],           index=False)
-    t4.to_csv(paths["facility_x_field_type"], index=False)
+    t1.to_csv(paths["field_type"],               index=False)
+    t2.to_csv(paths["facility"],                 index=False)
+    t3.to_csv(paths["scan_period"],              index=False)
+    t4.to_csv(paths["facility_x_field_type"],    index=False)
     t5.to_csv(paths["scan_period_per_facility"], index=False)
 
     # ── Combined table (for a single appendix) ───────────────────────────
@@ -472,7 +552,7 @@ def run_stratified_analysis(
     combined_path = out / f"table_combined_{model_label}.csv"
     combined.to_csv(combined_path, index=False)
 
-    # ── Console ──────────────────────────────────────────────────
+    # ── Console summary ──────────────────────────────────────────────────
     print(f"\n{'='*60}")
     print(f"  STRATIFIED ANALYSIS — {model_label.upper()}")
     print(f"{'='*60}")
@@ -499,16 +579,17 @@ def run_stratified_analysis(
     print(f"    {combined_path}")
 
     return {
-        "field_type":            t1,
-        "facility":              t2,
-        "scan_period":           t3,
-        "facility_x_field_type": t4,
+        "field_type":               t1,
+        "facility":                 t2,
+        "scan_period":              t3,
+        "facility_x_field_type":    t4,
         "scan_period_per_facility": t5,
     }
 
 
 # ---------------------------------------------------------------------------
 # CLI
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import argparse

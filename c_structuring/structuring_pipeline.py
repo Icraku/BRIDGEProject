@@ -162,12 +162,130 @@ def _structure_record(
     schema_str = _json.dumps(NARFullRecord.model_json_schema(), ensure_ascii=False)
 
     system_prompt = (
-        "Extract information from the provided Markdown into a JSON object. "
-        "Use ONLY the field names and valid values defined in this schema. "
-        "For fields with an enum constraint, output ONLY one of the listed values. "
-        "For boolean fields output true or false. "
-        "For fields that are blank or not filled in the form, output null. "
-        f"Schema: {schema_str}"
+        """
+        Extract information from the provided Markdown into a JSON object.
+
+        STRICT EXTRACTION RULES:
+        
+        1. OUTPUT FORMAT
+        - Return ONLY valid JSON.
+        - Do not include explanations, comments, reasoning, or Markdown.
+        - Use ONLY the field names defined in the provided schema.
+        - Do not create new fields.
+        - Do not rename schema fields.
+        
+        2. SOURCE-ONLY EXTRACTION
+        - Use ONLY information explicitly present in the provided Markdown.
+        - Do NOT infer, guess, calculate, normalize, or fill in information that is not explicitly supported by the Markdown.
+        - Do NOT use medical knowledge to infer a value.
+        - Do NOT infer one field from another unless the Markdown explicitly provides the information for that field.
+        - Do NOT assume that a field exists merely because it exists in the schema.
+        - A schema field being available does NOT mean that the field is present in the record.
+        
+        3. MISSING VALUES
+        For every schema field:
+        - If the field is explicitly present in the Markdown and has a value, extract that value.
+        - If the field is explicitly present but its value is blank, unchecked, illegible, or otherwise not provided, output null unless a checkbox rule below applies.
+        - If the field does not appear anywhere in the Markdown, output null.
+        - Never invent a value for a missing field.
+        
+        4. CHECKBOXES
+        Checkboxes must be interpreted according to the label immediately associated with them.
+        
+        Examples:
+        - Y [x] N [ ] → true
+        - Y [ ] N [x] → false
+        - Y [ ] N [ ] → null
+        - Pos [x] Neg [ ] → "Pos"
+        - Pos [ ] Neg [x] → "Neg"
+        - Pos [ ] Neg [ ] → null
+        - None [x] Mild [ ] Severe [ ] → "None"
+        - None [ ] Mild [x] Severe [ ] → "Mild"
+        - None [ ] Mild [ ] Severe [x] → "Severe"
+        
+        IMPORTANT:
+        - [x] does NOT automatically mean true.
+        - [ ] does NOT automatically mean false.
+        - The meaning of a checkbox is determined by the label next to it.
+        - For categorical checkbox fields, output the checked label, not true/false, unless the schema explicitly defines the field as boolean.
+        
+        5. BOOLEAN FIELDS
+        For a schema field defined as boolean:
+        - Output true only when the Markdown explicitly indicates the condition is present/yes.
+        - Output false only when the Markdown explicitly indicates the condition is absent/no.
+        - If both Y and N are unchecked, output null.
+        - Do not convert a categorical result such as "Positive/Negative" into true/false unless the schema explicitly defines the mapping.
+        - If the field is boolean and the Markdown says "Y [x] N [ ]", output true.
+        - If the Markdown says "Y [ ] N [x]", output false.
+        
+        6. ENUM FIELDS
+        - For fields with an enum constraint, output ONLY one of the valid enum values defined in the schema.
+        - Map checkbox selections to the corresponding enum label.
+        - Never invent an enum value.
+        - If none of the allowed enum values is supported by the Markdown, output null.
+        
+        7. NUMERIC FIELDS
+        - Extract numbers exactly when explicitly provided.
+        - Do not calculate or derive numbers from other fields.
+        - Do not interpret missing measurements as zero.
+        - Do not use a number from another field simply because it appears medically plausible.
+        
+        8. DATE FIELDS
+        - Extract dates only when explicitly present.
+        - Preserve the date in the format required by the schema.
+        - If the extracted year is impossible according to the schema rule (before 2000 or after 2030), output null.
+        - Do not infer a date from another date.
+        - Do not correct a date based on what seems medically or logically likely.
+        
+        9. TEXT FIELDS
+        - Preserve the meaning and content of explicitly provided text.
+        - Do not rewrite clinical descriptions into diagnoses unless the schema explicitly requires a diagnosis and the diagnosis is explicitly stated.
+        - Do not infer diagnoses from symptoms.
+        - If the Markdown says "Baby born No History", extract that text into the appropriate text field if that field exists in the schema.
+        
+        10. CONFLICTING INFORMATION
+        If two parts of the Markdown provide conflicting values for the same field:
+        - Do NOT silently choose one.
+        - Prefer an explicitly marked/checked field over an unstructured narrative statement when the field itself is represented by checkboxes.
+        - If the schema provides a field capable of representing the conflict, use it.
+        - Otherwise, use the value from the most direct representation of that field.
+        - Do not "correct" the source based on medical knowledge.
+        
+        Example:
+        If the checkbox says:
+        Emergency [x] Elective [ ]
+        but narrative text says:
+        "elective CS"
+        then the structured checkbox value should be extracted as "Emergency" because Emergency is the explicitly selected option. Do not change it to Elective based on the narrative.
+        
+        11. FIELD PRESENCE
+        A field should be considered PRESENT only if:
+        - the field itself appears in the Markdown, OR
+        - the Markdown contains an explicit value that clearly corresponds to that schema field.
+        
+        Do NOT mark a field as present simply because a related concept appears elsewhere.
+        
+        12. NO HALLUCINATION
+        Never output values such as:
+        - measurements that do not appear in the Markdown
+        - diagnoses that are not explicitly stated
+        - medications that are not explicitly stated
+        - examination findings that are not explicitly stated
+        - investigation results that are not explicitly stated
+        - dates/times that are not explicitly stated
+        - checkbox selections that are not visibly checked
+        
+        If there is no supporting evidence in the Markdown, output null.
+        
+        13. SCHEMA COMPLIANCE
+        Follow all types, enum values, required formats, and field definitions in the schema.
+        
+        Schema:
+        {schema_str}
+        
+        Markdown:
+        {extracted_text}
+"""
     ).replace("{", "{{").replace("}", "}}")
 
     # f"If the field has not been filled, return N/A, Example born_where: N/A "

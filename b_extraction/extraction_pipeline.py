@@ -49,11 +49,33 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
+def _make_hashable(value: Any) -> Any:
+    """Convert dict/list values into a hashable, comparable form for voting."""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True)
+    return value
+
+
+def _restore_from_hashable(value: Any) -> Any:
+    """Undo _make_hashable: turn JSON-encoded strings back into dict/list."""
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, (dict, list)):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return value
+
+
 def _merge_predictions(pred_dicts: list[dict[str, Any]]) -> dict[str, Any]:
     """Merge multiple prediction dicts into one using per-field majority vote.
 
     When the VLM is run with several prompts, each produces a parsed dict.
     This function combines them so the most common value wins for every field.
+    Values that are dicts/lists (e.g. a compound checkbox field parsed as a
+    nested object) are JSON-encoded before voting since Counter requires
+    hashable values, then decoded back on the winning value.
 
     Parameters
     ----------
@@ -68,10 +90,12 @@ def _merge_predictions(pred_dicts: list[dict[str, Any]]) -> dict[str, Any]:
     for d in pred_dicts:
         all_keys.update(d.keys())
 
-    return {
-        key: Counter(d.get(key, "N/A") for d in pred_dicts).most_common(1)[0][0]
-        for key in all_keys
-    }
+    merged: dict[str, Any] = {}
+    for key in all_keys:
+        values = [_make_hashable(d.get(key, "N/A")) for d in pred_dicts]
+        winner = Counter(values).most_common(1)[0][0]
+        merged[key] = _restore_from_hashable(winner)
+    return merged
 
 
 def _run_prompt(

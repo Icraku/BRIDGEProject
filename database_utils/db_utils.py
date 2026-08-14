@@ -43,7 +43,7 @@ _DB_USER     = os.getenv("SURREAL_USER")
 _DB_PASSWORD = os.getenv("SURREAL_PASS")
 _DB_PORT     = os.getenv("SURREAL_PORT", "8000")
 _NAMESPACE   = "BRIDGE"
-_DATABASE    = "Results"
+_DATABASE    = "main"
 
 
 def _db_url() -> str:

@@ -123,6 +123,10 @@ def _run_prompt(
         return client.chat(
             model=model_name,
             messages=[{"role": "user", "content": prompt_text, "images": [image_base64]}],
+            think=False,  # disable Qwen3-family "thinking mode" — must be top-level, not inside options.
+                          # Without this, Qwen3-family models can spend their entire generation budget
+                          # on an internal "thinking" field while "content" stays empty the whole time —
+                          # looks identical to a hang from the caller's side.
             options={"seed": 42},
         )
     start = time.perf_counter()

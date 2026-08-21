@@ -11,7 +11,6 @@ This mapping is used by the evaluation pipeline to:
 
 Type categories
 ---------------
-bool        Y/N checkboxes (``None`` = unknown / not ticked)
 int         Whole numbers
 float       Decimal numbers
 str         Coded strings and short categorical values
@@ -20,7 +19,7 @@ date        Calendar dates
 time        Clock times
 redacted    Black-barred fields on real forms (``Literal["redacted"]``)
 coded_int   Integer codes mapping to named values (e.g. hospital codes)
-categorical Closed-vocabulary string fields enforced by Python Enum classes from nar_enums.py
+categorical Closed-vocabulary string fields enforced by Python Enum classes from nar_enums.py (Y/N, Y/N/Unknown, Pos/Neg/Unknown)
 """
 
 from __future__ import annotations
@@ -44,11 +43,11 @@ FIELD_TYPES: dict[str, str] = {
     "apgar_10m":                "int",
     "delivery_type":                  "categorical",
     "had_cs":                         "categorical",
-    "was_resuscitated":         "bool",
+    "was_resuscitated":               "categorical",
     "rapture_of_membrane":            "categorical",
-    "is_multiple_delivery":     "bool",
+    "is_multiple_delivery":           "categorical",
     "multiple_delivery_num":    "int",
-    "born_before_arrival":      "bool",
+    "born_before_arrival":            "categorical",
     "born_where":                     "categorical",
 
     # ------------------------------------------------------------------
@@ -58,16 +57,15 @@ FIELD_TYPES: dict[str, str] = {
     "mum_age_in_years":                     "int",
     "parity_live":                          "int",
     "parity_abortions":                     "int",
-    "parity_total":                         "int",
     "date_estimated_delivery_date":         "date",
     "anc_clinic_name":                      "redacted",
     "anc_visits":                           "int",
-    "mum_has_anc_ultrasound":               "bool",
+    "mum_has_anc_ultrasound":                     "categorical",
     "anc_us_trimester":                           "categorical",
     "us_findings":                          "text",
     "blood_group":                                "categorical",
     "rhesus":                                     "categorical",
-    "given_anti_D_medication":              "bool",
+    "given_anti_D_medication":                    "categorical",
     "mum_had_vdrl":                               "categorical",
     "mum_pmtct_status":                           "categorical",
     "mum_on_arvs":                                "categorical",
@@ -95,16 +93,16 @@ FIELD_TYPES: dict[str, str] = {
     "pulse_oximetry":               "int",
     "birth_weight":                 "int",
     "weight":                       "int",
-    "has_fever":                    "bool",
-    "passed_meconium":              "bool",
-    "has_difficulty_breathing":     "bool",
-    "passed_urine":                 "bool",
-    "has_difficulty_feeding":       "bool",
-    "has_convulsions":              "bool",
-    "has_apnoea":                   "bool",
-    "is_floppy":                    "bool",
-    "has_vomiting":                 "bool",
-    "has_diarhoea":                 "bool",
+    "has_fever":                          "categorical",
+    "passed_meconium":                    "categorical",
+    "has_difficulty_breathing":           "categorical",
+    "passed_urine":                       "categorical",
+    "has_difficulty_feeding":             "categorical",
+    "has_convulsions":                    "categorical",
+    "has_apnoea":                         "categorical",
+    "is_floppy":                          "categorical",
+    "has_vomiting":                       "categorical",
+    "has_diarhoea":                       "categorical",
 
     # ------------------------------------------------------------------
     # SECTION F1: General examination
@@ -112,27 +110,27 @@ FIELD_TYPES: dict[str, str] = {
     "jaundice":                           "categorical",
     "appearance":                         "categorical",
     "cry":                                "categorical",
-    "has_crackles":                 "bool",
-    "has_grunting":                 "bool",
-    "has_good_air_entry":           "bool",
-    "has_central_cyanosis":         "bool",
-    "chest_indrawing":              "bool",
+    "has_crackles":                       "categorical",
+    "has_grunting":                       "categorical",
+    "has_good_air_entry":                 "categorical",
+    "has_central_cyanosis":               "categorical",
+    "chest_indrawing":                    "categorical",
     "xiphoid_retraction":                 "categorical",
     "intercostal_retraction":             "categorical",
     "capillary_refill_in_seconds":  "float",
     "pallor":                             "categorical",
-    "has_murmur":                   "bool",
-    "has_bulging_fontanelle":       "bool",
-    "is_irritable":                 "bool",
+    "has_murmur":                         "categorical",
+    "has_bulging_fontanelle":             "categorical",
+    "is_irritable":                       "categorical",
     "tone":                               "categorical",
-    "is_distended":                 "bool",
+    "is_distended":                       "categorical",
     "umbilicus":                          "categorical",
 
     # ------------------------------------------------------------------
     # SECTION F2: Further examination
     "neuro_examination":            "text",
     "further_examination":          "text",
-    "has_birth_defects":            "bool",
+    "has_birth_defects":                  "categorical",
     "birth_defect_types":                 "categorical",
 
     # ------------------------------------------------------------------
@@ -141,9 +139,9 @@ FIELD_TYPES: dict[str, str] = {
 
     # ------------------------------------------------------------------
     # SECTION H: Investigations
-    "rbs_measured":                 "bool",
+    "rbs_measured":                       "categorical",
     "rbs_value":                    "float",
-    "given_bilirubin":              "bool",
+    "given_bilirubin":                    "categorical",
     "total_serum_bilirubin":        "float",
     "investigations_other":         "text",
 
@@ -155,22 +153,22 @@ FIELD_TYPES: dict[str, str] = {
 
     # ------------------------------------------------------------------
     # SECTION J: Interventions
-    "given_vitamin_k":              "bool",
-    "given_bcg":                    "bool",
-    "given_chlorhexidine":          "bool",
-    "given_prophylaxis_pmtct":      "bool",
-    "prescribed_transfusion":       "bool",
-    "prescribed_phototherapy":      "bool",
-    "prescribed_cpap":              "bool",
-    "prescribed_iv_fluids":         "bool",
-    "prescribed_antibiotics":       "bool",
-    "prescribed_feeds":             "bool",
-    "prescribed_opv":               "bool",
-    "prescribed_surfactant":        "bool",
-    "prescribed_caffeine_citrate":  "bool",
-    "prescribed_oxygen":            "bool",
-    "prescribed_kmc":               "bool",
-    "prescribed_incubator":         "bool",
+    "given_vitamin_k":                    "categorical",
+    "given_bcg":                          "categorical",
+    "given_chlorhexidine":                "categorical",
+    "given_prophylaxis_pmtct":            "categorical",
+    "prescribed_transfusion":             "categorical",
+    "prescribed_phototherapy":            "categorical",
+    "prescribed_cpap":                    "categorical",
+    "prescribed_iv_fluids":               "categorical",
+    "prescribed_antibiotics":             "categorical",
+    "prescribed_feeds":                   "categorical",
+    "prescribed_opv":                     "categorical",
+    "prescribed_surfactant":              "categorical",
+    "prescribed_caffeine_citrate":        "categorical",
+    "prescribed_oxygen":                  "categorical",
+    "prescribed_kmc":                     "categorical",
+    "prescribed_incubator":               "categorical",
 
     # ------------------------------------------------------------------
     # SECTION K: Action plan

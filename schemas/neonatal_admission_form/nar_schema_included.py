@@ -44,7 +44,7 @@ from pydantic import BaseModel, Field
 from schemas.neonatal_admission_form.categorical_Enums import (
     AppearanceEnum, BloodGroupEnum, BornWhereEnum, CSTypeEnum, CryEnum, #AntiDEnum,
     DeliveryTypeEnum, GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
-    RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum,
+    RhesusEnum, ROMEnum, SexEnum, SkinEnum, ToneEnum, UmbilicusEnum, YesNoEnum,
     YesNoUnknownEnum, PositiveNegativeUnknownEnum,
 )
 
@@ -53,10 +53,7 @@ class NARRecord(BaseModel):
 
     Type conventions
     ----------------
-    bool        Y/N checkboxes with only two valid states (``None`` = blank /
-                unknown, stored as ``"null"`` in SurrealDB via
-                ``clean_for_db`` to prevent coercion to ``false``)
-    categorical Closed-vocabulary fields enforced by Enum classes, including
+    categorical Closed-vocabulary fields enforced by Enum classes, including two state Yes/No and also
                 three-state Pos/Neg/Unknown and Yes/No/Unknown fields
     str         Coded strings and short categorical values
     int         Whole numbers
@@ -86,15 +83,15 @@ class NARRecord(BaseModel):
         description="Mode of Delivery: SVD / CS / Breach / Forceps / Vacuum"
     )
     had_cs: CSTypeEnum = Field(..., description="If CS, type: Emergency / Elective")
-    was_resuscitated: bool = Field(...,
+    was_resuscitated: YesNoEnum = Field(...,
         description="BVM resus at birth: True=Y / False=N / None=Unknown"
     )
     rapture_of_membrane: ROMEnum = Field(..., description="ROM: <18h / >=18h / Unknown")
 
-    is_multiple_delivery: bool = Field(..., description="Multiple delivery: Y/N")
+    is_multiple_delivery: YesNoEnum = Field(..., description="Multiple delivery: Y/N")
     multiple_delivery_num: int = Field(..., description="If YES, number of babies")
 
-    born_before_arrival: bool = Field(..., description="Born outside facility: Y/N")
+    born_before_arrival: YesNoEnum = Field(..., description="Born outside facility: Y/N")
     born_where: BornWhereEnum = Field(..., description="If yes, where: Home/roadside / Other facility")
 
     # ------------------------------------------------------------------
@@ -105,10 +102,10 @@ class NARRecord(BaseModel):
     parity_abortions: int = Field(..., description="Parity abortions/losses")
     date_estimated_delivery_date: date = Field(..., description="EDD")
     anc_visits: int = Field(..., description="ANC no. of visits")
-    mum_has_anc_ultrasound: bool = Field(..., description="ANC U/S done: Y/N")
+    mum_has_anc_ultrasound: YesNoEnum = Field(..., description="ANC U/S done: Y/N")
     blood_group: BloodGroupEnum = Field(..., description="Blood group: A / B / AB / O / Unknown")
     rhesus: RhesusEnum = Field(..., description="Rhesus: Positive / Negative / Unknown")
-    given_anti_D_medication: bool = Field(..., description="Anti D given: Y / N")
+    given_anti_D_medication: YesNoEnum = Field(..., description="Anti D given: Y / N")
 
     mum_had_vdrl: PositiveNegativeUnknownEnum = Field(...,
         description="VDRL: Positive / Negative / Unknown"
@@ -153,16 +150,16 @@ class NARRecord(BaseModel):
     weight: int = Field(..., description="Weight now (grams)")
 
     # Symptoms (checkboxes)
-    has_fever: bool = Field(..., description="Fever: Y/N")
-    passed_meconium: bool = Field(..., description="Passed meconium/stool: Y/N")
-    has_difficulty_breathing: bool = Field(..., description="Difficulty breathing: Y/N")
-    passed_urine: bool = Field(..., description="Passed urine in last 12 hours: Y/N")
-    has_difficulty_feeding: bool = Field(..., description="Inability to feed: Y/N")
-    has_convulsions: bool = Field(..., description="Convulsions / Twitching: Y/N")
-    has_apnoea: bool = Field(..., description="Apnoea: Y/N")
-    is_floppy: bool = Field(..., description="Reduced / Absent movement: Y/N")
-    has_vomiting: bool = Field(..., description="Bilious Vomiting: Y/N")
-    has_diarhoea: bool = Field(..., description="Bloody stool: Y/N")
+    has_fever: YesNoEnum = Field(..., description="Fever: Y/N")
+    passed_meconium: YesNoEnum = Field(..., description="Passed meconium/stool: Y/N")
+    has_difficulty_breathing: YesNoEnum = Field(..., description="Difficulty breathing: Y/N")
+    passed_urine: YesNoEnum = Field(..., description="Passed urine in last 12 hours: Y/N")
+    has_difficulty_feeding: YesNoEnum = Field(..., description="Inability to feed: Y/N")
+    has_convulsions: YesNoEnum = Field(..., description="Convulsions / Twitching: Y/N")
+    has_apnoea: YesNoEnum = Field(..., description="Apnoea: Y/N")
+    is_floppy: YesNoEnum = Field(..., description="Reduced / Absent movement: Y/N")
+    has_vomiting: YesNoEnum = Field(..., description="Bilious Vomiting: Y/N")
+    has_diarhoea: YesNoEnum  = Field(..., description="Bloody stool: Y/N")
 
     # ------------------------------------------------------------------
     # SECTION F1: General examination
@@ -174,22 +171,22 @@ class NARRecord(BaseModel):
     appearance: AppearanceEnum = Field(..., description="Appearance: Well / Sick / Dysmorphic")
     cry: CryEnum = Field(..., description="Cry quality: Normal / Weak-Absent / Hoarse")
 
-    has_crackles: bool = Field(..., description="Crackles: Y/N")
-    has_grunting: bool = Field(..., description="Grunting: Y/N")
-    has_good_air_entry: bool = Field(..., description="Good bilateral air entry: Y/N")
-    has_central_cyanosis: bool = Field(..., description="Central cyanosis: Y/N")
-    chest_indrawing: bool = Field(..., description="Lower chest indrawing: Y/N")
+    has_crackles: YesNoEnum  = Field(..., description="Crackles: Y/N")
+    has_grunting: YesNoEnum  = Field(..., description="Grunting: Y/N")
+    has_good_air_entry: YesNoEnum  = Field(..., description="Good bilateral air entry: Y/N")
+    has_central_cyanosis: YesNoEnum  = Field(..., description="Central cyanosis: Y/N")
+    chest_indrawing: YesNoEnum  = Field(..., description="Lower chest indrawing: Y/N")
     xiphoid_retraction: RetractionSeverityEnum = Field(..., description="Xiphoid retraction: None / Mild / Severe")
     intercostal_retraction: RetractionSeverityEnum = Field(..., description="Intercostal retraction: None / Mild / Severe")
     capillary_refill_in_seconds: float = Field(..., description="Capillary refill (seconds)")
     pallor: PallorEnum = Field(..., description="Pallor/Anaemia: None / Mild(+) / Severe(+++)")
-    has_murmur: bool = Field(..., description="Murmur: Y/N")
+    has_murmur: YesNoEnum  = Field(..., description="Murmur: Y/N")
 
-    has_bulging_fontanelle: bool = Field(..., description="Bulging fontanelle: Y/N")
-    is_irritable: bool = Field(..., description="Irritable: Y/N")
+    has_bulging_fontanelle: YesNoEnum  = Field(..., description="Bulging fontanelle: Y/N")
+    is_irritable: YesNoEnum  = Field(..., description="Irritable: Y/N")
     tone: ToneEnum = Field(..., description="Tone: Normal / Increased / Reduced")
 
-    is_distended: bool = Field(..., description="Abdominal distension: Y/N")
+    is_distended: YesNoEnum  = Field(..., description="Abdominal distension: Y/N")
     umbilicus: UmbilicusEnum = Field(...,
         description="Umbilicus: Clean / Local pus / Pus+Red skin / Others"
     )
@@ -197,13 +194,13 @@ class NARRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION F2: Further examination
 
-    has_birth_defects: bool = Field(..., description="Birth defects: Y/N")
+    has_birth_defects: YesNoEnum  = Field(..., description="Birth defects: Y/N")
 
     # ------------------------------------------------------------------
     # SECTION H: Investigations
 
-    rbs_measured: bool = Field(..., description="RBS measured: Y/N")
-    given_bilirubin: bool = Field(..., description="Bilirubin measured: Y/N")
+    rbs_measured: YesNoEnum  = Field(..., description="RBS measured: Y/N")
+    given_bilirubin: YesNoEnum  = Field(..., description="Bilirubin measured: Y/N")
 
     # ------------------------------------------------------------------
     # SECTION I: Diagnoses
@@ -220,25 +217,25 @@ class NARRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION J: Interventions
 
-    given_vitamin_k: bool = Field(..., description="Vitamin K (& TEO) given: Y/N")
-    given_bcg: bool = Field(..., description="BCG given: Y/N")
-    given_chlorhexidine: bool = Field(..., description="Chlorhexidine given: Y/N")
-    given_prophylaxis_pmtct: bool = Field(..., description="PMTCT prophylaxis given: Y/N")
+    given_vitamin_k: YesNoEnum  = Field(..., description="Vitamin K (& TEO) given: Y/N")
+    given_bcg: YesNoEnum  = Field(..., description="BCG given: Y/N")
+    given_chlorhexidine: YesNoEnum  = Field(..., description="Chlorhexidine given: Y/N")
+    given_prophylaxis_pmtct: YesNoEnum  = Field(..., description="PMTCT prophylaxis given: Y/N")
 
-    prescribed_transfusion: bool = Field(..., description="Transfusion prescribed: Y/N")
-    prescribed_phototherapy: bool = Field(..., description="Phototherapy prescribed: Y/N")
-    prescribed_cpap: bool = Field(..., description="CPAP prescribed: Y/N")
-    prescribed_iv_fluids: bool = Field(..., description="IV fluids prescribed: Y/N")
-    prescribed_antibiotics: bool = Field(..., description="Antibiotics prescribed: Y/N")
-    prescribed_feeds: bool = Field(..., description="Feeds/Nutrition prescribed: Y/N")
-    prescribed_opv: bool = Field(..., description="OPV prescribed: Y/N")
-    prescribed_surfactant: bool = Field(..., description="Surfactant prescribed: Y/N")
-    prescribed_caffeine_citrate: bool = Field(...,
+    prescribed_transfusion: YesNoEnum  = Field(..., description="Transfusion prescribed: Y/N")
+    prescribed_phototherapy: YesNoEnum  = Field(..., description="Phototherapy prescribed: Y/N")
+    prescribed_cpap: YesNoEnum  = Field(..., description="CPAP prescribed: Y/N")
+    prescribed_iv_fluids: YesNoEnum  = Field(..., description="IV fluids prescribed: Y/N")
+    prescribed_antibiotics: YesNoEnum  = Field(..., description="Antibiotics prescribed: Y/N")
+    prescribed_feeds: YesNoEnum  = Field(..., description="Feeds/Nutrition prescribed: Y/N")
+    prescribed_opv: YesNoEnum  = Field(..., description="OPV prescribed: Y/N")
+    prescribed_surfactant: YesNoEnum  = Field(..., description="Surfactant prescribed: Y/N")
+    prescribed_caffeine_citrate: YesNoEnum  = Field(...,
         description="Caffeine citrate prescribed: Y/N"
     )
-    prescribed_oxygen: bool = Field(..., description="Oxygen prescribed: Y/N")
-    prescribed_kmc: bool = Field(..., description="KMC prescribed: Y/N")
-    prescribed_incubator: bool = Field(..., description="Incubator/keep warm prescribed: Y/N")
+    prescribed_oxygen: YesNoEnum  = Field(..., description="Oxygen prescribed: Y/N")
+    prescribed_kmc: YesNoEnum  = Field(..., description="KMC prescribed: Y/N")
+    prescribed_incubator: YesNoEnum  = Field(..., description="Incubator/keep warm prescribed: Y/N")
 
     # ------------------------------------------------------------------
     # Internal / derived

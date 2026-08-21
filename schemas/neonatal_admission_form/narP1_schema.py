@@ -11,14 +11,20 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from schemas.neonatal_admission_form.categorical_Enums import (
+    ANCTrimesterEnum, AppearanceEnum, BloodGroupEnum, #AntiDEnum,
+    BornWhereEnum, CSTypeEnum, CryEnum, DeliveryTypeEnum,
+    GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
+    RhesusEnum, ROMEnum, SexEnum, YesNoEnum, YesNoUnknownEnum, PositiveNegativeUnknownEnum,
+    SkinEnum, ToneEnum, UmbilicusEnum, BirthDefectsEnum,
+
+)
 
 class NAR_P1Record(BaseModel):
     """Required NAR fields matched against ground truth.
 
     Type conventions
     ----------------
-    bool    Y/N checkboxes (``None`` = blank / unknown, stored as ``"null"``
-            in SurrealDB via ``clean_for_db`` to prevent coercion to ``false``)
     str     Coded strings and short categorical values
     int     Whole numbers
     float   Decimal numbers
@@ -47,15 +53,15 @@ class NAR_P1Record(BaseModel):
         description="Delivery: SVD / CS / Breach / Forceps / Vacuum"
     )
     had_cs: str = Field(description="If CS, type: Emergency / Elective")
-    was_resuscitated: bool = Field(
+    was_resuscitated: YesNoEnum  = Field(
         description="BVM resus at birth: True=Y / False=N / None=Unknown"
     )
     rapture_of_membrane: str = Field(description="ROM: <18h / >=18h / Unknown")
 
-    is_multiple_delivery: bool = Field(description="Multiple delivery: Y/N")
+    is_multiple_delivery: YesNoEnum  = Field(description="Multiple delivery: Y/N")
     multiple_delivery_num: int = Field(description="If YES, number of babies")
 
-    born_before_arrival: bool = Field(description="Born outside facility: Y/N")
+    born_before_arrival: YesNoEnum  = Field(description="Born outside facility: Y/N")
     born_where: str = Field(description="If yes, where: Home/roadside / Other facility")
 
     # ------------------------------------------------------------------
@@ -66,36 +72,36 @@ class NAR_P1Record(BaseModel):
     parity_abortions: int = Field(description="Parity abortions/losses")
     date_estimated_delivery_date: date = Field(description="EDD")
     anc_visits: int = Field(description="ANC no. of visits")
-    mum_has_anc_ultrasound: bool = Field(description="ANC U/S done: Y/N")
+    mum_has_anc_ultrasound: YesNoEnum  = Field(description="ANC U/S done: Y/N")
     blood_group: str = Field(description="Blood group: A / B / AB / O / Unknown")
     rhesus: str = Field(description="Rhesus: Pos / Neg / Unknown")
     given_anti_D_medication: str = Field(description="Anti D given: Y / N")
 
-    mum_had_vdrl: bool = Field(
+    mum_had_vdrl: YesNoEnum  = Field(
         description="VDRL: Pos=True / Neg=False / Unknown=None"
     )
-    mum_pmtct_status: bool = Field(
+    mum_pmtct_status: YesNoEnum  = Field(
         description="PMTCT status: Pos=True / Neg=False / Unknown=None"
     )
-    mum_on_arvs: bool = Field(
+    mum_on_arvs: YesNoEnum  = Field(
         description="Mother on ARVs: Y=True / N=False / Unknown=None"
     )
-    mum_had_hepatitis_b: bool = Field(
+    mum_had_hepatitis_b: YesNoEnum  = Field(
         description="Hep B: Pos=True / Neg=False / Unknown=None"
     )
-    mum_given_HBIG_treatment: bool = Field(
+    mum_given_HBIG_treatment: YesNoEnum  = Field(
         description="Hep B IG given: Y=True / N=False / Unknown=None"
     )
-    mum_had_hypertension_in_pregnancy: bool = Field(
+    mum_had_hypertension_in_pregnancy: YesNoEnum  = Field(
         description="HTN in pregnancy: Y=True / N=False / Unknown=None"
     )
-    mum_had_antepartum_haemorrhage: bool = Field(
+    mum_had_antepartum_haemorrhage: YesNoEnum  = Field(
         description="APH: Y=True / N=False / Unknown=None"
     )
-    mum_had_diabetes: bool = Field(
+    mum_had_diabetes: YesNoEnum  = Field(
         description="Diabetes: Y=True / N=False / Unknown=None"
     )
-    prolonged_labour: bool = Field(
+    prolonged_labour: YesNoEnum  = Field(
         description="Prolonged 2nd stage: Y=True / N=False / Unknown=None"
     )
 
@@ -114,16 +120,16 @@ class NAR_P1Record(BaseModel):
     weight: int = Field(description="Weight now (grams)")
 
     # Symptoms (checkboxes)
-    has_fever: bool = Field(description="Fever: Y/N")
-    passed_meconium: bool = Field(description="Passed meconium/stool: Y/N")
-    has_difficulty_breathing: bool = Field(description="Difficulty breathing: Y/N")
-    passed_urine: bool = Field(description="Passed urine in last 12 hours: Y/N")
-    has_difficulty_feeding: bool = Field(description="Inability to feed: Y/N")
-    has_convulsions: bool = Field(description="Convulsions / Twitching: Y/N")
-    has_apnoea: bool = Field(description="Apnoea: Y/N")
-    is_floppy: bool = Field(description="Reduced / Absent movement: Y/N")
-    has_vomiting: bool = Field(description="Bilious Vomiting: Y/N")
-    has_diarhoea: bool = Field(description="Bloody stool: Y/N")
+    has_fever: YesNoEnum  = Field(description="Fever: Y/N")
+    passed_meconium: YesNoEnum  = Field(description="Passed meconium/stool: Y/N")
+    has_difficulty_breathing: YesNoEnum  = Field(description="Difficulty breathing: Y/N")
+    passed_urine: YesNoEnum  = Field(description="Passed urine in last 12 hours: Y/N")
+    has_difficulty_feeding: YesNoEnum  = Field(description="Inability to feed: Y/N")
+    has_convulsions: YesNoEnum  = Field(description="Convulsions / Twitching: Y/N")
+    has_apnoea: YesNoEnum  = Field(description="Apnoea: Y/N")
+    is_floppy: YesNoEnum  = Field(description="Reduced / Absent movement: Y/N")
+    has_vomiting: YesNoEnum  = Field(description="Bilious Vomiting: Y/N")
+    has_diarhoea: YesNoEnum  = Field(description="Bloody stool: Y/N")
 
 
 class NARSchema(BaseModel):

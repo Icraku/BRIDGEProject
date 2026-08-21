@@ -243,33 +243,26 @@ _SYNONYMS["RhesusEnum"] = {
     "unknown": "Unknown", "unkn": "Unknown", "unk": "Unknown", "?": "Unknown",
 }
 
+class YesNoEnum(str, Enum):
+    """Shared enum for any Y / N checkbox group."""
+    Y       = "Y"
+    N       = "N"
 
-#class AntiDEnum(str, Enum):
-#    """Whether Anti-D was given: Y or N.
+    @classmethod
+    def _missing_(cls, value: object) -> "YesNoEnum | None":
+        return _resolve(cls, value)
 
-#    The form has two checkboxes only. Blank field -> None (Optional).
-#    """
-#    Y = "Y"
-#    N = "N"
-
-#    @classmethod
-#    def _missing_(cls, value: object) -> "AntiDEnum | None":
-#        return _resolve(cls, value)
-
-#_SYNONYMS["AntiDEnum"] = {
-#    "y": "Y", "yes": "Y", "given": "Y", "administered": "Y",
-#    "n": "N", "no": "N", "not given": "N", "not administered": "N",
-#}
+_SYNONYMS["YesNoEnum"] = {
+    "y": "Y", "yes": "Y",
+    "given": "Y", "administered": "Y", "present": "Y",
+    "n": "N", "no": "N",
+    "not given": "N", "not administered": "N", "absent": "N",
+    "unknown": "Unknown", "unkn": "Unknown", "unk": "Unknown", "?": "Unknown",
+}
 
 
 class YesNoUnknownEnum(str, Enum):
-    """Shared enum for any Y / N / Unkn checkbox group.
-
-    Replaces the previously separate ArvsEnum, HbigEnum, HypertensionEnum,
-    HaemorrhageEnum, DiabetesEnum, and ProlongedLabourEnum, which were all
-    structurally identical (same Y/N/Unknown values, only synonym lists
-    differed). Synonym lists below are the union of all six.
-    """
+    """Shared enum for any Y / N / Unkn checkbox group."""
     Y       = "Y"
     N       = "N"
     UNKNOWN = "Unknown"
@@ -510,7 +503,7 @@ CATEGORICAL_FIELD_MAP: dict[str, type] = {
     "anc_us_trimester":                 ANCTrimesterEnum,
     "blood_group":                      BloodGroupEnum,
     "rhesus":                           PositiveNegativeUnknownEnum,
-    "given_anti_D_medication":          AntiDEnum,
+    "given_anti_D_medication":          YesNoEnum,
     "mum_had_vdrl":                     PositiveNegativeUnknownEnum,
     "mum_pmtct_status":                 PositiveNegativeUnknownEnum,
     "mum_had_hepatitis_b":              PositiveNegativeUnknownEnum,

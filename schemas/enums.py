@@ -38,7 +38,7 @@ from schemas.neonatal_admission_form.categorical_Enums import (
     ANCTrimesterEnum, AntiDEnum, AppearanceEnum, BloodGroupEnum,
     BornWhereEnum, CSTypeEnum, CryEnum, DeliveryTypeEnum,
     GestationTypeEnum, JaundiceEnum, PallorEnum, RetractionSeverityEnum,
-    RhesusEnum, ROMEnum, SexEnum, YesNoUnknownEnum, PositiveNegativeUnknownEnum,
+    RhesusEnum, ROMEnum, SexEnum, YesNoEnum, YesNoUnknownEnum, PositiveNegativeUnknownEnum,
     SkinEnum, ToneEnum, UmbilicusEnum, BirthDefectsEnum,
 )
 
@@ -51,7 +51,6 @@ class NARFullRecord(BaseModel):
 
     Type conventions
     ----------------
-    ``Optional[bool]``              Y/N checkboxes  (``None`` = blank / unknown)
     ``Optional[int]``               Whole numbers
     ``Optional[float]``             Decimal numbers
     ``Optional[FieldEnum]``.        Categorical fields with constrained valid values from see nar_enums.py
@@ -93,17 +92,17 @@ class NARFullRecord(BaseModel):
         ..., description="Mode of delivery: SVD / CS / Breach / Forceps / Vacuum"
     )
     had_cs: Optional[CSTypeEnum] = Field(..., description="If CS, type: Emergency / Elective")
-    was_resuscitated: Optional[bool] = Field(..., description="BVM resus at birth: Y/N")
+    was_resuscitated: Optional[YesNoEnum ] = Field(..., description="BVM resus at birth: Y/N")
     rapture_of_membrane: Optional[ROMEnum] = Field(
         ..., description="ROM: <18h (less than 18 hours) / >=18h (greater than 18 hours) / Unknown"
     )
 
-    is_multiple_delivery: Optional[bool] = Field(..., description="Multiple delivery: Y/N")
+    is_multiple_delivery: Optional[YesNoEnum ] = Field(..., description="Multiple delivery: Y/N")
     multiple_delivery_num: Optional[int] = Field(
         ..., description="If YES, number of babies"
     )
 
-    born_before_arrival: Optional[bool] = Field(
+    born_before_arrival: Optional[YesNoEnum ] = Field(
         ..., description="Born outside facility: Y/N"
     )
     born_where: Optional[BornWhereEnum] = Field(
@@ -134,7 +133,7 @@ class NARFullRecord(BaseModel):
     )
     anc_visits: Optional[int] = Field(..., description="ANC no. of visits")
 
-    mum_has_anc_ultrasound: Optional[bool] = Field(..., description="ANC U/S done: Y/N")
+    mum_has_anc_ultrasound: Optional[YesNoEnum ] = Field(..., description="ANC U/S done: Y/N")
     anc_us_trimester: Optional[ANCTrimesterEnum] = Field(
         ..., description="ANC U/S trimester: 1st / 2nd / 3rd"
     )
@@ -211,26 +210,26 @@ class NARFullRecord(BaseModel):
     weight: Optional[int] = Field(..., description="Weight now (grams)")
 
     # Symptoms (checkboxes)
-    has_fever: Optional[bool] = Field(..., description="Fever: Y/N")
-    passed_meconium: Optional[bool] = Field(..., description="Passed meconium/stool: Y/N")
-    has_difficulty_breathing: Optional[bool] = Field(
+    has_fever: Optional[YesNoEnum ] = Field(..., description="Fever: Y/N")
+    passed_meconium: Optional[YesNoEnum ] = Field(..., description="Passed meconium/stool: Y/N")
+    has_difficulty_breathing: Optional[YesNoEnum ] = Field(
         ..., description="Difficulty breathing: Y/N"
     )
-    passed_urine: Optional[bool] = Field(
+    passed_urine: Optional[YesNoEnum ] = Field(
         ..., description="Passed urine in last 12 hours: Y/N"
     )
-    has_difficulty_feeding: Optional[bool] = Field(
+    has_difficulty_feeding: Optional[YesNoEnum ] = Field(
         ..., description="Inability to feed: Y/N"
     )
-    has_convulsions: Optional[bool] = Field(
+    has_convulsions: Optional[YesNoEnum ] = Field(
         ..., description="Convulsions / Twitching: Y/N"
     )
-    has_apnoea: Optional[bool] = Field(..., description="Apnoea: Y/N")
-    is_floppy: Optional[bool] = Field(
+    has_apnoea: Optional[YesNoEnum ] = Field(..., description="Apnoea: Y/N")
+    is_floppy: Optional[YesNoEnum ] = Field(
         ..., description="Reduced / Absent movement: Y/N"
     )
-    has_vomiting: Optional[bool] = Field(..., description="Bilious Vomiting: Y/N")
-    has_diarhoea: Optional[bool] = Field(..., description="Bloody stool: Y/N")
+    has_vomiting: Optional[YesNoEnum ] = Field(..., description="Bilious Vomiting: Y/N")
+    has_diarhoea: Optional[YesNoEnum ] = Field(..., description="Bloody stool: Y/N")
 
     # ------------------------------------------------------------------
     # SECTION F1: General examination
@@ -248,12 +247,12 @@ class NARFullRecord(BaseModel):
     )
 
     # A & B (Respiratory)
-    has_crackles: Optional[bool] = Field(..., description="Crackles: Y/N")
-    has_grunting: Optional[bool] = Field(..., description="Grunting: Y/N")
-    has_good_air_entry: Optional[bool] = Field(
+    has_crackles: Optional[YesNoEnum ] = Field(..., description="Crackles: Y/N")
+    has_grunting: Optional[YesNoEnum ] = Field(..., description="Grunting: Y/N")
+    has_good_air_entry: Optional[YesNoEnum ] = Field(
         ..., description="Good bilateral air entry: Y/N"
     )
-    has_central_cyanosis: Optional[bool] = Field(
+    has_central_cyanosis: Optional[YesNoEnum ] = Field(
         ..., description="Central cyanosis: Y/N"
     )
     chest_indrawing: Optional[RetractionSeverityEnum] = Field(
@@ -271,19 +270,19 @@ class NARFullRecord(BaseModel):
         ..., description="Capillary refill (seconds)"
     )
     pallor: Optional[PallorEnum] = Field(..., description="Pallor/Anaemia severity: None / Mild(+) / Severe(++)")
-    has_murmur: Optional[bool] = Field(..., description="Murmur: Y/N")
+    has_murmur: Optional[YesNoEnum ] = Field(..., description="Murmur: Y/N")
 
     # D (Neurological)
-    has_bulging_fontanelle: Optional[bool] = Field(
+    has_bulging_fontanelle: Optional[YesNoEnum ] = Field(
         ..., description="Bulging fontanelle: Y/N"
     )
-    is_irritable: Optional[bool] = Field(..., description="Irritable: Y/N")
+    is_irritable: Optional[YesNoEnum ] = Field(..., description="Irritable: Y/N")
     tone: Optional[ToneEnum] = Field(
         ..., description="Tone: Normal / Increased / Reduced"
     )
 
     # Abdomen
-    is_distended: Optional[bool] = Field(
+    is_distended: Optional[YesNoEnum ] = Field(
         ..., description="Abdominal distension: Y/N"
     )
     umbilicus: Optional[UmbilicusEnum] = Field(
@@ -307,7 +306,7 @@ class NARFullRecord(BaseModel):
         ),
     )
 
-    has_birth_defects: Optional[bool] = Field(..., description="Birth defects: Y/N")
+    has_birth_defects: Optional[YesNoEnum ] = Field(..., description="Birth defects: Y/N")
     birth_defect_types: Optional[BirthDefectsEnum] = Field(
         ...,
         description=(
@@ -328,9 +327,9 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION H: Investigations
 
-    rbs_measured: Optional[bool] = Field(..., description="RBS measured: Y/N")
+    rbs_measured: Optional[YesNoEnum ] = Field(..., description="RBS measured: Y/N")
     rbs_value: Optional[float] = Field(..., description="RBS result value (mmol/L)")
-    given_bilirubin: Optional[bool] = Field(..., description="Bilirubin measured: Y/N")
+    given_bilirubin: Optional[YesNoEnum ] = Field(..., description="Bilirubin measured: Y/N")
     total_serum_bilirubin: Optional[float] = Field(
         ..., description="Total serum bilirubin value (µmol/L)"
     )
@@ -354,42 +353,42 @@ class NARFullRecord(BaseModel):
     # ------------------------------------------------------------------
     # SECTION J: Interventions
 
-    given_vitamin_k: Optional[bool] = Field(
+    given_vitamin_k: Optional[YesNoEnum ] = Field(
         ..., description="Vitamin K (& TEO) given: Y/N"
     )
-    given_bcg: Optional[bool] = Field(..., description="BCG given: Y/N")
-    given_chlorhexidine: Optional[bool] = Field(
+    given_bcg: Optional[YesNoEnum ] = Field(..., description="BCG given: Y/N")
+    given_chlorhexidine: Optional[YesNoEnum ] = Field(
         ..., description="Chlorhexidine given: Y/N"
     )
-    given_prophylaxis_pmtct: Optional[bool] = Field(
+    given_prophylaxis_pmtct: Optional[YesNoEnum ] = Field(
         ..., description="PMTCT prophylaxis given: Y/N"
     )
-    prescribed_transfusion: Optional[bool] = Field(
+    prescribed_transfusion: Optional[YesNoEnum ] = Field(
         ..., description="Transfusion prescribed: Y/N"
     )
-    prescribed_phototherapy: Optional[bool] = Field(
+    prescribed_phototherapy: Optional[YesNoEnum ] = Field(
         ..., description="Phototherapy prescribed: Y/N"
     )
-    prescribed_cpap: Optional[bool] = Field(..., description="CPAP prescribed: Y/N")
-    prescribed_iv_fluids: Optional[bool] = Field(
+    prescribed_cpap: Optional[YesNoEnum ] = Field(..., description="CPAP prescribed: Y/N")
+    prescribed_iv_fluids: Optional[YesNoEnum ] = Field(
         ..., description="IV fluids prescribed: Y/N"
     )
-    prescribed_antibiotics: Optional[bool] = Field(
+    prescribed_antibiotics: Optional[YesNoEnum ] = Field(
         ..., description="Antibiotics prescribed: Y/N"
     )
-    prescribed_feeds: Optional[bool] = Field(
+    prescribed_feeds: Optional[YesNoEnum ] = Field(
         ..., description="Feeds/Nutrition prescribed: Y/N"
     )
-    prescribed_opv: Optional[bool] = Field(..., description="OPV prescribed: Y/N")
-    prescribed_surfactant: Optional[bool] = Field(
+    prescribed_opv: Optional[YesNoEnum ] = Field(..., description="OPV prescribed: Y/N")
+    prescribed_surfactant: Optional[YesNoEnum ] = Field(
         ..., description="Surfactant prescribed: Y/N"
     )
-    prescribed_caffeine_citrate: Optional[bool] = Field(
+    prescribed_caffeine_citrate: Optional[YesNoEnum ] = Field(
         ..., description="Caffeine citrate prescribed: Y/N"
     )
-    prescribed_oxygen: Optional[bool] = Field(..., description="Oxygen prescribed: Y/N")
-    prescribed_kmc: Optional[bool] = Field(..., description="KMC prescribed: Y/N")
-    prescribed_incubator: Optional[bool] = Field(
+    prescribed_oxygen: Optional[YesNoEnum ] = Field(..., description="Oxygen prescribed: Y/N")
+    prescribed_kmc: Optional[YesNoEnum ] = Field(..., description="KMC prescribed: Y/N")
+    prescribed_incubator: Optional[YesNoEnum ] = Field(
         ..., description="Incubator/keep warm prescribed: Y/N"
     )
 

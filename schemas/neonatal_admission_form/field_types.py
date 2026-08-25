@@ -5,7 +5,7 @@ Maps every field in ``NARFullRecord`` to its data-type category, and
 provides hospital code lookup utilities.
 
 This mapping is used by the evaluation pipeline to:
-- Break down accuracy metrics by field type (e.g. bool vs int vs str)
+- Break down accuracy metrics by field type (e.g. categorical vs int vs str)
 - Drive type-compliance checks in ``schema_compliance.py``
 - Gate hallucination detection strategies in ``hallucination_detector.py``
 
@@ -172,6 +172,7 @@ FIELD_TYPES: dict[str, str] = {
 
     # ------------------------------------------------------------------
     # SECTION K: Action plan
+    "action_plan":          "text",
     "clinician_name":       "redacted",
     "clinician_signature":  "redacted",
     "action_plan_time":     "time",

@@ -60,15 +60,15 @@ class NARFullRecord(BaseModel):
 
     # Identifiers are physically redacted (black bar) on real forms
     infant_name: Optional[Literal["redacted"]] = Field(
-        ..., description="Infant name (redacted on real form)"
+        ..., description="Infant name"
     )
     ip_no: Optional[Literal["redacted"]] = Field(
-        ..., description="IP number (redacted on real form)"
+        ..., description="IP number"
     )
 
     admission_date: Optional[date] = Field(..., description="Date of Admission")
     time_seen: Optional[time] = Field(..., description="Time baby seen (24 hr clock)")
-    sex: Optional[SexEnum] = Field(..., description="Sex of the infant: F / M / I")
+    sex: Optional[SexEnum] = Field(..., description="Sex of the infant")
 
     birth_date: Optional[date] = Field(..., description="DOB")
     time_birth: Optional[time] = Field(..., description="Time of birth (24 hr clock)")
@@ -76,41 +76,41 @@ class NARFullRecord(BaseModel):
     baby_age_in_days: Optional[int] = Field(..., description="Age (in days)")
 
     gestation_type: Optional[GestationTypeEnum] = Field(
-        ..., description="Gestation age from: U/S or LMP"
+        ..., description="Gestation age from"
     )
     apgar_1m: Optional[int] = Field(..., description="APGAR score at 1 minute")
     apgar_5m: Optional[int] = Field(..., description="APGAR score at 5 minutes")
     apgar_10m: Optional[int] = Field(..., description="APGAR score at 10 minutes")
 
     delivery_type: Optional[DeliveryTypeEnum] = Field(
-        ..., description="Mode of delivery: SVD / CS / Breach / Forceps / Vacuum"
+        ..., description="Mode of delivery"
     )
-    had_cs: Optional[CSTypeEnum] = Field(..., description="If CS, type: Emergency / Elective")
-    was_resuscitated: Optional[YesNoEnum] = Field(..., description="BVM resus at birth: Y/N")
+    had_cs: Optional[CSTypeEnum] = Field(..., description="If CS, type")
+    was_resuscitated: Optional[YesNoEnum] = Field(..., description="BVM resus at birth")
     rapture_of_membrane: Optional[ROMEnum] = Field(
-        ..., description="ROM: <18h (less than 18 hours) / >=18h (greater than 18 hours) / Unknown"
+        ..., description="ROM"
     )
 
-    is_multiple_delivery: Optional[YesNoEnum] = Field(..., description="Multiple delivery: Y/N")
+    is_multiple_delivery: Optional[YesNoEnum] = Field(..., description="Multiple delivery")
     multiple_delivery_num: Optional[int] = Field(
         ..., description="If YES, number of babies"
     )
 
     born_before_arrival: Optional[YesNoEnum] = Field(
-        ..., description="Born outside facility: Y/N"
+        ..., description="Born outside facility"
     )
     born_where: Optional[BornWhereEnum] = Field(
-        ..., description="If born outside facility: 1) Home or roadside / 2) Other facility"
+        ..., description="If born outside facility"
     )
 
     # ------------------------------------------------------------------
     # SECTION B: Mother's details
 
     mum_name: Optional[Literal["redacted"]] = Field(
-        ..., description="Mother name (redacted on real form)"
+        ..., description="Mother name"
     )
     mum_ip_no: Optional[Literal["redacted"]] = Field(
-        ..., description="Mother IP number (redacted on real form)"
+        ..., description="Mother IP number"
     )
 
     mum_age_in_years: Optional[int] = Field(..., description="Age (years)")
@@ -124,46 +124,46 @@ class NARFullRecord(BaseModel):
     )
     anc_visits: Optional[int] = Field(..., description="ANC no. of visits")
 
-    mum_has_anc_ultrasound: Optional[YesNoEnum] = Field(..., description="ANC U/S done: Y/N")
+    mum_has_anc_ultrasound: Optional[YesNoEnum] = Field(..., description="ANC U/S done")
     anc_us_trimester: Optional[ANCTrimesterEnum] = Field(
-        ..., description="ANC U/S trimester: 1st / 2nd / 3rd"
+        ..., description="ANC U/S trimester"
     )
     us_findings: Optional[Literal["text"]] = Field(
         ..., description="U/S findings free text"
     )
 
     blood_group: Optional[BloodGroupEnum] = Field(
-        ..., description="Blood group type: A / B / AB / O / Unknown"
+        ..., description="Blood group type"
     )
-    rhesus: Optional[RhesusEnum] = Field(..., description="Rhesus: Positive / Negative / Unknown")
-    given_anti_D_medication: Optional[YesNoEnum] = Field(..., description="Anti D given: Y / N")
+    rhesus: Optional[RhesusEnum] = Field(..., description="Rhesus")
+    given_anti_D_medication: Optional[YesNoEnum] = Field(..., description="Anti D given")
 
     mum_had_vdrl: Optional[PositiveNegativeUnknownEnum] = Field(
-        ..., description="VDRL: Pos=True / Neg=False / Unknown=None"
+        ..., description="VDRL"
     )
     mum_pmtct_status: Optional[PositiveNegativeUnknownEnum] = Field(
-        ..., description="PMTCT status: Pos=True / Neg=False / Unknown=None"
+        ..., description="PMTCT status"
     )
     mum_on_arvs: Optional[YesNoUnknownEnum] = Field(
-        ..., description="Mother on ARVs: Y=True / N=False / Unknown=None"
+        ..., description="Mother on ARVs"
     )
     mum_had_hepatitis_b: Optional[PositiveNegativeUnknownEnum] = Field(
-        ..., description="Hep B: Pos=True / Neg=False / Unknown=None"
+        ..., description="Hep B"
     )
     mum_given_HBIG_treatment: Optional[YesNoUnknownEnum] = Field(
-        ..., description="Hep B IG given: Y=True / N=False / Unknown=None"
+        ..., description="Hep B IG given"
     )
     mum_had_hypertension_in_pregnancy: Optional[YesNoUnknownEnum] = Field(
-        ..., description="HTN in pregnancy: Y=True / N=False / Unknown=None"
+        ..., description="HTN in pregnancy"
     )
     mum_had_antepartum_haemorrhage: Optional[YesNoUnknownEnum] = Field(
-        ..., description="APH: Y=True / N=False / Unknown=None"
+        ..., description="APH"
     )
     mum_had_diabetes: Optional[YesNoUnknownEnum] = Field(
-        ..., description="Diabetes: Y=True / N=False / Unknown=None"
+        ..., description="Diabetes"
     )
     prolonged_labour: Optional[YesNoUnknownEnum] = Field(
-        ..., description="Prolonged 2nd stage: Y=True / N=False / Unknown=None"
+        ..., description="Prolonged 2nd stage"
     )
 
     # ------------------------------------------------------------------
@@ -172,7 +172,7 @@ class NARFullRecord(BaseModel):
     maternal_illness_notes: Optional[str] = Field(
         ...,
         description=(
-            "Section C: any maternal illness / fever / TB / antibiotics (free text)"
+            "Section C: Mother's problems during pregnancy/labour & relevant maternal treatment"
         ),
     )
 
@@ -181,7 +181,7 @@ class NARFullRecord(BaseModel):
 
     infant_presenting_problems: Optional[str] = Field(
         ...,
-        description="Section D: infant presenting problems narrative (free text)",
+        description="Section D: Infant presenting problems & any treatment given",
     )
 
     # ------------------------------------------------------------------
@@ -190,95 +190,93 @@ class NARFullRecord(BaseModel):
     head_circumference: Optional[int] = Field(..., description="Head circumference (cm)")
     length: Optional[int] = Field(..., description="Length (cm)")
     temparature: Optional[float] = Field(..., description="Temp (°C)")
-    respiratory_rate: Optional[int] = Field(..., description="Resp Rate (breaths/min)")
-    systolic_blood_pressure: Optional[int] = Field(..., description="Systolic BP (mmHg)")
-    diastolic_blood_pressure: Optional[int] = Field(
-        ..., description="Diastolic BP (mmHg)"
-    )
+    respiratory_rate: Optional[int] = Field(..., description="Resp Rate (bpm)")
+    blood_pressure: Optional[int] = Field(..., description="Blood Pressure (mmHg)")
+    #diastolic_blood_pressure: Optional[int] = Field(..., description="Diastolic BP (mmHg)")
     pulse_rate: Optional[int] = Field(..., description="Pulse (/min)")
     pulse_oximetry: Optional[int] = Field(..., description="O₂ Sat (%)")
     birth_weight: Optional[int] = Field(..., description="Birth Weight (grams)")
     weight: Optional[int] = Field(..., description="Weight now (grams)")
 
     # Symptoms (checkboxes)
-    has_fever: Optional[YesNoEnum] = Field(..., description="Fever: Y/N")
-    passed_meconium: Optional[YesNoEnum] = Field(..., description="Passed meconium/stool: Y/N")
+    has_fever: Optional[YesNoEnum] = Field(..., description="Fever")
+    passed_meconium: Optional[YesNoEnum] = Field(..., description="Passed meconium/stool")
     has_difficulty_breathing: Optional[YesNoEnum] = Field(
-        ..., description="Difficulty breathing: Y/N"
+        ..., description="Difficulty breathing"
     )
     passed_urine: Optional[YesNoEnum] = Field(
-        ..., description="Passed urine in last 12 hours: Y/N"
+        ..., description="Passed urine in last 12 hours"
     )
     has_difficulty_feeding: Optional[YesNoEnum] = Field(
-        ..., description="Inability to feed: Y/N"
+        ..., description="Inability to feed"
     )
     has_convulsions: Optional[YesNoEnum] = Field(
-        ..., description="Convulsions / Twitching: Y/N"
+        ..., description="Convulsions / Twitching"
     )
-    has_apnoea: Optional[YesNoEnum] = Field(..., description="Apnoea: Y/N")
+    has_apnoea: Optional[YesNoEnum] = Field(..., description="Apnoea")
     is_floppy: Optional[YesNoEnum] = Field(
-        ..., description="Reduced / Absent movement: Y/N"
+        ..., description="Reduced / Absent movement"
     )
-    has_vomiting: Optional[YesNoEnum] = Field(..., description="Bilious Vomiting: Y/N")
-    has_diarhoea: Optional[YesNoEnum] = Field(..., description="Bloody stool: Y/N")
+    has_vomiting: Optional[YesNoEnum] = Field(..., description="Bilious Vomiting")
+    has_diarhoea: Optional[YesNoEnum] = Field(..., description="Bloody stool")
 
     # ------------------------------------------------------------------
     # SECTION F1: General examination
 
     skin: Optional[SkinEnum] = Field(
         ...,
-        description="Skin appearance: Normal / Bruising / Rash / Pustules / Mottling / Dry-peeling-wrinkled",
+        description="Skin appearance",
     )
-    jaundice: Optional[JaundiceEnum] = Field(..., description="Jaundice severity: None / Mild(+) / Severe(+++)")
+    jaundice: Optional[JaundiceEnum] = Field(..., description="Jaundice severity")
     appearance: Optional[AppearanceEnum] = Field(
-        ..., description="General appearance: Well / Sick / Dysmorphic"
+        ..., description="Appearance"
     )
     cry: Optional[CryEnum] = Field(
-        ..., description="Cry quality: Normal / Weak-Absent / Hoarse"
+        ..., description="Cry"
     )
 
     # A & B (Respiratory)
-    has_crackles: Optional[YesNoEnum] = Field(..., description="Crackles: Y/N")
-    has_grunting: Optional[YesNoEnum] = Field(..., description="Grunting: Y/N")
+    has_crackles: Optional[YesNoEnum] = Field(..., description="Crackles")
+    has_grunting: Optional[YesNoEnum] = Field(..., description="Grunting")
     has_good_air_entry: Optional[YesNoEnum] = Field(
-        ..., description="Good bilateral air entry: Y/N"
+        ..., description="Good bilateral air entry"
     )
     has_central_cyanosis: Optional[YesNoEnum] = Field(
-        ..., description="Central cyanosis: Y/N"
+        ..., description="Central cyanosis"
     )
     chest_indrawing: Optional[YesNoEnum] = Field(
-        ..., description="Lower chest indrawing: Y/N"
+        ..., description="Lower chest indrawing"
     )
     xiphoid_retraction: Optional[RetractionSeverityEnum] = Field(
-        ..., description="Xiphoid retraction: None / Mild / Severe"
+        ..., description="Xiphoid retraction"
     )
     intercostal_retraction: Optional[RetractionSeverityEnum] = Field(
-        ..., description="Intercostal retraction: None / Mild / Severe"
+        ..., description="Intercostal retraction"
     )
 
     # C (Cardiovascular)
     capillary_refill_in_seconds: Optional[float] = Field(
-        ..., description="Capillary refill (seconds)"
+        ..., description="Capillary refill (Sternal) in seconds"
     )
-    pallor: Optional[PallorEnum] = Field(..., description="Pallor/Anaemia severity: None / Mild(+) / Severe(++)")
-    has_murmur: Optional[YesNoEnum] = Field(..., description="Murmur: Y/N")
+    pallor: Optional[PallorEnum] = Field(..., description="Pallor/Anaemia severity")
+    has_murmur: Optional[YesNoEnum] = Field(..., description="Murmur")
 
     # D (Neurological)
     has_bulging_fontanelle: Optional[YesNoEnum] = Field(
-        ..., description="Bulging fontanelle: Y/N"
+        ..., description="Bulging fontanelle"
     )
-    is_irritable: Optional[YesNoEnum] = Field(..., description="Irritable: Y/N")
+    is_irritable: Optional[YesNoEnum] = Field(..., description="Irritable")
     tone: Optional[ToneEnum] = Field(
-        ..., description="Tone: Normal / Increased / Reduced"
+        ..., description="Tone"
     )
 
     # Abdomen
     is_distended: Optional[YesNoEnum] = Field(
-        ..., description="Abdominal distension: Y/N"
+        ..., description="Abdominal distension"
     )
     umbilicus: Optional[UmbilicusEnum] = Field(
         ...,
-        description="Umbilicus: Clean / Local pus / Pus+Red skin / Others",
+        description="Umbilicus",
     )
 
     # ------------------------------------------------------------------
@@ -287,23 +285,21 @@ class NARFullRecord(BaseModel):
     neuro_examination: Optional[str] = Field(
         ...,
         description=(
-            "F2 neuro: abnormal posture / movement and reflexes (free text)"
+            "F2 neuro: abnormal posture / movement and reflexes"
         ),
     )
     further_examination: Optional[str] = Field(
         ...,
         description=(
-            "F2 further exam of Resp / CVS / GIT / GU / Skin / Birth Trauma (free text)"
+            "F2 further exam of Resp / CVS / GIT / GU / Skin / Birth Trauma"
         ),
     )
 
-    has_birth_defects: Optional[YesNoEnum] = Field(..., description="Birth defects: Y/N")
+    has_birth_defects: Optional[YesNoEnum] = Field(..., description="Birth defects")
     birth_defect_types: Optional[BirthDefectsEnum] = Field(
         ...,
         description=(
-            "Birth defect types if yes (comma-separated from: Major GI abnormality, "
-            "Hydrocephalus, Cleft lip/palate, Microcephaly, Neural tube defects, "
-            "Spina bifida, Limb abnormalities, Birth injury/abnormalities)"
+            "Birth defect types if yes"
         ),
     )
 
@@ -312,20 +308,20 @@ class NARFullRecord(BaseModel):
 
     problem_list: Optional[str] = Field(
         ...,
-        description="Section G: problem list free text (most important first)",
+        description="Section G: Presentation and problem list (most important first)",
     )
 
     # ------------------------------------------------------------------
     # SECTION H: Investigations
 
-    rbs_measured: Optional[YesNoEnum] = Field(..., description="RBS measured: Y/N")
+    rbs_measured: Optional[YesNoEnum] = Field(..., description="RBS measured")
     rbs_value: Optional[float] = Field(..., description="RBS result value (mmol/L)")
-    given_bilirubin: Optional[YesNoEnum] = Field(..., description="Bilirubin measured: Y/N")
+    given_bilirubin: Optional[YesNoEnum] = Field(..., description="Bilirubin measured")
     total_serum_bilirubin: Optional[float] = Field(
         ..., description="Total serum bilirubin value (µmol/L)"
     )
     investigations_other: Optional[str] = Field(
-        ..., description="Other investigations ordered (free text)"
+        ..., description="Other investigations ordered"
     )
 
     # ------------------------------------------------------------------
@@ -345,52 +341,56 @@ class NARFullRecord(BaseModel):
     # SECTION J: Interventions
 
     given_vitamin_k: Optional[YesNoEnum] = Field(
-        ..., description="Vitamin K (& TEO) given: Y/N"
+        ..., description="Vitamin K (& TEO) given"
     )
-    given_bcg: Optional[YesNoEnum] = Field(..., description="BCG given: Y/N")
+    given_bcg: Optional[YesNoEnum] = Field(..., description="BCG given")
     given_chlorhexidine: Optional[YesNoEnum] = Field(
-        ..., description="Chlorhexidine given: Y/N"
+        ..., description="Chlorhexidine given"
     )
     given_prophylaxis_pmtct: Optional[YesNoEnum] = Field(
-        ..., description="PMTCT prophylaxis given: Y/N"
+        ..., description="PMTCT prophylaxis given"
     )
     prescribed_transfusion: Optional[YesNoEnum] = Field(
-        ..., description="Transfusion prescribed: Y/N"
+        ..., description="Transfusion prescribed"
     )
     prescribed_phototherapy: Optional[YesNoEnum] = Field(
-        ..., description="Phototherapy prescribed: Y/N"
+        ..., description="Phototherapy prescribed"
     )
-    prescribed_cpap: Optional[YesNoEnum] = Field(..., description="CPAP prescribed: Y/N")
+    prescribed_cpap: Optional[YesNoEnum] = Field(..., description="CPAP prescribed")
     prescribed_iv_fluids: Optional[YesNoEnum] = Field(
-        ..., description="IV fluids prescribed: Y/N"
+        ..., description="IV fluids prescribed"
     )
     prescribed_antibiotics: Optional[YesNoEnum] = Field(
-        ..., description="Antibiotics prescribed: Y/N"
+        ..., description="Antibiotics prescribed"
     )
     prescribed_feeds: Optional[YesNoEnum] = Field(
-        ..., description="Feeds/Nutrition prescribed: Y/N"
+        ..., description="Feeds/Nutrition prescribed"
     )
-    prescribed_opv: Optional[YesNoEnum] = Field(..., description="OPV prescribed: Y/N")
+    prescribed_opv: Optional[YesNoEnum] = Field(..., description="OPV prescribed")
     prescribed_surfactant: Optional[YesNoEnum] = Field(
-        ..., description="Surfactant prescribed: Y/N"
+        ..., description="Surfactant prescribed"
     )
     prescribed_caffeine_citrate: Optional[YesNoEnum] = Field(
-        ..., description="Caffeine citrate prescribed: Y/N"
+        ..., description="Caffeine citrate prescribed"
     )
-    prescribed_oxygen: Optional[YesNoEnum] = Field(..., description="Oxygen prescribed: Y/N")
-    prescribed_kmc: Optional[YesNoEnum] = Field(..., description="KMC prescribed: Y/N")
+    prescribed_oxygen: Optional[YesNoEnum] = Field(..., description="Oxygen prescribed")
+    prescribed_kmc: Optional[YesNoEnum] = Field(..., description="KMC prescribed")
     prescribed_incubator: Optional[YesNoEnum] = Field(
-        ..., description="Incubator/keep warm prescribed: Y/N"
+        ..., description="Incubator/keep warm prescribed"
     )
 
     # ------------------------------------------------------------------
     # SECTION K: Action plan
 
+    action_plan: Optional[str] = Field(
+        ..., description="Listed action plans"
+    )
+
     clinician_name: Optional[Literal["redacted"]] = Field(
-        ..., description="Clinician name (redacted on real form)"
+        ..., description="Clinician name"
     )
     clinician_signature: Optional[Literal["redacted"]] = Field(
-        ..., description="Clinician signature (redacted on real form)"
+        ..., description="Clinician signature"
     )
     action_plan_time: Optional[time] = Field(..., description="Action plan time (24 hr)")
     action_plan_date: Optional[date] = Field(
